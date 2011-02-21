@@ -13,9 +13,28 @@ require "connections/base.rb"
 
 TICK_DURATION = 5.0 # in seconds
 
+$connections = []
+
+def stuff
+  $connections += Connections::new_connections
+  $connections -= Connections::new_disconnections
+  Log::info "connections (#{$connections.join ", "})"
+  $connections.each do |c|
+    cmd = (Connections::next_command c).to_s
+    Log::info "conn #{c} next cmd (#{cmd})"
+    if cmd =~ /quit/
+      Connections::send c, "thanks! bye!"
+      Connections::disconnect c
+    else
+      Connections::send c, cmd
+    end
+  end
+end
+
 while true
   tick_start = Time.now
   Connections::tick
+  stuff
   tick_duration = Time.now - tick_start
   Log::info "tick done, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity", "mud"
   sleep [0,TICK_DURATION - tick_duration].max
