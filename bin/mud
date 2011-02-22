@@ -12,7 +12,7 @@ Log::info RUBY_VERSION, "ruby version"
 require "connections/base.rb"
 require "accounts/base.rb"
 
-TICK_DURATION = 5.0 # in seconds
+TICK_DURATION = 0.25 # in seconds
 
 $connections = []
 

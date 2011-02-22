@@ -12,14 +12,15 @@ eos
       Connections::send conn_id, SPLASH
       Connections::send conn_id, "{!{FB<enter your chat {FGname{FB>{@ "
       name = nil
-      while not name
+      while not name or name.length < 1
         Fiber.yield
         name = Connections::next_command conn_id
       end
+      Connections::send conn_id, "{!{FYnow chatting as {FC#{name}{FY!{@\r\n"
       while true
         Fiber.yield
         msg = Connections::next_command conn_id
-        next unless msg
+        next unless msg and msg.length > 0
         if msg =~ /^quit$/
           Connections::disconnect conn_id
           break
