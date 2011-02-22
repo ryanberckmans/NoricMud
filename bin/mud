@@ -11,6 +11,9 @@ require "yaml"
 ActiveRecord::Base.establish_connection YAML.load_file('config/database.yml')[ ENV['RAILS_ENV'] ]
 
 require "models/account.rb"
+require "models/character.rb"
+require "models/mob.rb"
+require "models/room.rb"
 
 require "core/util.rb"
 require "core/log.rb"
@@ -22,7 +25,7 @@ Log::info RUBY_VERSION, "ruby version"
 require "connections/base.rb"
 require "accounts/base.rb"
 
-TICK_DURATION = 5.0 # in seconds
+TICK_DURATION = 2.0 # in seconds
 
 while true
   tick_start = Time.now

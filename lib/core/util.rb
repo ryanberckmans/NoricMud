@@ -21,4 +21,47 @@ module Util
       raise
     end
   end
+
+  module InFiber
+    def self.wait_for_next_command( conn_id )
+      cmd = nil
+      while not cmd
+        Fiber.yield
+        cmd = Connections::next_command conn_id
+      end
+      cmd
+    end
+
+    module ValueMenu
+      def self.activate( conn_id, menu_items, alphabetic_index = false )
+        # where menu_items is an array, and each element of menu_items is one of:
+        #  string - a line of text (header) to be displayed literally in the menu
+        #  (value, string) - a value the user can select, represented by the label string
+        # the items are processed in order, to generate an ordered menu
+
+        menu = "{@{!"
+        menu_index = 1
+        menu_options = {}
+
+        menu_items.each do |item|
+          if item.kind_of? String
+            menu += "{FY" + item + "\n"
+          elsif item.kind_of? Array
+            item_index = alphabetic_index ? (96+menu_index).chr : menu_index
+            menu += " {FC#{item_index}{FG) - {FU#{item[1]}\n"
+            menu_options[item_index.to_s] = item[0]
+            menu_index += 1
+          end
+        end
+
+        while true
+          Connections::send conn_id, menu
+          selection = InFiber::wait_for_next_command conn_id
+          break if menu_options.key? selection
+        end
+        menu_options[selection]
+      end #  self.activate
+    end # module ValueMenu
+
+  end
 end
