@@ -27,8 +27,9 @@ module Connections
 
     def send( msg )
       begin
-        @socket.send color(msg), 0
+        @socket.send color(msg + "{@"), 0
       rescue Exception => e
+        Log::error "socket #{id} exception raised in socket.send():"
         Log::error "#{e.backtrace.join ", "}"
         Log::error e.to_s
         disconnect

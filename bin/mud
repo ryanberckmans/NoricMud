@@ -7,38 +7,21 @@ require "core/util.rb"
 require "core/log.rb"
 
 Log::get "mud", { :default => true, :level => Logger::DEBUG }
+Log::info "============================== booting ==============================", "mud"
 Log::info RUBY_VERSION, "ruby version"
 
 require "connections/base.rb"
 require "accounts/base.rb"
 
-TICK_DURATION = 0.25 # in seconds
-
-$connections = []
-
-def stuff
-  $connections += Connections::new_connections
-  $connections -= Connections::new_disconnections
-  Log::info "connections (#{$connections.join ", "})"
-  $connections.each do |c|
-    cmd = (Connections::next_command c).to_s
-    Log::info "conn #{c} next cmd (#{cmd})"
-    if cmd =~ /^quit$/
-      Connections::send c, "thanks! bye!"
-      Connections::disconnect c
-    else
-      Connections::send c, cmd
-    end
-  end
-end
+TICK_DURATION = 5.0 # in seconds
 
 while true
   tick_start = Time.now
+  Log::info"start tick", "mud"
   Connections::tick
   Accounts::tick
-  #stuff
-  
   tick_duration = Time.now - tick_start
-  Log::info "tick done, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity", "mud"
-  sleep [0,TICK_DURATION - tick_duration].max
+  time_remaining = [0,TICK_DURATION - tick_duration].max
+  Log::info "end tick, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity, sleeping #{"%4.6f" % time_remaining}s", "mud"
+  sleep time_remaining
 end

@@ -12,8 +12,7 @@ module Connections
       @connections = {}
       @new_connections = []
       @new_disconnections = []
-      Log::info "tcp server started on port #{PORT}", "connections"
-      Log::info "accepting maximum of #{MAX_ACCEPTS_PER_TICK} connections per tick", "connections"
+      Log::info "tcp server started on port #{PORT}, accepting maximum of #{MAX_ACCEPTS_PER_TICK} connections per tick", "connections"
     end
 
     def new_connections
@@ -53,6 +52,7 @@ module Connections
           conn = Connection.new socket
           @connections[ conn.id ] = conn
           @new_connections << conn.id
+          Log::info "accepted connection #{conn.id}", "connections"
           accepts += 1
           redo if accepts < MAX_ACCEPTS_PER_TICK
         end

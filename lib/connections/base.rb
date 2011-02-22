@@ -4,7 +4,9 @@ module Connections
   @server = Connections::Server.new
   
   def self.tick
+    Log::debug "start tick", "connections"
     @server.tick
+    Log::debug "end tick", "connections"
   end
 
   def self.new_connections
