@@ -22,7 +22,7 @@ def stuff
   $connections.each do |c|
     cmd = (Connections::next_command c).to_s
     Log::info "conn #{c} next cmd (#{cmd})"
-    if cmd =~ /quit/
+    if cmd =~ /^quit$/
       Connections::send c, "thanks! bye!"
       Connections::disconnect c
     else

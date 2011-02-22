@@ -6,7 +6,7 @@ module Connections
     def initialize( socket )
       @socket = socket
       @connected = true
-      @data = nil
+      @raw = ""
     end
 
     def tick
@@ -16,7 +16,7 @@ module Connections
         Log::info "socket #{id} received eof", "connections"
         disconnect
       else
-        @data = data
+        @raw += data
       end
     end
 
@@ -35,9 +35,18 @@ module Connections
     end
 
     def next_command
-      d = @data
-      @data = nil
-      d
+      if @raw =~ /.*--\r?\n?/m
+        old_raw = @raw
+        @raw = $'
+        Log::debug "socket #{id} flushed command queue (old raw (#{Util.strip_newlines old_raw}), new raw (#{Util.strip_newlines @raw})", "connections"
+      end
+      cmd = nil
+      if @raw =~ /.*?\r?\n/
+        @raw = $'
+        cmd = $&.chomp
+        Log::debug "socket #{id} next command (#{cmd}), remaining raw (#{Util.strip_newlines @raw})", "connections"
+      end
+      cmd
     end
 
     def connected?
