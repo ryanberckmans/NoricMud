@@ -1,3 +1,4 @@
+require "core/color.rb"
 
 module Connections
   class Connection
@@ -26,7 +27,7 @@ module Connections
 
     def send( msg )
       begin
-        @socket.send msg, 0
+        @socket.send color(msg), 0
       rescue Exception => e
         Log::error "#{e.backtrace.join ", "}"
         Log::error e.to_s

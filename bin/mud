@@ -10,6 +10,7 @@ Log::get "mud", { :default => true, :level => Logger::DEBUG }
 Log::info RUBY_VERSION, "ruby version"
 
 require "connections/base.rb"
+require "accounts/base.rb"
 
 TICK_DURATION = 5.0 # in seconds
 
@@ -34,7 +35,9 @@ end
 while true
   tick_start = Time.now
   Connections::tick
-  stuff
+  Accounts::tick
+  #stuff
+  
   tick_duration = Time.now - tick_start
   Log::info "tick done, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity", "mud"
   sleep [0,TICK_DURATION - tick_duration].max
