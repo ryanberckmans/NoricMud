@@ -44,7 +44,7 @@ module Connections
       cmd = nil
       if @raw =~ /.*?\r?\n/
         @raw = $'
-        cmd = $&.chomp
+        cmd = $&.chomp.gsub /[^[:print:]]/, ""
         Log::debug "socket #{id} next command (#{cmd}), remaining raw (#{Util.strip_newlines @raw})", "connections"
       end
       cmd
