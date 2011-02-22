@@ -17,7 +17,7 @@ Logger::Formatter.send :remove_const, :Format
 Logger::Formatter.send :const_set, :Format, "%s\t%s\t%d\t%5s\t%s\t%s\n"
 
 class Log
-  PATH = "../log/"
+  PATH = "log/"
   EXTENSION = ".log"
   ROTATION = "daily"
 

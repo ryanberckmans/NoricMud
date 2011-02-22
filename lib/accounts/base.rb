@@ -5,8 +5,47 @@ module Accounts
   SPLASH = <<eos
 {@{!{FG     ________             ________ \r\n{FG    / ____  /\\           /\\  ____ \\ \r\n{FG   / /\\__/ / _\\_________/_ \\ \\__/\\ \\ \r\n{FG  / /_/_/ / /             \\ \\ \\_\\_\\ \\ \r\n{FG /_______/ /_______________\\ \\_______\\ \r\n{FG \\  ____ \\ \\               / / ____  / \r\n{FG  \\ \\ \\_\\ \\ \\_____________/ / /_/ / / \r\n{FG   \\ \\/__\\ \\  /{FR N O T A{FG \\  / /__\\/ / \r\n{FG    \\_______\\/{FY M   U   D{FG \\/_______/ \r\n{FG  \r\n       {FW+ {FRC a t a l y s t i c a {FW+{@ \r\n \r\n
 eos
+  def self.tick
+    Connections::new_connections.each do |conn_id|
+      @connections[ conn_id ] = account_flow conn_id
+    end
+
+    Connections::new_disconnections.each do |conn_id|
+      @connections.delete conn_id
+    end
+
+    @connections.each_value do |flow|
+      flow.resume
+    end
+  end
+
+  private
+  def self.wait_for_next_command( conn_id )
+    cmd = nil
+    while not cmd
+      Fiber.yield
+      cmd = Connections::next_command conn_id
+    end
+    cmd
+  end
 
   def self.account_flow( id )
+    Fiber.new do
+      conn_id = id
+      Connections::send conn_id, SPLASH
+      account = nil
+      while true
+        Connections::send conn_id, "{!{FYaccount name{FB> "
+        account = Account.new({:name => wait_for_next_command( conn_id)})
+        break if account.save
+        account.errors.each_value do |err| err.each do |msg| Connections::send conn_id, "{!{FC#{msg}\n" end end
+      end
+      Connections::send conn_id, "successfully created account #{account.name}"
+      Connections::disconnect conn_id
+    end
+  end
+  
+  def self.chat_flow( id )
     Fiber.new do
       conn_id = id
       Connections::send conn_id, SPLASH
@@ -29,20 +68,6 @@ eos
           Connections::send other_conn_id, "{!{FC#{name}: #{msg}{@\r\n"
         end
       end
-    end
-  end
-  
-  def self.tick
-    Connections::new_connections.each do |conn_id|
-      @connections[ conn_id ] = account_flow conn_id
-    end
-
-    Connections::new_disconnections.each do |conn_id|
-      @connections.delete conn_id
-    end
-
-    @connections.each_value do |flow|
-      flow.resume
     end
   end
 end

@@ -1,8 +1,17 @@
 #!/usr/bin/env ruby
 
 $:.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
+Dir.chdir ".."
 
-require "bundler/setup"
+require 'bundler'
+Bundler.setup
+require "active_record"
+require "yaml"
+
+ActiveRecord::Base.establish_connection YAML.load_file('config/database.yml')[ ENV['RAILS_ENV'] ]
+
+require "models/account.rb"
+
 require "core/util.rb"
 require "core/log.rb"
 
