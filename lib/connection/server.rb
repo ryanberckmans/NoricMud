@@ -2,7 +2,7 @@ require 'socket'
 
 require Util.here 'connection.rb'
 
-module Connections
+module Connection
   class Server
     PORT = 4000
     MAX_ACCEPTS_PER_TICK = 3
@@ -49,7 +49,7 @@ module Connections
       while true
         socket = @server.accept_nonblock rescue nil
         if socket
-          conn = Connection.new socket
+          conn = PlayerSocket.new socket
           @connections[ conn.id ] = conn
           @new_connections << conn.id
           Log::info "accepted connection #{conn.id}", "connections"
@@ -68,4 +68,4 @@ module Connections
       end
     end
   end # class Server
-end # module Connections
+end # module Connection

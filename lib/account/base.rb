@@ -1,7 +1,7 @@
 
-module Accounts
+module Login
   @connections = {}
-  @new_logons = []
+  @new_logins = []
 
   SPLASH = <<eos
 {@{!{FG     ________             ________ \r\n{FG    / ____  /\\           /\\  ____ \\ \r\n{FG   / /\\__/ / _\\_________/_ \\ \\__/\\ \\ \r\n{FG  / /_/_/ / /             \\ \\ \\_\\_\\ \\ \r\n{FG /_______/ /_______________\\ \\_______\\ \r\n{FG \\  ____ \\ \\               / / ____  / \r\n{FG  \\ \\ \\_\\ \\ \\_____________/ / /_/ / / \r\n{FG   \\ \\/__\\ \\  /{FR N O T A{FG \\  / /__\\/ / \r\n{FG    \\_______\\/{FY M   U   D{FG \\/_______/ \r\n{FG  \r\n       {FW+ {FRC a t a l y s t i c a {FW+{@ \r\n \r\n
@@ -10,12 +10,12 @@ eos
   def self.tick
     @new_logons.clear
     
-    Connections::new_connections.each do |connection|
+    Connection::new_connections.each do |connection|
       Log::info "socket #{connection} started new account flow", "accounts"
       @connections[ connection ] = account_flow connection
     end
 
-    Connections::new_disconnections.each do |connection|
+    Connection::new_disconnections.each do |connection|
       Log::info "socket #{connection} disconnected, deleting from connections", "accounts"
       @connections.delete connection
     end
@@ -30,8 +30,8 @@ eos
     end
   end
 
-  def self.new_logons
-    @new_logons
+  def self.new_logins
+    @new_logins
   end
 
   private
@@ -39,7 +39,7 @@ eos
   def self.account_flow( id )
     Fiber.new do
       connection = id
-      Connections::send connection, SPLASH
+      Connection::send connection, SPLASH
 
       account = get_account connection
       Log::info "socket #{id} using account #{account.name}", "accounts"
@@ -48,7 +48,7 @@ eos
       Log::info "account #{account.name} selected char #{char.name}", "accounts"
 
       @new_logons << char
-      Connections::send connection, "{!{FYLogging on {FU#{char.name}{FY...\n"
+      Connection::send connection, "{!{FYLogging on {FU#{char.name}{FY...\n"
       Log::info "account #{account.name} with character #{char.name} registered to log on", "accounts"
     end
   end
@@ -56,11 +56,11 @@ eos
   def self.get_account( connection )
     account = nil
     while true
-      Connections::send connection, "{!{FYaccount name{FB> "
+      Connection::send connection, "{!{FYaccount name{FB> "
       account = Account.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( connection ))
       break unless account.new_record?
       break if account.save
-      account.errors.each_value do |err| err.each do |msg| Connections::send connection, "{!{FC#{msg}\n" end end
+      account.errors.each_value do |err| err.each do |msg| Connection::send connection, "{!{FC#{msg}\n" end end
     end
     account.connection = connection
     account
@@ -87,13 +87,13 @@ eos
   def self.new_character( account )
     char = nil
     while true
-      Connections::send account.connection, "{!{FYnew character name{FB> "
+      Connection::send account.connection, "{!{FYnew character name{FB> "
       char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( account.connection ).capitalize)
       break unless char.new_record?
       char.account = account
       char.mob = Mob.new({:short_name => char.name, :long_name => "The legendary hero known as #{char.name}"})
       break if char.save
-      char.errors.each_value do |err| err.each do |msg| Connections::send account.connection, "{!{FC#{msg}\n" end end
+      char.errors.each_value do |err| err.each do |msg| Connection::send account.connection, "{!{FC#{msg}\n" end end
     end
     char
   end

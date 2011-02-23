@@ -1,7 +1,7 @@
 require Util::here 'server.rb'
 
-module Connections
-  @server = Connections::Server.new
+module Connection
+  @server = Connection::Server.new
   
   def self.tick
     Log::debug "start tick", "connections"

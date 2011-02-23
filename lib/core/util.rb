@@ -27,7 +27,7 @@ module Util
       cmd = nil
       while not cmd
         Fiber.yield
-        cmd = Connections::next_command connection
+        cmd = Connection::next_command connection
       end
       cmd
     end
@@ -55,7 +55,7 @@ module Util
         end
 
         while true
-          Connections::send connection, menu
+          Connection::send connection, menu
           selection = InFiber::wait_for_next_command connection
           break if menu_options.key? selection
         end
