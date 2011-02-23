@@ -5,5 +5,5 @@ class Account < ActiveRecord::Base
   validates_uniqueness_of :name, :case_sensitive => false, :message => "That account name is in use."
   validates_format_of :name, :with => /\A[[:alnum:]]+\z/, :message => "Account names may have letters and numbers only."
 
-  attr_accessor :connection
+  attr_accessor :socket
 end

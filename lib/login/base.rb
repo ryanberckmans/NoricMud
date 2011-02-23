@@ -62,14 +62,14 @@ eos
       break if account.save
       account.errors.each_value do |err| err.each do |msg| Network::send connection, "{!{FC#{msg}\n" end end
     end
-    account.connection = connection
+    account.socket = connection
     account
   end
 
   def self.get_character( account )
     char = select_character account
     char = new_character account unless char
-    char.connection = account.connection
+    char.socket = account.socket
     char
   end
   
@@ -81,19 +81,19 @@ eos
     account.characters.each do |char|
       character_menu.push [char, char.name]
     end
-    Util::InFiber::ValueMenu::activate account.connection, character_menu
+    Util::InFiber::ValueMenu::activate account.socket, character_menu
   end
 
   def self.new_character( account )
     char = nil
     while true
-      Network::send account.connection, "{!{FYnew character name{FB> "
-      char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( account.connection ).capitalize)
+      Network::send account.socket, "{!{FYnew character name{FB> "
+      char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( account.socket ).capitalize)
       break unless char.new_record?
       char.account = account
       char.mob = Mob.new({:short_name => char.name, :long_name => "The legendary hero known as #{char.name}"})
       break if char.save
-      char.errors.each_value do |err| err.each do |msg| Network::send account.connection, "{!{FC#{msg}\n" end end
+      char.errors.each_value do |err| err.each do |msg| Network::send account.socket, "{!{FC#{msg}\n" end end
     end
     char
   end

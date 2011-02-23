@@ -9,5 +9,5 @@ class Character < ActiveRecord::Base
   validates_presence_of :name, :message => "A character name is required."
   validates_format_of :name, :with => /\A[[:alpha:]]+\z/, :message => "Character names may have letters only."
 
-  attr_accessor :connection
+  attr_accessor :socket
 end
