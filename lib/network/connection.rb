@@ -6,6 +6,7 @@ module Network
     
     def initialize( socket )
       @socket = socket
+      @clientside_disconnect = false
       @connected = true
       @raw = ""
     end
@@ -15,6 +16,7 @@ module Network
       return unless data
       if data.length < 1
         Log::info "socket #{id} received eof", "connections"
+        @clientside_disconnect = true
         disconnect
       else
         @raw += data
@@ -32,6 +34,7 @@ module Network
         Log::error "socket #{id} exception raised in socket.send():"
         Log::error "#{e.backtrace.join ", "}"
         Log::error e.to_s
+        @clientside_disconnect = true
         disconnect
       end
     end
@@ -53,6 +56,10 @@ module Network
 
     def connected?
       @connected
+    end
+
+    def clientside_disconnect?
+      @clientside_disconnect
     end
 
     def disconnect

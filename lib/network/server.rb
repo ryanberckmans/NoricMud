@@ -63,8 +63,11 @@ module Network
     def tick_connections
       @connections.each_value do |conn| conn.tick end
       @connections.delete_if do |conn_id, conn|
-        @new_disconnections << conn.id if not conn.connected?
-        not conn.connected?
+        connected = conn.connected?
+        if not connected
+          @new_disconnections << conn.id if conn.clientside_disconnect?
+        end
+        connected
       end
     end
   end # class Server
