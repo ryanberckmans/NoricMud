@@ -57,7 +57,7 @@ eos
       elsif @accounts_online.value? connection
         account = @accounts_online.key(connection)
         @new_disconnections << account
-        Log::info "socket #{connection} disconnected, was account #{account.name}", "accounts"
+        Log::info "socket #{connection} disconnected, account #{account.name}", "accounts"
         set_offline account
       else
         raise "disconnected socket #{connection} not found in system", "accounts"
@@ -98,12 +98,13 @@ eos
 
   def self.disconnect_if_already_online( account )
     if @accounts_online.key? account
-      Log::info "account #{account.name} already online, socket #{@accounts_online[account]}", "accounts"
       old_connection = @accounts_online[account]
+      Log::info "account #{account.name} already online, socket #{old_connection}, disconnecting", "accounts"
       Network::send old_connection, "Your account has been logged into from somewhere else.\n"
       Network::disconnect old_connection
       @new_disconnections << account
       set_offline account
+      Log::info "account #{account.name} ready to go online with new socket", "accounts"
     end
   end
 

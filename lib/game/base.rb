@@ -7,30 +7,82 @@ module Game
 
   def self.tick
     Log::debug "start tick", "game"
-    CharacterLoginSystem::new_connections.each do |char| logon char end
+    process_new_disconnections
+    process_new_connections
     process_character_commands
     Log::debug "end tick", "game"
   end
 
   private
-  def self.logon( char )
-    Log::info "logging on #{char.name}", "game"
-    @characters << char
-    Commands::poof char.mob, @rooms[0]
+  def self.character_connected( char )
+    verify_mob_has_no_character char
+    char.mob.char = char
+
+    if character_logged_on? char
+      verify_character_disconnected char
+      Log::info "#{char.name} reconnected", "game"
+      cached = @characters[@characters.index char]
+      Log::info "#{char.name} reconnected instance has: #{char.object_id} #{char.mob.room.to_s}, cached instance #{cached.object_id} #{cached.mob.room.to_s}"
+      Helper::send_to_room char.mob.room, "#{char.name} reconnected.\n"
+    else
+      Log::info "#{char.name} logging on", "game"
+      @characters << char
+      Commands::poof char.mob, @rooms[0]
+    end
+    char.connected = true
     Commands::look char.mob
+  end
+
+  def self.character_logged_on?( char )
+    @characters.index char
+  end
+
+  def self.character_disconnected( char )
+    verify_character_connected char
+    Log::info "#{char.name} disconnected (lost link)", "game"
+    char.connected = false
+    char.mob.char = nil
+    Helper::send_to_room char.mob.room, "#{char.name} disconnected.\n"
+  end
+
+  def self.log_off_character( char )
+    Helper::move_to( char.mob, nil )
+    @characters.delete char
+    CharacterLoginSystem::disconnect char
+  end
+
+  def self.verify_mob_has_no_character( char )
+    raise "expected #{char.name}.mob to have no character connected to it" if char.mob.char
+  end
+
+  def self.verify_character_connected( char )
+    raise "expected #{char.name} to be connected" unless char.connected
+  end
+
+  def self.verify_character_disconnected( char )
+    raise "expected #{char.name} to be disconnected" if char.connected
+  end
+
+  def self.process_new_connections
+    CharacterLoginSystem::new_connections.each do |char| character_connected char end
+  end
+
+  def self.process_new_disconnections
+    CharacterLoginSystem::new_disconnections.each do |char| character_disconnected char end
   end
 
   def self.process_character_commands
     @characters.each do |char|
+      next unless char.connected
       cmd = CharacterLoginSystem::next_command char
       next unless cmd
       Commands::look char.mob if cmd == "look"
       Commands::poof char.mob, @rooms[0] if cmd == "poof"
       Commands::say char.mob, $' if cmd =~ /\Asay /
       if cmd =~ /quit/
-        Log::info "char #{char.name} quit", "game"
-        @characters.delete char
-        CharacterLoginSystem::disconnect char
+        Log::info "#{char.name} quit", "game"
+        Helper::send_to_room char.mob.room, "#{char.name} quit.\n"
+        log_off_character char
       end
     end
   end
@@ -40,8 +92,8 @@ module Game
       previous_room = mob.room
       mob.room.mobs.delete mob if mob.room
       mob.room = room
-      room.mobs << mob
-      Log::debug "moved #{mob.short_name} to room #{room.name}, previous room #{previous_room ? previous_room.name : "nil"}", "game"
+      Log::debug "moved #{mob.short_name} to room #{room ? room.name : "nil"}, previous room #{previous_room ? previous_room.name : "nil"}", "game"
+      room.mobs << mob if room
     end
 
     def self.send_to_room( room, msg )

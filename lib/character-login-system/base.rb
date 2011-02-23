@@ -48,7 +48,7 @@ module CharacterLoginSystem
   
   def self.process_new_account_connections
     AccountSystem::new_connections.each do |account|
-      Log::info "account #{account.name} began selecting character", "characterlogins"
+      Log::info "account #{account.name} connected, selecting character", "characterlogins"
       @accounts_selecting_character[ account ] = character_flow account
     end
   end
@@ -60,8 +60,7 @@ module CharacterLoginSystem
         Log::info "account #{account.name} disconnected, was currently selecting character", "characterlogins"
       elsif @characters_online.value? account
         char = @characters_online.key(account)
-        Log::info "account #{account.name} trying to disconnect #{char.to_s}", "characterlogins"
-        Log::info "account #{account.name} disconnected, was character #{char.name}", "characterlogins"
+        Log::info "account #{account.name} disconnected, character #{char.name}", "characterlogins"
         @new_disconnections << char
         set_offline char
       else
@@ -106,7 +105,6 @@ module CharacterLoginSystem
   def self.get_character( account )
     char = select_character account
     char = new_character account unless char
-    char.mob.char = char
     char
   end
 
