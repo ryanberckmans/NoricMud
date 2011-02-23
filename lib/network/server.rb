@@ -67,7 +67,7 @@ module Network
         if not connected
           @new_disconnections << conn.id if conn.clientside_disconnect?
         end
-        connected
+        not connected
       end
     end
   end # class Server

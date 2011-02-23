@@ -27,6 +27,11 @@ module Game
       Commands::look char.mob if cmd == "look"
       Commands::poof char.mob, @rooms[0] if cmd == "poof"
       Commands::say char.mob, $' if cmd =~ /\Asay /
+      if cmd =~ /quit/
+        Log::info "char #{char.name} quit", "game"
+        @characters.delete char
+        Network::disconnect char.socket
+      end
     end
   end
 
@@ -75,10 +80,6 @@ module Game
       msg.lstrip!
       return unless msg.length > 0
       Helper::send_to_room mob.room, "{!{FC#{mob.short_name} says, '#{msg}'\n"
-    end
-
-    def self.quit( mob )
-      
     end
   end
 end
