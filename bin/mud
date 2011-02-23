@@ -27,15 +27,15 @@ TICK_DURATION = 2.0 # in seconds
 Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
-require "connections/base.rb"
-require "accounts/base.rb"
+require "connection/base.rb"
+require "account/base.rb"
 require "game/base.rb"
 
 while true
   tick_start = Time.now
   Log::info"start tick", "mud"
-  Connections::tick
-  Accounts::tick
+  Connection::tick
+  Account::tick
   Game::tick
   tick_duration = Time.now - tick_start
   time_remaining = [0,TICK_DURATION - tick_duration].max
