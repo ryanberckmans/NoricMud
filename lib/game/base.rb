@@ -10,6 +10,6 @@ module Game
   private
   def self.logon( char )
     Log::info "logging on #{char.name}", "game"
-    Connection::send char.connection, "Logged on!\n"
+    Network::send char.connection, "Logged on!\n"
   end
 end

@@ -1,7 +1,7 @@
 require "core/color.rb"
 
-module Connection
-  class PlayerSocket
+module Network
+  class Connection
     MAX_RECV = 1024
     
     def initialize( socket )
