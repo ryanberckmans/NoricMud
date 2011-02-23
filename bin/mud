@@ -22,7 +22,7 @@ require "core/log.rb"
 Log::get "mud", { :default => true, :level => Logger::DEBUG }
 Log::info "============================== booting ==============================", "mud"
 
-TICK_DURATION = 2.0 # in seconds
+TICK_DURATION = 0.25 # in seconds
 
 Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"

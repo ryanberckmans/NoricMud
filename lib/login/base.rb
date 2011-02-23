@@ -25,7 +25,7 @@ eos
     end
 
     @connections.delete_if do |connection,account_flow|
-      Log::info "socket #{connection} completed account flow, deleting from connections", "accounts"
+      Log::info "socket #{connection} completed account flow, deleting from connections", "accounts" if not account_flow.alive?
       not account_flow.alive?
     end
   end
@@ -70,6 +70,7 @@ eos
     char = select_character account
     char = new_character account unless char
     char.socket = account.socket
+    char.mob.char = char
     char
   end
   
@@ -91,7 +92,7 @@ eos
       char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( account.socket ).capitalize)
       break unless char.new_record?
       char.account = account
-      char.mob = Mob.new({:short_name => char.name, :long_name => "The legendary hero known as #{char.name}"})
+      char.mob = Mob.new({:short_name => char.name, :long_name => "{FGLegionnaire {FY#{char.name}{FG the legendary hero"})
       break if char.save
       char.errors.each_value do |err| err.each do |msg| Network::send account.socket, "{!{FC#{msg}\n" end end
     end
