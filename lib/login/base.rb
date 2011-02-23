@@ -8,7 +8,7 @@ module Login
 eos
 
   def self.tick
-    @new_logons.clear
+    @new_logins.clear
     
     Network::new_connections.each do |connection|
       Log::info "socket #{connection} started new account flow", "accounts"
@@ -47,7 +47,7 @@ eos
       char = get_character account
       Log::info "account #{account.name} selected char #{char.name}", "accounts"
 
-      @new_logons << char
+      @new_logins << char
       Network::send connection, "{!{FYLogging on {FU#{char.name}{FY...\n"
       Log::info "account #{account.name} with character #{char.name} registered to log on", "accounts"
     end

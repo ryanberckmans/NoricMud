@@ -1,5 +1,5 @@
 module Game
-  @rooms = Room.find
+  @rooms = Room.find :all
 
   def self.tick
     Log::debug "start tick", "game"

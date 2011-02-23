@@ -29,6 +29,7 @@ module Util
         Fiber.yield
         cmd = Network::next_command connection
       end
+      Log::debug "Util::InFiber::wait_for_next_command for socket #{connection} got (#{cmd})", "util"
       cmd
     end
 
