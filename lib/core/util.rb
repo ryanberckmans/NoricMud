@@ -23,18 +23,18 @@ module Util
   end
 
   module InFiber
-    def self.wait_for_next_command( connection )
+    def self.wait_for_next_command( next_command_function )
       cmd = nil
       while not cmd
         Fiber.yield
-        cmd = Network::next_command connection
+        cmd = next_command_function.()
       end
-      Log::debug "Util::InFiber::wait_for_next_command for socket #{connection} got (#{cmd})", "util"
+      Log::debug "Util::InFiber::wait_for_next_command got (#{cmd})", "util"
       cmd
     end
 
     module ValueMenu
-      def self.activate( connection, menu_items, alphabetic_index = false )
+      def self.activate( send_function, next_command_function, menu_items, alphabetic_index = false )
         # where menu_items is an array, and each element of menu_items is one of:
         #  string - a line of text (header) to be displayed literally in the menu
         #  (value, string) - a value the user can select, represented by the label string
@@ -56,8 +56,8 @@ module Util
         end
 
         while true
-          Network::send connection, menu
-          selection = InFiber::wait_for_next_command connection
+          send_function.(menu)
+          selection = InFiber::wait_for_next_command next_command_function
           break if menu_options.key? selection
         end
         menu_options[selection]

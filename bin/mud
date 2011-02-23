@@ -22,7 +22,7 @@ require "core/log.rb"
 Log::get "mud", { :default => true, :level => Logger::DEBUG }
 Log::info "============================== booting ==============================", "mud"
 
-TICK_DURATION = 0.25 # in seconds
+TICK_DURATION = 2.0 # in seconds
 
 Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"
@@ -32,14 +32,22 @@ require "account-system/base.rb"
 require "character-login-system/base.rb"
 require "game/base.rb"
 
-while true
-  tick_start = Time.now
-  Log::info"start tick", "mud"
-  Network::tick
-  AccountSystem::tick
-  Game::tick
-  tick_duration = Time.now - tick_start
-  time_remaining = [0,TICK_DURATION - tick_duration].max
-  Log::info "end tick, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity, sleeping #{"%4.6f" % time_remaining}s", "mud"
-  sleep time_remaining
+begin
+  while true
+    tick_start = Time.now
+    Log::info"start tick", "mud"
+    Network::tick
+    AccountSystem::tick
+    CharacterLoginSystem::tick
+    Game::tick
+    tick_duration = Time.now - tick_start
+    time_remaining = [0,TICK_DURATION - tick_duration].max
+    Log::info "end tick, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity, sleeping #{"%4.6f" % time_remaining}s", "mud"
+    sleep time_remaining
+  end
+rescue Exception => e
+  Log::fatal "uncaught exception #{e.class}", "mud"
+  Log::fatal e.backtrace.join "\t"
+  Log::fatal e.message if e.message.length > 0 
 end
+

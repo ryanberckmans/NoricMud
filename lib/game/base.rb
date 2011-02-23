@@ -7,7 +7,7 @@ module Game
 
   def self.tick
     Log::debug "start tick", "game"
-    AccountSystem::new_logins.each do |char| logon char end
+    CharacterLoginSystem::new_connections.each do |char| logon char end
     process_character_commands
     Log::debug "end tick", "game"
   end
@@ -22,7 +22,7 @@ module Game
 
   def self.process_character_commands
     @characters.each do |char|
-      cmd = Network::next_command char.socket
+      cmd = CharacterLoginSystem::next_command char
       next unless cmd
       Commands::look char.mob if cmd == "look"
       Commands::poof char.mob, @rooms[0] if cmd == "poof"
@@ -30,7 +30,7 @@ module Game
       if cmd =~ /quit/
         Log::info "char #{char.name} quit", "game"
         @characters.delete char
-        Network::disconnect char.socket
+        CharacterLoginSystem::disconnect char
       end
     end
   end
@@ -47,7 +47,7 @@ module Game
     def self.send_to_room( room, msg )
       room.mobs.each do |mob|
         if mob.char
-          Network::send mob.char.socket, msg
+          CharacterLoginSystem::send mob.char, msg
           Log::debug "send_to_room, room #{room.name}, mob #{mob.short_name} received the message", "game"
         end
       end
@@ -71,7 +71,7 @@ module Game
       mob.room.mobs.each do |mob_in_room|
         look += "{FG#{mob_in_room.long_name} is here.\n" unless mob_in_room == mob
       end
-      Network::send mob.char.socket, look
+      CharacterLoginSystem::send mob.char, look
     end
 
     def self.say( mob, msg )
