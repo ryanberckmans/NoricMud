@@ -28,14 +28,15 @@ Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
 require "network/base.rb"
-require "login/base.rb"
+require "account-system/base.rb"
+require "character-login-system/base.rb"
 require "game/base.rb"
 
 while true
   tick_start = Time.now
   Log::info"start tick", "mud"
   Network::tick
-  Login::tick
+  AccountSystem::tick
   Game::tick
   tick_duration = Time.now - tick_start
   time_remaining = [0,TICK_DURATION - tick_duration].max

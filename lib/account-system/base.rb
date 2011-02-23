@@ -1,5 +1,5 @@
 
-module Login
+module AccountSystem
   @connections = {}
   @new_logins = []
 

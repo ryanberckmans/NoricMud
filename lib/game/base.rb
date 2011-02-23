@@ -7,7 +7,7 @@ module Game
 
   def self.tick
     Log::debug "start tick", "game"
-    Login::new_logins.each do |char| logon char end
+    AccountSystem::new_logins.each do |char| logon char end
     process_character_commands
     Log::debug "end tick", "game"
   end
