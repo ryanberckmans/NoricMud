@@ -17,16 +17,16 @@ module Connections
     @server.new_disconnections
   end
 
-  def self.next_command( conn_id )
-    @server.next_command conn_id
+  def self.next_command( connection )
+    @server.next_command connection
   end
 
-  def self.disconnect( conn_id )
-    @server.disconnect conn_id
+  def self.disconnect( connection )
+    @server.disconnect connection
   end
 
-  def self.send( conn_id, msg )
-    @server.send conn_id, msg
+  def self.send( connection, msg )
+    @server.send connection, msg
   end
 
   Log::info "initialized", "connections"

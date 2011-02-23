@@ -3,6 +3,7 @@
 $:.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
 Dir.chdir ".."
 
+require 'fiber'
 require 'bundler'
 Bundler.setup
 require "active_record"
@@ -20,18 +21,22 @@ require "core/log.rb"
 
 Log::get "mud", { :default => true, :level => Logger::DEBUG }
 Log::info "============================== booting ==============================", "mud"
+
+TICK_DURATION = 2.0 # in seconds
+
 Log::info RUBY_VERSION, "ruby version"
+Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
 require "connections/base.rb"
 require "accounts/base.rb"
-
-TICK_DURATION = 2.0 # in seconds
+require "game/base.rb"
 
 while true
   tick_start = Time.now
   Log::info"start tick", "mud"
   Connections::tick
   Accounts::tick
+  Game::tick
   tick_duration = Time.now - tick_start
   time_remaining = [0,TICK_DURATION - tick_duration].max
   Log::info "end tick, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity, sleeping #{"%4.6f" % time_remaining}s", "mud"

@@ -1,84 +1,99 @@
 
 module Accounts
   @connections = {}
+  @new_logons = []
 
   SPLASH = <<eos
 {@{!{FG     ________             ________ \r\n{FG    / ____  /\\           /\\  ____ \\ \r\n{FG   / /\\__/ / _\\_________/_ \\ \\__/\\ \\ \r\n{FG  / /_/_/ / /             \\ \\ \\_\\_\\ \\ \r\n{FG /_______/ /_______________\\ \\_______\\ \r\n{FG \\  ____ \\ \\               / / ____  / \r\n{FG  \\ \\ \\_\\ \\ \\_____________/ / /_/ / / \r\n{FG   \\ \\/__\\ \\  /{FR N O T A{FG \\  / /__\\/ / \r\n{FG    \\_______\\/{FY M   U   D{FG \\/_______/ \r\n{FG  \r\n       {FW+ {FRC a t a l y s t i c a {FW+{@ \r\n \r\n
 eos
 
   def self.tick
-    Connections::new_connections.each do |conn_id|
-      @connections[ conn_id ] = account_flow conn_id
+    @new_logons.clear
+    
+    Connections::new_connections.each do |connection|
+      Log::info "socket #{connection} started new account flow", "accounts"
+      @connections[ connection ] = account_flow connection
     end
 
-    Connections::new_disconnections.each do |conn_id|
-      @connections.delete conn_id
+    Connections::new_disconnections.each do |connection|
+      Log::info "socket #{connection} disconnected, deleting from connections", "accounts"
+      @connections.delete connection
     end
 
-    @connections.each_value do |flow|
-      flow.resume
+    @connections.each_value do |account_flow|
+      account_flow.resume
     end
+
+    @connections.delete_if do |connection,account_flow|
+      Log::info "socket #{connection} completed account flow, deleting from connections", "accounts"
+      not account_flow.alive?
+    end
+  end
+
+  def self.new_logons
+    @new_logons
   end
 
   private
 
   def self.account_flow( id )
     Fiber.new do
-      conn_id = id
-      Connections::send conn_id, SPLASH
+      connection = id
+      Connections::send connection, SPLASH
 
-      account = get_account conn_id
+      account = get_account connection
       Log::info "socket #{id} using account #{account.name}", "accounts"
-      Connections::send conn_id, "{!{FCUsing account {FY#{account.name}{FC.\n"
 
       char = get_character account
       Log::info "account #{account.name} selected char #{char.name}", "accounts"
-      Connections::send conn_id, "{!{FCUsing character {FY#{char.name}{FC.\n"
-      
-      Connections::disconnect conn_id
+
+      @new_logons << char
+      Connections::send connection, "{!{FYLogging on {FU#{char.name}{FY...\n"
+      Log::info "account #{account.name} with character #{char.name} registered to log on", "accounts"
     end
   end
 
-  def self.get_account( conn_id )
+  def self.get_account( connection )
     account = nil
     while true
-      Connections::send conn_id, "{!{FYaccount name{FB> "
-      account = Account.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( conn_id ))
+      Connections::send connection, "{!{FYaccount name{FB> "
+      account = Account.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( connection ))
       break unless account.new_record?
       break if account.save
-      account.errors.each_value do |err| err.each do |msg| Connections::send conn_id, "{!{FC#{msg}\n" end end
+      account.errors.each_value do |err| err.each do |msg| Connections::send connection, "{!{FC#{msg}\n" end end
     end
-    account.conn_id = conn_id
+    account.connection = connection
     account
   end
 
   def self.get_character( account )
     char = select_character account
     char = new_character account unless char
+    char.connection = account.connection
     char
   end
   
   def self.select_character( account )
     character_menu = [
-                      "\nSelect a character:",
+                      "\n\nSelect a character from account {FC#{account.name}{FY:",
                       [nil, "New Character"],
                      ]
     account.characters.each do |char|
       character_menu.push [char, char.name]
     end
-    Util::InFiber::ValueMenu::activate account.conn_id, character_menu
+    Util::InFiber::ValueMenu::activate account.connection, character_menu
   end
 
   def self.new_character( account )
     char = nil
     while true
-      Connections::send account.conn_id, "{!{FYnew character name{FB> "
-      char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( account.conn_id ).capitalize)
+      Connections::send account.connection, "{!{FYnew character name{FB> "
+      char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command( account.connection ).capitalize)
       break unless char.new_record?
       char.account = account
       char.mob = Mob.new({:short_name => char.name, :long_name => "The legendary hero known as #{char.name}"})
       break if char.save
-      char.errors.each_value do |err| err.each do |msg| Connections::send account.conn_id, "{!{FC#{msg}\n" end end
+      char.errors.each_value do |err| err.each do |msg| Connections::send account.connection, "{!{FC#{msg}\n" end end
     end
     char
   end
