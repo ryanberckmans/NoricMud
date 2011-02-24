@@ -15,32 +15,35 @@ module Game
 
   private
   def self.character_connected( char )
+    index = @characters.index char
+    if index
+      # i.e. char already in @characters, already logged on, use cached copy, because it has the transient attributes
+      char = @characters[index]
+    end
+    
     verify_mob_has_no_character char
     char.mob.char = char
 
-    if character_logged_on? char
-      verify_character_disconnected char
+    if char.mob.room
+      # i.e. char.mob is in physical world, reconnect
       Log::info "#{char.name} reconnected", "game"
-      cached = @characters[@characters.index char]
-      Log::info "#{char.name} reconnected instance has: #{char.object_id} #{char.mob.room.to_s}, cached instance #{cached.object_id} #{cached.mob.room.to_s}"
       Helper::send_to_room char.mob.room, "#{char.name} reconnected.\n"
     else
+      # i.e. char.mob has no room, logon
       Log::info "#{char.name} logging on", "game"
       @characters << char
       Commands::poof char.mob, @rooms[0]
     end
-    char.connected = true
     Commands::look char.mob
   end
 
-  def self.character_logged_on?( char )
+  def self.is_reconnect?( char )
     @characters.index char
   end
 
   def self.character_disconnected( char )
-    verify_character_connected char
+    verify_mob_has_character char
     Log::info "#{char.name} disconnected (lost link)", "game"
-    char.connected = false
     char.mob.char = nil
     Helper::send_to_room char.mob.room, "#{char.name} disconnected.\n"
   end
@@ -51,16 +54,12 @@ module Game
     CharacterLoginSystem::disconnect char
   end
 
+  def self.verify_mob_has_character( char )
+    raise "expected #{char.name}.mob to have a character connected to it" unless char.mob.char
+  end
+
   def self.verify_mob_has_no_character( char )
     raise "expected #{char.name}.mob to have no character connected to it" if char.mob.char
-  end
-
-  def self.verify_character_connected( char )
-    raise "expected #{char.name} to be connected" unless char.connected
-  end
-
-  def self.verify_character_disconnected( char )
-    raise "expected #{char.name} to be disconnected" if char.connected
   end
 
   def self.process_new_connections
@@ -73,7 +72,7 @@ module Game
 
   def self.process_character_commands
     @characters.each do |char|
-      next unless char.connected
+      next unless char.mob.char
       cmd = CharacterLoginSystem::next_command char
       next unless cmd
       Commands::look char.mob if cmd == "look"
@@ -121,7 +120,10 @@ module Game
       look += "{FY#{mob.room.name}\n"
       look += "{FM#{mob.room.description}\n"
       mob.room.mobs.each do |mob_in_room|
-        look += "{FG#{mob_in_room.long_name} is here.\n" unless mob_in_room == mob
+        next if mob_in_room == mob
+        look += "{FG#{mob_in_room.long_name} is here."
+        look += " {@{FW[LOST LINK]" if not mob_in_room.char
+        look += "\n"
       end
       CharacterLoginSystem::send mob.char, look
     end

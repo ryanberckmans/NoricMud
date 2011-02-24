@@ -1,0 +1,9 @@
+
+* TODO lost link characters from multiple accounts
+** log jim.Xaeric in
+** ll
+** log jim.Fred in
+** Xaeric and Fred both logged in from same account
+
+* TODO need to tell if char is connected without relying on mob.char; mob.char should always be active
+** e.g. with cmd look, send [LOST LINK] if mob.char and mob.char.disconnected, doesn't work if mob.char = nil
