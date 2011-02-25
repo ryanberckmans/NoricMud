@@ -1,4 +1,4 @@
-require "account-system/base.rb"
+require "spec_helper.rb"
 
 describe AccountSystem do
   before :all do @x = true end

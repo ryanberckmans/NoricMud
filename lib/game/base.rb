@@ -98,7 +98,7 @@ module Game
     def self.send_to_room( room, msg )
       room.mobs.each do |mob|
         if mob.char
-          CharacterLoginSystem::send mob.char, msg
+          CharacterLoginSystem::send_msg mob.char, msg
           Log::debug "send_to_room, room #{room.name}, mob #{mob.short_name} received the message", "game"
         end
       end
@@ -125,7 +125,7 @@ module Game
         look += " {@{FW[LOST LINK]" if not mob_in_room.char
         look += "\n"
       end
-      CharacterLoginSystem::send mob.char, look
+      CharacterLoginSystem::send_msg mob.char, look
     end
 
     def self.say( mob, msg )

@@ -17,6 +17,7 @@ module CharacterLoginSystem
     @new_connections
   end
 
+
   def self.new_disconnections
     @new_disconnections
   end
@@ -31,7 +32,7 @@ module CharacterLoginSystem
     set_offline char
   end
 
-  def self.send( char, msg )
+  def self.send_msg( char, msg )
     verify_online char
     AccountSystem::send @characters_online[char], msg
   end
