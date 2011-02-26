@@ -7,3 +7,11 @@
 
 * TODO need to tell if char is connected without relying on mob.char; mob.char should always be active
 ** e.g. with cmd look, send [LOST LINK] if mob.char and mob.char.disconnected, doesn't work if mob.char = nil
+
+* TODO case-insensitive account name recognition
+** repro
+*** 1. make account Foo
+*** 2. close connection
+*** 3. log in with account foo
+*** That account name is in use. -> it knows to match foo with Foo, but doesn't load correctly
+** spec test for this
