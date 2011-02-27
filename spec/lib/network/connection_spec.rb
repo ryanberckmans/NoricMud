@@ -226,5 +226,22 @@ describe Network::Connection do
       @connection.send msg
       @client_socket.recv(1024).should == color(msg)
     end
+
+    it "leaves no color codes in a sent string" do
+      msg = "hey!"
+      COLORS.keys.each do |color_code| msg += color_code end
+      msg += msg
+      @connection.send msg
+      recv_msg = @client_socket.recv(2048)
+      COLORS.keys.each do |color_code|
+        recv_msg.index(color_code).should be_nil
+      end
+    end
+
+    it "correctly sends a message which is epsilon besides color codes" do
+      msg = "{@{!{FW{BU"
+      expect { @connection.send msg }.to_not raise_error
+      @client_socket.recv(1024).should == color(msg)
+    end
   end
 end
