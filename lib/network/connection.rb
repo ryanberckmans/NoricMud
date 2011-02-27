@@ -63,6 +63,10 @@ module Network
       @clientside_disconnect
     end
 
+    def client_disconnected
+      clientside_disconnect?
+    end
+
     def disconnect
       @socket.close rescue nil
       @connected = false
