@@ -5,6 +5,7 @@ module Network
     MAX_RECV = 1024
     
     def initialize( socket )
+      raise "socket wasn't a TCPSocket" unless socket.kind_of? TCPSocket
       @socket = socket
       @clientside_disconnect = false
       @connected = true
