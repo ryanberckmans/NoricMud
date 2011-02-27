@@ -29,8 +29,9 @@ module Network
     end
 
     def send( msg )
+      raise "sent msg to disconnected connection" unless @connected
       begin
-        @socket.send color(msg + "{@"), 0
+        @socket.send color(msg), 0
       rescue Exception => e
         Log::error "socket #{id} exception raised in socket.send():"
         Log::error "#{e.backtrace.join ", "}"
@@ -68,7 +69,7 @@ module Network
     end
 
     def disconnect
-      raise "socket already disconnected" unless @connected
+      raise "connection already disconnected" unless @connected
       @socket.close rescue nil
       @raw = ""
       @connected = false

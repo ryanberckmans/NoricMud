@@ -187,5 +187,44 @@ describe Network::Connection do
       @connection.disconnect
       @connection.next_command.should be_nil
     end
+
+    it "raises an error when a message is sent to a disconnected user" do
+      @connection.disconnect
+      expect { @connection.send "foo" }.to raise_error
+    end
+
+    it "can send an empty message" do
+      expect { @connection.send "" }.to_not raise_error
+    end
+
+    it "can send a huge message to a client" do
+      large = "heybadgerbadgerbadgermushroommushroom"
+      6.times { large += large }
+      @connection.send large
+      @client_socket.recv(large.length + 1024).should == large
+    end
+
+    it "sends messages which are actually received verbatim by a client" do
+      cmd = "abc"
+      @connection.send cmd
+      @client_socket.recv(1024).should == cmd
+      cmd = " KILLING BLOW dEF    $%& 000033_____.????? OMG      "
+      @connection.send cmd
+      @client_socket.recv(1024).should == cmd
+      cmd = "damn son \nholy verbatim BATMAN\r\nandrobin  393 "
+      @connection.send cmd
+      @client_socket.recv(1024).should == cmd
+    end
+
+    it "can not break / fail silently when sending a message to a closed client socket" do
+      @client_socket.close
+      expect { @connection.send "abc" }.to_not raise_error
+    end
+
+    it "colorifies sent messages" do
+      msg = "hey {@{!{FW{BUjim how you doing{@"
+      @connection.send msg
+      @client_socket.recv(1024).should == color(msg)
+    end
   end
 end
