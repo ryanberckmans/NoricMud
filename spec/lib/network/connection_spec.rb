@@ -62,6 +62,7 @@ describe Network::Connection do
       @client_socket.send "\n", 0
       @connection.tick
       @connection.next_command.should == ""
+      @connection.next_command.should be_nil
     end
 
     it "should resolve multiple newlines into multiple epsilon commands" do
@@ -77,6 +78,7 @@ describe Network::Connection do
       @client_socket.send "abc\n", 0
       @connection.tick
       @connection.next_command.should == "abc"
+      @connection.next_command.should be_nil
     end
 
     it "should receive commands in the order they are sent" do
@@ -85,24 +87,105 @@ describe Network::Connection do
       @connection.tick
       @connection.next_command.should == "abc"
       @connection.next_command.should == "def"
+      @connection.next_command.should be_nil
     end
 
     it "should discard previous commands if the client sends --" do
       @client_socket.send "abc\ndef\n--qed\n", 0
       @connection.tick
       @connection.next_command.should == "qed"
+      @connection.next_command.should be_nil
     end
 
     it "should discard a newline trailing --" do
       @client_socket.send "abcet\ndddef\n--\nfged\n", 0
       @connection.tick
       @connection.next_command.should == "fged"
+      @connection.next_command.should be_nil
     end
 
     it "should discard previous commands up to the most recent --" do
       @client_socket.send "abc\ndef\n--qed\n--omg\nfred\r\n--\nc heal bro\n", 0
       @connection.tick
       @connection.next_command.should == "c heal bro"
+      @connection.next_command.should be_nil
+    end
+
+    it "dilineates commands using windows newlines" do
+      @client_socket.send "abc\r\n\r\ndef\r\nomg\r\n", 0
+      @connection.tick
+      @connection.next_command.should == "abc"
+      @connection.next_command.should == ""
+      @connection.next_command.should == "def"
+      @connection.next_command.should == "omg"
+      @connection.next_command.should be_nil
+    end
+
+    it "requires input to be terminated by a newline to become a command" do
+      @client_socket.send "abc", 0
+      @connection.tick
+      @connection.next_command.should be_nil
+      @client_socket.send "\n", 0
+      @connection.tick
+      @connection.next_command.should == "abc"
+    end
+
+    it "does not process extremely large socket receipts all at once" do
+      large = "heybadgerbadgerbadgermushroommushroom"
+      6.times { large += large }
+      @client_socket.send large + "\n", 0
+      @connection.tick
+      @connection.next_command.should be_nil
+      6.times { @connection.tick }
+      @connection.next_command.should == large
+    end
+
+    it "receives commands verbatim" do
+      cmd = "saY   yO!!dawg__  how you doing?? this is some weirdly formatted command!!!    "
+      @client_socket.send cmd + "\n", 0
+      @connection.tick
+      @connection.next_command.should == cmd
+    end
+
+    it "strips left whitespace off commands" do
+      cmd = "holy command batman!!!!!wnes cheal me shockw"
+      whitespace = "   \t   " 
+      @client_socket.send whitespace + cmd + "\n", 0
+      @connection.tick
+      @connection.next_command.should == cmd
+    end
+
+    it "does not strip right whitespace off commands" do
+      cmd = "holy command batman!!!!!wnes cheal me shockw           "
+      @client_socket.send cmd + "\n", 0
+      @connection.tick
+      @connection.next_command.should == cmd
+    end
+
+    it "strips out non-printable/bad characters from commands" do
+      pending "example of bad input"
+    end
+
+    it "doesn't report a client_disconnect when disconnect is on server side" do
+      @connection.disconnect
+      @connection.client_disconnected.should be_false
+    end
+
+    it "causes the client socket to disconnect when server disconnects" do
+      @connection.disconnect
+      @client_socket.recv(1024).should == ""
+    end
+
+    it "raises an error when disconnecting a disconnected connection" do
+      @connection.disconnect
+      expect { @connection.disconnect }.to raise_error
+    end
+
+    it "stops reporting commands when disconnected" do
+      @client_socket.send "abc\n", 0
+      @connection.tick
+      @connection.disconnect
+      @connection.next_command.should be_nil
     end
   end
 end

@@ -49,7 +49,7 @@ module Network
       cmd = nil
       if @raw =~ /.*?\r?\n/
         @raw = $'
-        cmd = $&.chomp.gsub /[^[:print:]]/, ""
+        cmd = $&.chomp.lstrip.gsub /[^[:print:]]/, ""
         Log::debug "socket #{id} next command (#{cmd}), remaining raw (#{Util.strip_newlines @raw})", "connections"
       end
       cmd
@@ -68,7 +68,9 @@ module Network
     end
 
     def disconnect
+      raise "socket already disconnected" unless @connected
       @socket.close rescue nil
+      @raw = ""
       @connected = false
       Log::info "socket #{id} disconnected", "connections"
     end
