@@ -16,6 +16,10 @@ module Network
       Log::info "tcp server started on port #{port}, accepting maximum of #{MAX_ACCEPTS_PER_TICK} connections per tick", "connections"
     end
 
+    def next_connection
+      @new_connections.shift
+    end
+
     def new_connections
       @new_connections
     end
