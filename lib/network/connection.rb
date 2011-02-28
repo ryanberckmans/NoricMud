@@ -7,21 +7,13 @@ module Network
     def initialize( socket )
       raise "socket wasn't a TCPSocket" unless socket.kind_of? TCPSocket
       @socket = socket
-      @clientside_disconnect = false
+      @client_disconnected = false
       @connected = true
       @raw = ""
     end
 
     def tick
-      data = @socket.recv_nonblock MAX_RECV rescue nil
-      return unless data
-      if data.length < 1
-        Log::info "socket #{id} received eof", "connections"
-        @clientside_disconnect = true
-        disconnect
-      else
-        @raw += data
-      end
+      receive_data
     end
 
     def id
@@ -33,10 +25,10 @@ module Network
       begin
         @socket.send color(msg), 0
       rescue Exception => e
-        Log::error "socket #{id} exception raised in socket.send():"
+        Log::error "connection #{id} exception raised in socket.send():"
         Log::error "#{e.backtrace.join ", "}"
         Log::error e.to_s
-        @clientside_disconnect = true
+        @client_disconnected = true
         disconnect
       end
     end
@@ -45,27 +37,19 @@ module Network
       if @raw =~ /.*--\r?\n?/m
         old_raw = @raw
         @raw = $'
-        Log::debug "socket #{id} flushed command queue (old raw (#{Util.strip_newlines old_raw}), new raw (#{Util.strip_newlines @raw})", "connections"
+        Log::debug "connection #{id} flushed command queue (old raw (#{Util.strip_newlines old_raw}), new raw (#{Util.strip_newlines @raw})", "connections"
       end
       cmd = nil
       if @raw =~ /.*?\r?\n/
         @raw = $'
         cmd = $&.chomp.lstrip.gsub /[^[:print:]]/, ""
-        Log::debug "socket #{id} next command (#{cmd}), remaining raw (#{Util.strip_newlines @raw})", "connections"
+        Log::debug "connection #{id} next command (#{cmd}), remaining raw (#{Util.strip_newlines @raw})", "connections"
       end
       cmd
     end
 
-    def connected?
-      @connected
-    end
-
-    def clientside_disconnect?
-      @clientside_disconnect
-    end
-
     def client_disconnected
-      clientside_disconnect?
+      @client_disconnected
     end
 
     def disconnect
@@ -73,7 +57,20 @@ module Network
       @socket.close rescue nil
       @raw = ""
       @connected = false
-      Log::info "socket #{id} disconnected", "connections"
+      Log::info "connection #{id} disconnected", "connections"
+    end
+    
+    private
+    def receive_data
+      data = @socket.recv_nonblock MAX_RECV rescue nil
+      return unless data
+      if data.length < 1
+        Log::info "connection #{id} received eof", "connections"
+        @client_disconnected = true
+        disconnect
+      else
+        @raw += data
+      end
     end
   end
 end
