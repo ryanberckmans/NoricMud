@@ -26,3 +26,5 @@ require "network/base.rb"
 require "account-system/base.rb"
 require "character-login-system/base.rb"
 require "game/base.rb"
+
+$test_port = 47383

@@ -1,10 +1,5 @@
 require "spec_helper.rb"
 
-$test_port = 47383
-def next_port
-  $test_port += 1
-end
-
 describe Network::Connection do
   def next_port
     $test_port +=1 
@@ -14,7 +9,7 @@ describe Network::Connection do
     expect { Network::Connection.new [] }.to raise_error
   end
 
-  it "doesnt require the underlying TCPSocket to be connected" do
+  it "doesn't require the underlying TCPSocket to be connected" do
     s = TCPSocket.new "localhost", 22
     s.close
     expect { Network::Connection.new s }.to_not raise_error

@@ -4,15 +4,16 @@ require Util.here 'connection.rb'
 
 module Network
   class Server
-    PORT = 4000
+    DEFAULT_PORT = 4000
     MAX_ACCEPTS_PER_TICK = 3
     
-    def initialize
-      @server = TCPServer.new PORT
+    def initialize( port=nil )
+      port ||= DEFAULT_PORT
+      @server = TCPServer.new port
       @connections = {}
       @new_connections = []
       @new_disconnections = []
-      Log::info "tcp server started on port #{PORT}, accepting maximum of #{MAX_ACCEPTS_PER_TICK} connections per tick", "connections"
+      Log::info "tcp server started on port #{port}, accepting maximum of #{MAX_ACCEPTS_PER_TICK} connections per tick", "connections"
     end
 
     def new_connections
