@@ -9,6 +9,10 @@ class Authentication
     @auth_successes = []
   end
 
+  def size
+    @authenticating.size
+  end
+
   def tick
     @authenticating.each_value do |account_flow|
       account_flow.resume
