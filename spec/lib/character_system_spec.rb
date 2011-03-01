@@ -1,14 +1,23 @@
 require "spec_helper.rb"
 
-describe CharacterLoginSystem do
+describe CharacterSystem do
 
-  it "desc" do
-    described_class.should eq(CharacterLoginSystem)
+  before :each do
+    @account_system = double()
+    @account_system.stub(:kind_of?).with(AccountSystem).and_return true
+    @character_selection = double()
+    @character_selection.stub(:kind_of?).with(CharacterSelection).and_return true
   end
 
-  context "brand new system" do
-    subject { CharacterLoginSystem }
-    its("new_connections") { should be_empty }
-    its("new_disconnections") { should be_empty }
+  it "requires an AccountSystem on init" do
+    expect { CharacterSystem.new nil, @character_selection }.to raise_error
+    expect { CharacterSystem.new Object.new, @character_selection }.to raise_error
+    expect { CharacterSystem.new @account_system, @character_selection }.to_not raise_error
+  end
+
+  it "requires a CharacterSelection on init" do
+    expect { CharacterSystem.new @account_system, nil }.to raise_error
+    expect { CharacterSystem.new @account_system, Object.new }.to raise_error
+    expect { CharacterSystem.new @account_system, @character_selection }.to_not raise_error
   end
 end

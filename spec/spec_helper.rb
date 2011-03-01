@@ -24,7 +24,7 @@ Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
 require "network.rb"
 require "account_system.rb"
-require "character_login_system.rb"
+require "character_system.rb"
 require "game/base.rb"
 
 $test_port = Random.new.rand 10000..50000

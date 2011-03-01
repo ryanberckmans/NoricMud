@@ -6,7 +6,7 @@ describe Authentication do
   end
 
   it "requires a proper Network upon init" do
-    network = Network.new
+    network = Network.new next_port
     expect { Authentication.new nil }.to raise_error
     expect { Authentication.new [] }.to raise_error
     expect { Authentication.new network }.to_not raise_error
