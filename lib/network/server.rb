@@ -7,32 +7,34 @@ module Network
     DEFAULT_PORT = 4000
     MAX_ACCEPTS_PER_TICK = 3
     
-    def initialize( port=nil )
-      port ||= DEFAULT_PORT
+    def initialize( port=DEFAULT_PORT )
       @server = TCPServer.new port
       @connections = {}
+      @new_connections_this_tick = []
       @new_connections = []
       @new_disconnections = []
-      Log::info "tcp server started on port #{port}, accepting maximum of #{MAX_ACCEPTS_PER_TICK} connections per tick", "connections"
+      Log::info "server started on port #{port}, accepting maximum of #{MAX_ACCEPTS_PER_TICK} connections per tick", "connections"
     end
 
     def next_connection
       @new_connections.shift
     end
 
-    def new_connections
-      @new_connections
-    end
-
-    def new_disconnections
-      @new_disconnections
+    def next_disconnection
+      @new_disconnections.shift
     end
 
     def tick
-      @new_connections.clear
-      @new_disconnections.clear
+      @new_connections_this_tick.clear
       accept_connections
       tick_connections
+      @new_connections_this_tick.each do |conn_id|
+        if @new_disconnections.index conn_id
+          @new_disconnections.delete conn_id
+        else
+          @new_connections << conn_id
+        end
+      end
     end
 
     def next_command( conn_id )
@@ -41,14 +43,19 @@ module Network
 
     def disconnect( conn_id )
       @connections[conn_id].disconnect
+      @connections.delete conn_id
     end
 
     def send( conn_id, msg )
       @connections[conn_id].send msg
     end
 
-    private
+    def shutdown
+      @connections.each do |conn| conn.disconnect end
+      @server.close
+    end
 
+    private
     def accept_connections
       accepts = 0
       while true
@@ -56,7 +63,7 @@ module Network
         if socket
           conn = Connection.new socket
           @connections[ conn.id ] = conn
-          @new_connections << conn.id
+          @new_connections_this_tick << conn.id
           Log::info "accepted connection #{conn.id}", "connections"
           accepts += 1
           redo if accepts < MAX_ACCEPTS_PER_TICK
@@ -68,11 +75,8 @@ module Network
     def tick_connections
       @connections.each_value do |conn| conn.tick end
       @connections.delete_if do |conn_id, conn|
-        connected = conn.connected?
-        if not connected
-          @new_disconnections << conn.id if conn.clientside_disconnect?
-        end
-        not connected
+        @new_disconnections << conn.id if conn.client_disconnected
+        conn.client_disconnected
       end
     end
   end # class Server

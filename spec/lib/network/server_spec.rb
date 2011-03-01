@@ -44,5 +44,65 @@ describe Network::Server do
       @server.next_connection.should_not be_nil
       @server.next_connection.should be_nil
     end
+
+    it "refuses new connections when shutdown" do
+      @server.shutdown
+      expect { TCPSocket.new "localhost", @server_port }.to raise_error(Errno::ECONNREFUSED)
+    end
+
+    it "disconnects all connections when shutdown" do
+      a = TCPSocket.new "localhost", @server_port
+      b = TCPSocket.new "localhost", @server_port
+      @server.shutdown
+      expect { a.recv(1024) }.to raise_error(Errno::ECONNRESET)
+      expect { b.recv(1024) }.to raise_error(Errno::ECONNRESET)
+    end
+
+    it "should report a new connection when there's a tcpconnect to the server" do
+      TCPSocket.new "localhost", @server_port
+      @server.tick
+      @server.next_connection.should_not be_nil
+    end
+
+    it "should report exactly one new connection when there's a tcpconnect to the server" do
+      TCPSocket.new "localhost", @server_port
+      @server.tick
+      @server.next_connection.should_not be_nil
+      @server.next_connection.should be_nil
+    end
+
+    it "should report exactly two new connections when there's two tcpconnects to the server" do
+      TCPSocket.new "localhost", @server_port
+      TCPSocket.new "localhost", @server_port
+      @server.tick
+      @server.next_connection.should_not be_nil
+      @server.next_connection.should_not be_nil
+    end
+
+    it "should not process a flood of connections all at once" do
+      6.times do TCPSocket.new "localhost", @server_port end
+      @server.tick
+      new_connections = 0
+      while @server.next_connection do new_connections += 1 end
+      new_connections.should > 2
+      new_connections.should < 5
+    end
+
+    it "should ignore a tcpconnection which disconnects during the same tick it connects" do
+      a = TCPSocket.new "localhost", @server_port
+      a.close
+      @server.tick
+      @server.next_connection.should be_nil
+      @server.next_disconnection.should be_nil
+    end
+
+    it "should not ignore a tcpconnection which disconnects the tick after it connects" do
+      a = TCPSocket.new "localhost", @server_port
+      @server.tick
+      @server.next_connection.should_not be_nil
+      a.close
+      @server.tick
+      @server.next_disconnection.should_not be_nil
+    end
   end
 end
