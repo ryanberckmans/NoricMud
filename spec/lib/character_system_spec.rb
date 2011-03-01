@@ -97,6 +97,18 @@ describe CharacterSystem do
         expect { @char.tick }.to raise_error
       end
 
+      it "should receive a cmd provided by account_system" do
+        cmd = "jim c healsneak"
+        @account_system.should_receive(:next_command).with(@account).and_return cmd
+        @char.next_command(@character).should == cmd
+      end
+
+      it "should pass a send_msg on to the account" do
+        msg = "do not fear\nyou will survive"
+        @account_system.should_receive(:send_msg).with(@account,msg)
+        @char.send_msg(@character,msg)
+      end
+
       context "when the account disconnects" do
         before :each do
           @account_system.should_receive(:next_account_disconnection).and_return @account

@@ -48,18 +48,18 @@ class CharacterSystem
 
   def next_command( char )
     verify_connected char
-    @account_system.next_command @characters_online[char]
+    @account_system.next_command @characters_online[char][:account]
   end
 
   def disconnect( char )
-    @account_system.disconnect @characters_online[char]
-    verify_connected char
+    verify_online char
+    @account_system.disconnect @characters_online[char][:account]
     set_offline char
   end
 
   def send_msg( char, msg )
     verify_connected char
-    @account_system.send_msg @characters_online[char], msg
+    @account_system.send_msg @characters_online[char][:account], msg
   end
 
   private
