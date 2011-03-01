@@ -1,3 +1,4 @@
+require Util.here "character_selection.rb"
 
 module CharacterLoginSystem
   @characters_online = {}
