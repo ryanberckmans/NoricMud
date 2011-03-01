@@ -12,6 +12,12 @@ describe AccountSystem do
   end
   
   it "should require a Network on init" do
-    expect { AccountSystem.new nil, nil }.to raise_error
+    expect { AccountSystem.new nil, @auth }.to raise_error
+    expect { AccountSystem.new @network, @auth }.to_not raise_error
+  end
+
+  it "should require an Authentication on init" do
+    expect { AccountSystem.new @network, nil }.to raise_error
+    expect { AccountSystem.new @network, @auth }.to_not raise_error
   end
 end
