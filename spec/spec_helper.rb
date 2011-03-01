@@ -11,8 +11,8 @@ require "models/character.rb"
 require "models/mob.rb"
 require "models/room.rb"
 
-require "core/util.rb"
-require "core/log.rb"
+require "util.rb"
+require "log.rb"
 
 Log::get "spec", { :default => true, :level => Logger::DEBUG }
 Log::info "============================== booting ==============================", "mud"
@@ -22,9 +22,9 @@ TICK_DURATION = 0.25 # in seconds
 Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
-require "network/base.rb"
-require "account-system/base.rb"
-require "character-login-system/base.rb"
+require "network.rb"
+require "account_system.rb"
+require "character_login_system.rb"
 require "game/base.rb"
 
 $test_port = Random.new.rand 10000..50000

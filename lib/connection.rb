@@ -1,4 +1,4 @@
-require "core/color.rb"
+require "color.rb"
 
 class Connection
   MAX_RECV = 1024

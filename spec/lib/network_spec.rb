@@ -10,8 +10,9 @@ describe Network do
   end
 
   it "runs on a default port" do
-    pending "spec_helper loads a server on default port"
-    expect { Network.new }.to_not raise_error
+    network = nil
+    expect { network = Network.new }.to_not raise_error
+    network.shutdown
   end
 
   it "won't run two servers on the same port" do
