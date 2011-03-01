@@ -21,7 +21,7 @@ module Network
     end
 
     def send( msg )
-      raise "sent msg to disconnected connection" unless @connected
+      return unless @connected
       begin
         @socket.send color(msg), 0
       rescue Exception => e

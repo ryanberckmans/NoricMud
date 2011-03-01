@@ -183,9 +183,9 @@ describe Network::Connection do
       @connection.next_command.should be_nil
     end
 
-    it "raises an error when a message is sent to a disconnected user" do
+    it "fails silently when a message is sent to a disconnected user" do
       @connection.disconnect
-      expect { @connection.send "foo" }.to raise_error
+      expect { @connection.send "foo" }.to_not raise_error
     end
 
     it "can send an empty message" do
@@ -214,6 +214,13 @@ describe Network::Connection do
     it "can not break / fail silently when sending a message to a closed client socket" do
       @client_socket.close
       expect { @connection.send "abc" }.to_not raise_error
+    end
+
+    it "fails silently when sending messages to a connection closed on the client side" do
+      @client_socket.close
+      expect { @connection.send "abc" }.to_not raise_error
+      expect { @connection.send "def" }.to_not raise_error
+      expect { @connection.send "omgponies" }.to_not raise_error
     end
 
     it "colorifies sent messages" do

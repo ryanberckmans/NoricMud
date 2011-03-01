@@ -104,5 +104,43 @@ describe Network::Server do
       @server.tick
       @server.next_disconnection.should_not be_nil
     end
+
+    it "should report any number of disconnects in a single tick" do
+      conns = []
+      6.times do conns << TCPSocket.new( "localhost", @server_port) end
+      3.times do @server.tick end
+      conns.each do |conn| conn.close end
+      @server.tick
+      discons = 0
+      while @server.next_disconnection do discons += 1 end
+      discons.should == conns.size
+    end
+
+    it "should recieve next_command sent by a tcpsocket" do
+      a = TCPSocket.new "localhost", @server_port
+      cmd = "hey"
+      a.send cmd + "\n", 0
+      @server.tick
+      a_id = @server.next_connection
+      @server.next_command(a_id).should == cmd
+    end
+
+    it "should not report a disconnect if the connection is disconnected on serverside" do
+      a = TCPSocket.new "localhost", @server_port
+      @server.tick
+      a_id = @server.next_connection
+      @server.disconnect a_id
+      @server.tick
+      @server.next_disconnection.should be_nil
+    end
+
+    it "should forward a sent msg to client tcpsocket" do
+      a = TCPSocket.new "localhost", @server_port
+      msg = "hey\nsexy"
+      @server.tick
+      a_id = @server.next_connection
+      @server.send a_id, msg
+      a.recv(1024).should == msg
+    end
   end
 end
