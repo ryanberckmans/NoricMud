@@ -14,11 +14,27 @@ eos
     @new_account_connections = []
     @new_account_disconnections = []
   end
+
+  def size
+    @accounts_online.size
+  end
+
+  def connection( account )
+    @accounts_online[account]
+  end
   
   def tick
     process_new_network_disconnections
     process_new_network_connections
     @authentication.tick
+    while connection = @authentication.next_auth_fail do
+      raise "connection should not be nil" unless connection
+      @network.disconnect connection
+    end
+    while success = @authentication.next_auth_success do
+      raise "success should not be nil" unless success
+      set_online success[:account], success[:connection]
+    end
   end
 
   def next_account_connection
@@ -47,22 +63,22 @@ eos
 
   private
   def process_new_network_connections
-    @network.new_connections.each do |connection|
+    while connection = @network.next_connection do
+      raise "connection should not be nil" unless connection
       Log::info "connection #{connection} began authenticating", "accounts"
       @authentication.authenticate connection
     end
   end
 
   def process_new_network_disconnections
-    @network.new_disconnections.each do |connection|
+    while connection = @network.next_disconnection do
+      raise "connection should not be nil" unless connection
       @authentication.disconnect connection
       if @accounts_online.value? connection
         account = @accounts_online.key(connection)
-        @new_disconnections << account
+        @new_account_disconnections << account
         Log::info "socket #{connection} disconnected, account #{account.name}", "accounts"
         set_offline account
-      else
-        raise "disconnected socket #{connection} not found in system", "accounts"
       end
     end
   end
@@ -75,7 +91,7 @@ eos
     Log::info "trying to set account #{account.name} online, socket #{connection}", "accounts"
     disconnect_if_already_online account
     @accounts_online[account] = connection
-    @new_connections << account
+    @new_account_connections << account
     Log::info "account #{account.name}, socket #{@accounts_online[account]} set online", "accounts"
   end
 
@@ -85,7 +101,7 @@ eos
       Log::info "account #{account.name} already online, socket #{old_connection}, disconnecting", "accounts"
       @network.send old_connection, "Your account has been logged into from somewhere else.\n"
       @network.disconnect old_connection
-      @new_disconnections << account
+      @new_account_disconnections << account
       set_offline account
       Log::info "account #{account.name} ready to go online with new socket", "accounts"
     end
