@@ -26,15 +26,7 @@ eos
   def tick
     process_new_network_disconnections
     process_new_network_connections
-    @authentication.tick
-    while connection = @authentication.next_auth_fail do
-      raise "connection should not be nil" unless connection
-      @network.disconnect connection
-    end
-    while success = @authentication.next_auth_success do
-      raise "success should not be nil" unless success
-      set_online success[:account], success[:connection]
-    end
+    process_authentications
   end
 
   def next_account_connection
@@ -56,12 +48,24 @@ eos
     set_offline account
   end
 
-  def send( account, msg )
+  def send_msg( account, msg )
     verify_online account
     @network.send @accounts_online[account], msg
   end
 
   private
+  def process_authentications
+    @authentication.tick
+    while connection = @authentication.next_auth_fail do
+      raise "connection should not be nil" unless connection
+      @network.disconnect connection
+    end
+    while success = @authentication.next_auth_success do
+      raise "success should not be nil" unless success
+      set_online success[:account], success[:connection]
+    end
+  end
+  
   def process_new_network_connections
     while connection = @network.next_connection do
       raise "connection should not be nil" unless connection

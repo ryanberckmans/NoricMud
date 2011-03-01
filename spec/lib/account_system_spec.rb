@@ -31,6 +31,19 @@ describe AccountSystem do
       @account = AccountSystem.new @network, @auth
     end
 
+    it "disconnects a tcpsocket when authentication fails" do
+      conn = nil
+      @auth.stub(:authenticate) do |c| conn = c end
+      @client_socket = TCPSocket.new "localhost", @port
+      @network.tick
+      @account.tick
+      @auth.should_receive(:next_auth_fail) do
+        conn
+      end
+      @account.tick
+      @client_socket.recv(1024).should == ""
+    end
+
     it "triggers an account_connection when an account is authenticated" do
       conn = nil
       @auth.stub(:authenticate) do |c| conn = c end
@@ -137,9 +150,37 @@ describe AccountSystem do
         it "still registers account as online" do
           @account.size.should == 1
         end
+      end # context already logged in account authenticated
+
+      it "receives a client command" do
+        cmd = "say c heal shockw"
+        @client_socket.send cmd + "\n", 0
+        @network.tick
+        @account.tick
+        @account.next_command(@online_account).should == cmd
       end
 
+      it "sends a msg which is received by tcpsocket" do
+        msg = "hey buddy \n how you doing :)"
+        @account.send_msg(@online_account, msg)
+        @client_socket.recv(1024).should == msg
+      end
 
+      it "disconnects the tcpsocket when account disconnected" do
+        @account.disconnect @online_account
+        @client_socket.recv(1024).should == ""
+      end
+
+      it "should not report a disconnect when account is disconnected" do
+        @account.disconnect @online_account
+        @account.tick
+        @account.next_account_disconnection.should be_nil
+      end
+
+      it "should put account offline when account is disconnected" do
+        @account.disconnect @online_account
+        @account.connection(@online_account).should be_nil
+      end
     end # context one account online
   end # context auth mock
 
@@ -164,6 +205,11 @@ describe AccountSystem do
       @network.tick
       @account.tick
       @auth.size.should == 0
+    end
+
+    it "raises error when sent a message to non-existent account" do
+      expect { @account.send_msg Object.new, "foo" }.to raise_error
+      expect { @account.send_msg nil, "foo" }.to raise_error
     end
   end
 end
