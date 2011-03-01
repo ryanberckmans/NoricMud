@@ -1,18 +1,18 @@
 require "spec_helper.rb"
 
-describe Network::Connection do
+describe Connection do
   def next_port
     $test_port +=1 
   end
   
   it "should require an underlying TCPSocket" do
-    expect { Network::Connection.new [] }.to raise_error
+    expect { Connection.new [] }.to raise_error
   end
 
   it "doesn't require the underlying TCPSocket to be connected" do
     s = TCPSocket.new "localhost", 22
     s.close
-    expect { Network::Connection.new s }.to_not raise_error
+    expect { Connection.new s }.to_not raise_error
   end
 
   context "a connection bound to a valid tcp socket" do
@@ -21,7 +21,7 @@ describe Network::Connection do
       @server = TCPServer.new @port
       @client_socket = TCPSocket.new "localhost", @port
       @server_socket = @server.accept
-      @connection = Network::Connection.new @server_socket
+      @connection = Connection.new @server_socket
     end
 
     after :each do
@@ -48,7 +48,7 @@ describe Network::Connection do
       client_socket = TCPSocket.new "localhost", @port
       server_socket = @server.accept
       client_socket.close
-      connection = Network::Connection.new server_socket
+      connection = Connection.new server_socket
       connection.tick
       connection.client_disconnected.should be_true
     end

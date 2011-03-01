@@ -1,3 +1,4 @@
+require Util.here "authentication.rb"
 
 module AccountSystem
   @connections_authenticating = {}
