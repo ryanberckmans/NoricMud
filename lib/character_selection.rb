@@ -25,6 +25,7 @@ class CharacterSelection
 
   def select_character( account )
     @selecting[account] = character_flow account
+    Log::info "account #{account.name} started selecting char", "characterselection"
   end
 
   def disconnect( account )
