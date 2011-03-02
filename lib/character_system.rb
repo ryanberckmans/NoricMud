@@ -59,7 +59,7 @@ class CharacterSystem
 
   def send_msg( char, msg )
     verify_connected char
-    @account_system.send_msg @characters_online[char][:account], msg
+    @account_system.send_msg @characters_online[char][:account], msg + "{@"
   end
 
   private
