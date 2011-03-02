@@ -66,8 +66,7 @@ class CharacterSelection
     char = nil
     while true
       @account_system.send_msg account, "{!{FYnew character name{FB>{@ "
-      char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command(->{@account_system.next_command account}).capitalize)
-      break unless char.new_record?
+      char = Character.new({name:Util::InFiber::wait_for_next_command(->{@account_system.next_command account}).capitalize})
       char.account = account
       char.mob = Mob.new({:short_name => char.name, :long_name => "{FGLegionnaire {FY#{char.name}{FG the legendary hero"})
       break if char.save
