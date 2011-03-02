@@ -1,3 +1,6 @@
+require 'continuation'
+require 'ostruct'
+
 def resumption_exception(*args)
   # from internet
   raise *args
@@ -6,51 +9,6 @@ rescue Exception => e
     scls = class << e; self; end
     scls.send(:define_method, :resume, lambda { cc.call })
     raise
-  end
-end
-
-def pov_scope(&block)
-  povs = {}
-  begin
-    block.call
-  rescue HadPov => e
-    povs[e.subject] = e.pov unless povs.key? e.subject
-    e.resume
-  end
-  povs.each_pair do |key,value|
-    puts key + " pov << " + value
-  end
-end
-
-class POV
-  def initialize
-    @first = nil
-  end
-  def first(first=nil)
-    if first
-      @first = first
-      nil
-    elsif @first
-      @first
-    else
-      ""
-    end
-  end
-  def third(third=nil)
-    if third
-      @third = third
-      nil
-    elsif @third
-      @third
-    else
-      ""
-    end
-  end
-end
-
-def pov(*receivers, &block)
-  receivers.each do |rc|
-    had_pov rc, block.call
   end
 end
 
@@ -76,23 +34,46 @@ def had_pov( subject, msg )
   resumption_exception h
 end
 
-class Weapon
-  def initialize
-    @pov = POV.new
-    @pov.first "Lashmaw, the infinium crystal blade's slash"
-    @pov.third "manificent crystal blade's slash"
-  end
+# public
 
-  def pov
-    @pov
+def pov_scope(send_func=nil,&block)
+  povs = {}
+  begin
+    block.call
+  rescue HadPov => e
+    povs[e.subject] = e.pov unless povs.key? e.subject
+    e.resume
+  end
+  povs.each_pair do |key,value|
+    send_func[key,value] if send_func
+    puts key + " pov << " + value if not send_func
   end
 end
 
-weapon = Weapon.new
+def pov_static(*params)
+  all_params = {}
+  params.flatten.each do |param|
+    raise "pov_static expects each param as hash pov_label:pov_string" unless param.kind_of? Hash
+    all_params.merge! param
+  end
+  OpenStruct.new all_params
+end
+
+def pov(*receivers, &block)
+  receivers.flatten.each do |rc|
+    had_pov rc, block.call
+  end
+end
+
+first = "Lashmaw, the infinium crystal blade's slash"
+third = "manificent crystal blade's slash"
+
+weapon = OpenStruct.new
+weapon.pov = pov_static first:first, third:third
 
 def m( weapon )
   pov_scope do
-    everyone = %w[ Fred, Alice, Jim, Xheric ]
+    everyone = ["Fred","Alice","Jim","Bob"]
     pov("Fred","Alice") do
       "Your " + weapon.pov.first + " decimates Jim."
     end
@@ -105,4 +86,4 @@ def m( weapon )
   end
 end
 
-m weapon
+#m weapon

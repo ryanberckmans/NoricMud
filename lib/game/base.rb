@@ -1,3 +1,5 @@
+require "pov.rb"
+
 module Game
   @rooms = Room.find :all
   @rooms.each do |room|
@@ -97,6 +99,17 @@ module Game
   end
 
   module Helper
+    def self.send( entity, msg )
+      char = nil
+      if entity.kind_of? Mob
+        char = entity.char
+      elsif entity.kind_of? Character
+        char = entity
+      end
+      return unless char
+      $character_system.send_msg char, msg
+    end
+    
     def self.move_to( mob, room )
       previous_room = mob.room
       mob.room.mobs.delete mob if mob.room
@@ -140,10 +153,17 @@ module Game
 
     def self.say( mob, msg )
       Log::debug "mob #{mob.short_name} says #{msg}", "game"
-      return unless mob.room and msg
       msg.lstrip!
       return unless msg.length > 0
-      Helper::send_to_room mob.room, "{!{FC#{mob.short_name} says, '#{msg}'\n"
+      pov_scope( ->(c,m){ Helper::send c, m } ) do
+        pov(mob) do
+          "{!{FCYou say, '#{msg}'\n"
+        end
+        pov(mob.room.mobs) do
+          "{!{FC#{mob.short_name} says, '#{msg}'\n"
+        end
+      end
+      # Helper::send_to_room mob.room, "{!{FC#{mob.short_name} says, '#{msg}'\n"
     end
   end
 end
