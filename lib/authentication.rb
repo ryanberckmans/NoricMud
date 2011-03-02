@@ -58,7 +58,7 @@ class Authentication
     account = nil
     while true
       @network.send connection, "{!{FYaccount name{FB>{@ "
-      account = Account.find_or_initialize_by_name(Util::InFiber::wait_for_next_command(->{@network.next_command connection}))
+      account = Account.find_or_initialize_by_name(Util::InFiber::wait_for_next_command(->{@network.next_command connection}).downcase)
       break unless account.new_record?
       break if account.save
       account.errors.each_value do |err| err.each do |msg| @network.send connection, "{!{FC#{msg}{@\n" end end
