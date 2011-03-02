@@ -18,7 +18,7 @@ class CharacterSelection
     end
 
     @selecting.delete_if do |account,character_flow|
-      Log::info "account #{account.name} completed account flow", "characterselection" if not character_flow.alive?
+      Log::info "account #{account.name} completed character selection", "characterselection" if not character_flow.alive?
       not character_flow.alive?
     end
   end
