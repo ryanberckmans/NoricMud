@@ -109,6 +109,30 @@ describe CharacterSystem do
         @char.send_msg(@character,msg)
       end
 
+      it "should not cause an account disconnect when a disconnected character is disconnected (from above)" do
+        @account_system.should_receive(:next_account_disconnection).and_return @account
+        @character_selection.stub(:disconnect).with @account
+        @char.tick
+        @account_system.should_receive(:disconnect).exactly(0).times
+        @char.disconnect @character
+      end
+
+      context "after character is disconnected" do
+        before :each do
+          @account_system.should_receive(:disconnect).with @account
+          @char.disconnect @character
+        end
+        
+        it "should set character to offline" do
+          @char.online?(@character).should be_false
+        end
+
+        it "should not trigger next_char_disconnection" do
+          @char.tick
+          @char.next_character_disconnection.should be_nil
+        end
+      end # context char disconnected
+      
       context "when the account disconnects" do
         before :each do
           @account_system.should_receive(:next_account_disconnection).and_return @account

@@ -53,7 +53,7 @@ class CharacterSystem
 
   def disconnect( char )
     verify_online char
-    @account_system.disconnect @characters_online[char][:account]
+    @account_system.disconnect @characters_online[char][:account] if connected? char
     set_offline char
   end
 
