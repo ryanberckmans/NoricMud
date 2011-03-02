@@ -5,6 +5,12 @@ module Game
   end
   @characters = []
 
+  $character_system = nil
+
+  def self.set_character_system( cs )
+    $character_system = cs
+  end
+
   def self.tick
     Log::debug "start tick", "game"
     process_new_disconnections
@@ -51,7 +57,7 @@ module Game
   def self.log_off_character( char )
     Helper::move_to( char.mob, nil )
     @characters.delete char
-    CharacterLoginSystem::disconnect char
+    $character_system.disconnect char
   end
 
   def self.verify_mob_has_character( char )
@@ -63,17 +69,21 @@ module Game
   end
 
   def self.process_new_connections
-    CharacterLoginSystem::new_connections.each do |char| character_connected char end
+    while char = $character_system.next_character_connection do
+      character_connected char
+    end
   end
 
   def self.process_new_disconnections
-    CharacterLoginSystem::new_disconnections.each do |char| character_disconnected char end
+    while char = $character_system.next_character_disconnection do
+      character_disconnected char
+    end
   end
 
   def self.process_character_commands
     @characters.each do |char|
       next unless char.mob.char
-      cmd = CharacterLoginSystem::next_command char
+      cmd = $character_system.next_command char
       next unless cmd
       Commands::look char.mob if cmd == "look"
       Commands::poof char.mob, @rooms[0] if cmd == "poof"
@@ -98,7 +108,7 @@ module Game
     def self.send_to_room( room, msg )
       room.mobs.each do |mob|
         if mob.char
-          CharacterLoginSystem::send_msg mob.char, msg
+          $character_system.send_msg mob.char, msg
           Log::debug "send_to_room, room #{room.name}, mob #{mob.short_name} received the message", "game"
         end
       end
@@ -125,7 +135,7 @@ module Game
         look += " {@{FW[LOST LINK]" if not mob_in_room.char
         look += "\n"
       end
-      CharacterLoginSystem::send_msg mob.char, look
+      $character_system.send_msg mob.char, look
     end
 
     def self.say( mob, msg )

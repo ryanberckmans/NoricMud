@@ -16,8 +16,8 @@ require "models/character.rb"
 require "models/mob.rb"
 require "models/room.rb"
 
-require "core/util.rb"
-require "core/log.rb"
+require "util.rb"
+require "log.rb"
 
 Log::get "mud", { :default => true, :level => Logger::DEBUG }
 Log::info "============================== booting ==============================", "mud"
@@ -27,18 +27,26 @@ TICK_DURATION = 0.25 # in seconds
 Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
-require "network/base.rb"
-require "account-system/base.rb"
-require "character-login-system/base.rb"
+require "network.rb"
+require "account_system.rb"
+require "character_system.rb"
 require "game/base.rb"
+
+network = Network.new
+auth = Authentication.new network
+account_system = AccountSystem.new network, auth
+character_selection = CharacterSelection.new account_system
+character_system = CharacterSystem.new account_system, character_selection
+
+Game::set_character_system character_system
 
 begin
   while true
     tick_start = Time.now
     Log::info"start tick", "mud"
-    Network::tick
-    AccountSystem::tick
-    CharacterLoginSystem::tick
+    network.tick
+    account_system.tick
+    character_system.tick
     Game::tick
     tick_duration = Time.now - tick_start
     time_remaining = [0,TICK_DURATION - tick_duration].max

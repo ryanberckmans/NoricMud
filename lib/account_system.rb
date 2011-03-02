@@ -69,6 +69,7 @@ eos
   def process_new_network_connections
     while connection = @network.next_connection do
       raise "connection should not be nil" unless connection
+      @network.send connection, SPLASH
       Log::info "connection #{connection} began authenticating", "accounts"
       @authentication.authenticate connection
     end

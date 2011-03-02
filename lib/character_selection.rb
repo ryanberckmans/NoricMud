@@ -59,19 +59,19 @@ class CharacterSelection
     account.characters.each do |char|
       character_menu.push [char, char.name]
     end
-    Util::InFiber::ValueMenu::activate ->(msg){ @account_system.send_msg account, msg }, ->{ @account_system.next_command account }, character_menu
+    Util::InFiber::ValueMenu::activate ->(msg){ @account_system.send_msg account, msg + "{@" }, ->{ @account_system.next_command account }, character_menu
   end
 
   def new_character( account )
     char = nil
     while true
-      @account_system.send_msg account, "{!{FYnew character name{FB> "
+      @account_system.send_msg account, "{!{FYnew character name{FB>{@ "
       char = Character.find_or_initialize_by_name(Util::InFiber::wait_for_next_command(->{@account_system.next_command account}).capitalize)
       break unless char.new_record?
       char.account = account
       char.mob = Mob.new({:short_name => char.name, :long_name => "{FGLegionnaire {FY#{char.name}{FG the legendary hero"})
       break if char.save
-      char.errors.each_value do |err| err.each do |msg| @account_system.send_msg account, "{!{FC#{msg}\n" end end
+      char.errors.each_value do |err| err.each do |msg| @account_system.send_msg account, "{!{FC#{msg}{@\n" end end
     end
     char
   end
