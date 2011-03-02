@@ -103,9 +103,9 @@ describe CharacterSystem do
         @char.next_command(@character).should == cmd
       end
 
-      it "should pass a send_msg on to the account" do
+      it "should pass a send_msg on to the account, postfixed with ansi reset" do
         msg = "do not fear\nyou will survive"
-        @account_system.should_receive(:send_msg).with(@account,msg)
+        @account_system.should_receive(:send_msg).with(@account,msg+"{@")
         @char.send_msg(@character,msg)
       end
 

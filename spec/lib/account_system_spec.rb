@@ -41,6 +41,7 @@ describe AccountSystem do
         conn
       end
       @account.tick
+      @client_socket.recv(4096).should_not == ""
       @client_socket.recv(1024).should == ""
     end
 
@@ -161,12 +162,15 @@ describe AccountSystem do
       end
 
       it "sends a msg which is received by tcpsocket" do
+        @client_socket.recv(4096)
         msg = "hey buddy \n how you doing :)"
         @account.send_msg(@online_account, msg)
+
         @client_socket.recv(1024).should == msg
       end
 
       it "disconnects the tcpsocket when account disconnected" do
+        @client_socket.recv(4096)
         @account.disconnect @online_account
         @client_socket.recv(1024).should == ""
       end
