@@ -57,13 +57,16 @@ module Game
     Log::info "#{char.name} logging on", "game"
     Commands::poof char.mob, @rooms[0]
     Commands::look char.mob
+    Game::send_msg char, COMMANDS
   end
-  
+
+  COMMANDS = "{!{FY--> {@Current commands are {!{FClook{@, {!{FCsay, {!{FCquit{@. Try losing link, reconnecting, multiplaying, creating multiple chars, breaking it, etc.\n"
   def self.character_reconnected( char )
     raise "expected char to be connected" unless $character_system.connected? char
-    # i.e. char.mob is in physical world, reconnect
     Log::info "#{char.name} reconnected", "game"
     Helper::send_to_room char.mob.room, "#{char.name} reconnected.\n"
+    Commands::look char.mob
+    Game::send_msg char, COMMANDS
   end
 
   def self.character_disconnected( char )
@@ -176,7 +179,7 @@ module Game
       mob.room.mobs.each do |mob_in_room|
         next if mob_in_room == mob
         look += "{FG#{mob_in_room.long_name} is here."
-        look += " {@{FW[LOST LINK]" if not $character_system.connected? mob_in_room.char
+        look += " {@{FW[Lost Link]" if not $character_system.connected? mob_in_room.char
         look += "\n"
       end
       Game::send_msg mob, look
