@@ -17,6 +17,7 @@ module Game
     Log::debug "start tick", "game"
     process_new_disconnections
     process_new_connections
+    process_new_logins
     process_character_commands
     Log::debug "end tick", "game"
   end

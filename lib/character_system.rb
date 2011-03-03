@@ -17,6 +17,18 @@ class CharacterSystem
     @characters_online.size
   end
 
+  def each_char
+    @characters_online.each_key do |char|
+      yield char
+    end
+  end
+
+  def each_connected_char
+    @characters_online.each_key do |char|
+      yield char if connected? char
+    end
+  end
+
   def online?( char )
     @characters_online.key? char
   end

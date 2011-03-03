@@ -79,6 +79,20 @@ describe CharacterSystem do
       it "should list the character as online" do
         @char.online?(@character).should be_true
       end
+
+      it "should include the character and only the character in each_char" do
+        chars = []
+        @char.each_char do |char| chars << char end
+        chars.size.should == 1
+        chars[0].should == @character
+      end
+
+      it "should include the character and only the character in each_connected_char" do
+        chars = []
+        @char.each_connected_char do |char| chars << char end
+        chars.size.should == 1
+        chars[0].should == @character
+      end
     end
 
     context "with one online character" do
@@ -127,12 +141,12 @@ describe CharacterSystem do
         @char.logout @character
       end
 
-      context "after character is disconnected" do
+      context "after character is logged out" do
         before :each do
           @account_system.should_receive(:disconnect).with @account
           @char.logout @character
         end
-        
+
         it "should set character to offline" do
           @char.online?(@character).should be_false
         end
@@ -148,6 +162,19 @@ describe CharacterSystem do
           @account_system.should_receive(:next_account_disconnection).and_return @account
           @character_selection.should_receive(:disconnect).with @account
           @char.tick
+        end
+
+        it "should still include the character and only the character in each_char" do
+          chars = []
+          @char.each_char do |char| chars << char end
+          chars.size.should == 1
+          chars[0].should == @character
+        end
+        
+        it "should not include the character in each_connected_char" do
+          chars = []
+          @char.each_connected_char do |char| chars << char end
+          chars.should be_empty
         end
 
         it "character is set disconnected" do
@@ -168,6 +195,20 @@ describe CharacterSystem do
             @char.connected?(@character).should be_false
             @account_system.should_receive(:next_account_connection).and_return @account
             @char.tick
+          end
+
+          it "should still include the character and only the character in each_char" do
+            chars = []
+            @char.each_char do |char| chars << char end
+            chars.size.should == 1
+            chars[0].should == @character
+          end
+          
+          it "should again include the character in each_connected_char" do
+            chars = []
+            @char.each_connected_char do |char| chars << char end
+            chars.size.should == 1
+            chars[0].should == @character
           end
 
           it "should set character as connected" do
