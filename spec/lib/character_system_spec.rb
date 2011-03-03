@@ -56,8 +56,16 @@ describe CharacterSystem do
         @char.tick
       end
 
-      it "should trigger next_char_connection" do
-        @char.next_character_connection.should == @character
+      it "should trigger next_char_login" do
+        @char.next_character_login.should == @character
+      end
+
+      it "should not trigger next_char_reconnection" do
+        @char.next_character_reconnection.should be_nil
+      end
+
+      it "should not trigger next_char_disconnection" do
+        @char.next_character_disconnection.should be_nil
       end
 
       it "should register character as connected" do
@@ -79,7 +87,9 @@ describe CharacterSystem do
         @character.stub(:name).and_return "charname"
         @character_selection.should_receive(:next_char_selection).and_return({account:@account, character:@character})
         @char.tick
-        @char.next_character_connection.should == @character
+        @char.next_character_login.should == @character
+        @char.next_character_reconnection.should be_nil
+        @char.next_character_disconnection.should be_nil
         @char.online?(@character).should be_true
         @char.char_online_with_account(@account).should == @character
         @char.connected?(@character).should be_true
@@ -114,13 +124,13 @@ describe CharacterSystem do
         @character_selection.stub(:disconnect).with @account
         @char.tick
         @account_system.should_receive(:disconnect).exactly(0).times
-        @char.disconnect @character
+        @char.logout @character
       end
 
       context "after character is disconnected" do
         before :each do
           @account_system.should_receive(:disconnect).with @account
-          @char.disconnect @character
+          @char.logout @character
         end
         
         it "should set character to offline" do
@@ -168,8 +178,8 @@ describe CharacterSystem do
             @char.online?(@character).should be_true
           end
 
-          it "should trigger next_character_connection" do
-            @char.next_character_connection.should == @character
+          it "should trigger next_character_reconnection" do
+            @char.next_character_reconnection.should == @character
           end
         end # account reconnects
       end # account disconnects

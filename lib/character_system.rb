@@ -8,7 +8,8 @@ class CharacterSystem
     @account_system = account_system
     @character_selection = character_selection
     @characters_online = {}
-    @new_character_connections = []
+    @new_character_logins = []
+    @new_character_reconnections = []
     @new_character_disconnections = []
   end
 
@@ -37,9 +38,13 @@ class CharacterSystem
     process_new_account_connections
     process_character_selections
   end
+
+  def next_character_login
+    @new_character_logins.shift
+  end
   
-  def next_character_connection
-    @new_character_connections.shift
+  def next_character_reconnection
+    @new_character_reconnections.shift
   end
 
   def next_character_disconnection
@@ -51,7 +56,7 @@ class CharacterSystem
     @account_system.next_command @characters_online[char][:account]
   end
 
-  def disconnect( char )
+  def logout( char )
     verify_online char
     @account_system.disconnect @characters_online[char][:account] if connected? char
     set_offline char
@@ -83,7 +88,7 @@ class CharacterSystem
     while account = @account_system.next_account_connection do
       raise "account should not be nil" unless account
       if char = char_online_with_account( account )
-        set_connected char
+        set_reconnected char
       else
         @character_selection.select_character account
       end
@@ -112,7 +117,8 @@ class CharacterSystem
   def set_online( char, account )
     verify_offline char
     Log::info "character #{char.name}, account #{account.name} set online", "charactersystem"
-    @characters_online[char] = {account:account} 
+    @characters_online[char] = {account:account}
+    @new_character_logins << char
   end
 
   def set_offline( char )
@@ -129,11 +135,16 @@ class CharacterSystem
     Log::info "character #{char.name}, account #{@characters_online[char][:account].name} set disconnected", "charactersystem"
   end
 
+  def set_reconnected( char )
+    set_connected( char )
+    @new_character_reconnections << char
+    Log::info "character #{char.name} reconnected", "charactersystem"
+  end
+
   def set_connected( char )
     verify_online char
     verify_disconnected char
     @characters_online[char][:connected] = true
-    @new_character_connections << char
     Log::info "character #{char.name}, account #{@characters_online[char][:account].name} set connected", "charactersystem"
   end
 end
