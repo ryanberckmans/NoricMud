@@ -182,7 +182,7 @@ module Game
       look += "{FM#{mob.room.description}\n"
       mob.room.mobs.each do |mob_in_room|
         next if mob_in_room == mob
-        look += "{FG#{mob_in_room.long_name} is here."
+        look += "{!{FG#{mob_in_room.long_name} is here."
         look += " {@{FW[Lost Link]" if not $character_system.connected? mob_in_room.char
         look += "\n"
       end
