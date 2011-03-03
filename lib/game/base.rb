@@ -8,6 +8,7 @@ module Game
 
   $character_system = nil
   @msgs_this_tick = {}
+  @new_logouts = []
 
   def self.set_character_system( cs )
     $character_system = cs
@@ -34,6 +35,9 @@ module Game
     process_character_commands
     send_char_msgs
     send_prompts
+    while char = @new_logouts.shift do
+      $character_system.logout char
+    end
     Log::debug "end tick", "game"
   end
 
@@ -80,7 +84,7 @@ module Game
     raise "expected char to be online" unless $character_system.online? char
     Log::info "#{char.name} logging off", "game"
     Helper::move_to( char.mob, nil )
-    $character_system.logout char
+    @new_logouts << char
   end
 
   def self.verify_mob_has_character( char )
