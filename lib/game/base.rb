@@ -5,62 +5,79 @@ module Game
   @rooms.each do |room|
     room.mobs = []
   end
-  @characters = []
 
   $character_system = nil
+  @msgs_this_tick = {}
 
   def self.set_character_system( cs )
     $character_system = cs
   end
 
+  def self.send_msg( entity, msg )
+    char = nil
+    if entity.kind_of? Mob
+      char = entity.char
+    elsif entity.kind_of? Character
+      char = entity
+    end
+    return unless char and $character_system.connected? char
+    @msgs_this_tick[char] ||= ""
+    @msgs_this_tick[char] += msg
+  end
+
   def self.tick
+    @msgs_this_tick.clear
     Log::debug "start tick", "game"
     process_new_disconnections
-    process_new_connections
+    process_new_reconnections
     process_new_logins
     process_character_commands
+    send_char_msgs
+    send_prompts
     Log::debug "end tick", "game"
   end
 
   private
-  def self.character_connected( char )
-    index = @characters.index char
-    if index
-      # i.e. char already in @characters, already logged on, use cached copy, because it has the transient attributes
-      char = @characters[index]
+  def self.send_char_msgs
+    @msgs_this_tick.each_pair do |char,msg|
+      $character_system.send_msg char, msg
     end
-    
-    verify_mob_has_no_character char
-    char.mob.char = char
-
-    if char.mob.room
-      # i.e. char.mob is in physical world, reconnect
-      Log::info "#{char.name} reconnected", "game"
-      Helper::send_to_room char.mob.room, "#{char.name} reconnected.\n"
-    else
-      # i.e. char.mob has no room, logon
-      Log::info "#{char.name} logging on", "game"
-      @characters << char
-      Commands::poof char.mob, @rooms[0]
-    end
-    Commands::look char.mob
   end
 
-  def self.is_reconnect?( char )
-    @characters.index char
+  PROMPT = "\n{@{!{FU<prompt> "
+  def self.send_prompts
+    @msgs_this_tick.each_key do |char|
+      $character_system.send_msg char, PROMPT
+    end
+  end
+  
+  def self.login( char )
+    verify_mob_has_no_character char
+    char.mob.char = char
+    Log::info "#{char.name} logging on", "game"
+    Commands::poof char.mob, @rooms[0]
+    Commands::look char.mob
+  end
+  
+  def self.character_reconnected( char )
+    raise "expected char to be connected" unless $character_system.connected? char
+    # i.e. char.mob is in physical world, reconnect
+    Log::info "#{char.name} reconnected", "game"
+    Helper::send_to_room char.mob.room, "#{char.name} reconnected.\n"
   end
 
   def self.character_disconnected( char )
+    raise "expected char to be online" unless $character_system.online? char
     verify_mob_has_character char
     Log::info "#{char.name} disconnected (lost link)", "game"
-    char.mob.char = nil
     Helper::send_to_room char.mob.room, "#{char.name} disconnected.\n"
   end
 
-  def self.log_off_character( char )
+  def self.logout( char )
+    raise "expected char to be online" unless $character_system.online? char
+    Log::info "#{char.name} logging off", "game"
     Helper::move_to( char.mob, nil )
-    @characters.delete char
-    $character_system.disconnect char
+    $character_system.logout char
   end
 
   def self.verify_mob_has_character( char )
@@ -71,9 +88,9 @@ module Game
     raise "expected #{char.name}.mob to have no character connected to it" if char.mob.char
   end
 
-  def self.process_new_connections
-    while char = $character_system.next_character_connection do
-      character_connected char
+  def self.process_new_reconnections
+    while char = $character_system.next_character_reconnection do
+      character_reconnected char
     end
   end
 
@@ -83,34 +100,29 @@ module Game
     end
   end
 
+  def self.process_new_logins
+    while char = $character_system.next_character_login do
+      login char
+    end
+  end
+
   def self.process_character_commands
-    @characters.each do |char|
-      next unless char.mob.char
+    $character_system.each_connected_char do |char|
       cmd = $character_system.next_command char
       next unless cmd
+      @msgs_this_tick[char] ||= "" # hack, use presence of key to flag char for prompt
       Commands::look char.mob if cmd == "look"
       Commands::poof char.mob, @rooms[0] if cmd == "poof"
       Commands::say char.mob, $' if cmd =~ /\Asay /
       if cmd =~ /quit/
         Log::info "#{char.name} quit", "game"
         Helper::send_to_room char.mob.room, "#{char.name} quit.\n"
-        log_off_character char
+        logout char
       end
     end
   end
 
   module Helper
-    def self.send( entity, msg )
-      char = nil
-      if entity.kind_of? Mob
-        char = entity.char
-      elsif entity.kind_of? Character
-        char = entity
-      end
-      return unless char
-      $character_system.send_msg char, msg
-    end
-    
     def self.move_to( mob, room )
       previous_room = mob.room
       mob.room.mobs.delete mob if mob.room
@@ -120,21 +132,39 @@ module Game
     end
 
     def self.send_to_room( room, msg )
-      room.mobs.each do |mob|
-        if mob.char
-          $character_system.send_msg mob.char, msg
-          Log::debug "send_to_room, room #{room.name}, mob #{mob.short_name} received the message", "game"
-        end
+      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
+        pov(room.mobs) do msg end
       end
-      Log::debug "send_to_room, room #{room.name} contained #{room.mobs.size} mobs", "game"
     end
   end
 
   module Commands
+    def self.poof_out( mob )
+      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
+        pov(mob) do
+          "{!{FWPFFT. You disappear in a puff of white smoke.\n"
+        end
+        pov(mob.room.mobs) do
+          "{!{FWPFFT. #{mob.short_name} disappears in a puff of white smoke.\n"
+        end
+      end
+    end
+
+    def self.poof_in( mob )
+      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
+        pov(mob) do
+          "{!{FWBANG! You appear in a burst of white smoke.\n"
+        end
+        pov(mob.room.mobs) do
+          "{!{FWBANG! #{mob.short_name} appears in a burst of white smoke.\n"
+        end
+      end
+    end
+    
     def self.poof( mob, room )
-      Helper::send_to_room room, "{!{FWPFFT. #{mob.short_name} disappears in a puff of white smoke.\n" if mob.room
+      poof_out mob if mob.room
       Helper::move_to mob, room
-      Helper::send_to_room room, "{!{FWBANG! #{mob.short_name} appears in a burst of white smoke.\n" if mob.room
+      poof_in mob if mob.room
       Log::debug "mob #{mob.short_name} poofed to #{room.name}"
     end
 
@@ -146,17 +176,17 @@ module Game
       mob.room.mobs.each do |mob_in_room|
         next if mob_in_room == mob
         look += "{FG#{mob_in_room.long_name} is here."
-        look += " {@{FW[LOST LINK]" if not mob_in_room.char
+        look += " {@{FW[LOST LINK]" if not $character_system.connected? mob_in_room.char
         look += "\n"
       end
-      $character_system.send_msg mob.char, look
+      Game::send_msg mob, look
     end
 
     def self.say( mob, msg )
       Log::debug "mob #{mob.short_name} says #{msg}", "game"
       msg.lstrip!
       return unless msg.length > 0
-      pov_scope( ->(c,m){ Helper::send c, m } ) do
+      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
         pov(mob) do
           "{!{FCYou say, '#{msg}'\n"
         end
@@ -164,7 +194,6 @@ module Game
           "{!{FC#{mob.short_name} says, '#{msg}'\n"
         end
       end
-      # Helper::send_to_room mob.room, "{!{FC#{mob.short_name} says, '#{msg}'\n"
     end
   end
 end
