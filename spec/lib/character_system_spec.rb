@@ -21,7 +21,7 @@ describe CharacterSystem do
     expect { CharacterSystem.new @account_system, @character_selection }.to_not raise_error
   end
 
-  context "as an instance" do
+  context "an instance" do
     before :each do
       @char = CharacterSystem.new @account_system, @character_selection
       @account_system.stub :tick
@@ -48,11 +48,12 @@ describe CharacterSystem do
       @char.tick
     end
 
-    context "with a character selected by account" do
+    context "with one character online, after the char was selected by an account," do
       before :each do
         @character = double("Character")
         @character.stub(:name).and_return "charname"
-        @character_selection.should_receive(:next_char_selection).and_return({account:@account, character:@character})
+        selections = [{account:@account, character:@character}]
+        @character_selection.stub(:next_char_selection) do selections.shift end
         @char.tick
       end
 
@@ -93,21 +94,6 @@ describe CharacterSystem do
         chars.size.should == 1
         chars[0].should == @character
       end
-    end
-
-    context "with one online character" do
-      before :each do
-        @character = double("Character")
-        @character.stub(:name).and_return "charname"
-        @character_selection.should_receive(:next_char_selection).and_return({account:@account, character:@character})
-        @char.tick
-        @char.next_character_login.should == @character
-        @char.next_character_reconnection.should be_nil
-        @char.next_character_disconnection.should be_nil
-        @char.online?(@character).should be_true
-        @char.char_online_with_account(@account).should == @character
-        @char.connected?(@character).should be_true
-      end
 
       it "should raise error if the character is selected again with the same account" do
         @character_selection.should_receive(:next_char_selection).and_return({account:@account, character:@character})
@@ -133,17 +119,14 @@ describe CharacterSystem do
         @char.send_msg(@character,msg)
       end
 
-      it "should not cause an account disconnect when a disconnected character is disconnected (from above)" do
-        @account_system.should_receive(:next_account_disconnection).and_return @account
-        @character_selection.stub(:disconnect).with @account
-        @char.tick
-        @account_system.should_receive(:disconnect).exactly(0).times
+      it "should cause an account disconnect when the character is logged out" do
+        @account_system.should_receive(:disconnect).with @account
         @char.logout @character
       end
 
-      context "after character is logged out" do
+      context "if the character is logged out" do
         before :each do
-          @account_system.should_receive(:disconnect).with @account
+          @account_system.stub :disconnect
           @char.logout @character
         end
 
@@ -155,13 +138,18 @@ describe CharacterSystem do
           @char.tick
           @char.next_character_disconnection.should be_nil
         end
-      end # context char disconnected
+      end
       
-      context "when the account disconnects" do
+      context "if the account disconnects" do
         before :each do
           @account_system.should_receive(:next_account_disconnection).and_return @account
           @character_selection.should_receive(:disconnect).with @account
           @char.tick
+        end
+        
+        it "should not cause an account disconnect when the character is logged out" do
+          @account_system.should_receive(:disconnect).exactly(0).times
+          @char.logout @character
         end
 
         it "should still include the character and only the character in each_char" do
@@ -189,7 +177,7 @@ describe CharacterSystem do
           @char.online?(@character).should be_true
         end
 
-        context "and then account reconnects" do
+        context "and if the account reconnects" do
           before :each do
             @char.online?(@character).should be_true
             @char.connected?(@character).should be_false
