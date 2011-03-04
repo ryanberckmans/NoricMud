@@ -1,17 +1,6 @@
 require 'continuation'
 require 'ostruct'
 
-def resumption_exception(*args)
-  # from internet
-  raise *args
-rescue Exception => e
-  callcc do |cc|
-    scls = class << e; self; end
-    scls.send(:define_method, :resume, lambda { cc.call })
-    raise
-  end
-end
-
 class HadPov < Exception
   def pov=(msg)
     @msg = msg
@@ -31,12 +20,18 @@ def had_pov( subject, msg )
   h = HadPov.new
   h.subject = subject
   h.pov = msg
-  resumption_exception h
+  Util.resumption_exception h
 end
+
+$POV_send_func = ->(key,value){ puts key + " pov << " + value  }
 
 # public
 
-def pov_scope(send_func=nil,&block)
+def pov_send(send_func)
+  $POV_send_func = send_func
+end
+
+def pov_scope(&block)
   povs = {}
   begin
     block.call
@@ -45,8 +40,7 @@ def pov_scope(send_func=nil,&block)
     e.resume
   end
   povs.each_pair do |key,value|
-    send_func[key,value] if send_func
-    puts key + " pov << " + value if not send_func
+    $POV_send_func[key,value]
   end
 end
 
@@ -64,6 +58,8 @@ def pov(*receivers, &block)
     had_pov rc, block.call
   end
 end
+
+# example
 
 first = "Lashmaw, the infinium crystal blade's slash"
 third = "manificent crystal blade's slash"

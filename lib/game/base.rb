@@ -10,6 +10,8 @@ module Game
   @msgs_this_tick = {}
   @new_logouts = []
 
+  pov_send ->(c,m){ Game::send_msg c, m }
+
   def self.set_character_system( cs )
     $character_system = cs
   end
@@ -139,7 +141,7 @@ module Game
     end
 
     def self.send_to_room( room, msg )
-      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
+      pov_scope do
         pov(room.mobs) do msg end
       end
     end
@@ -147,7 +149,7 @@ module Game
 
   module Commands
     def self.poof_out( mob )
-      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
+      pov_scope do
         pov(mob) do
           "{!{FWPFFT. You disappear in a puff of white smoke.\n"
         end
@@ -158,7 +160,7 @@ module Game
     end
 
     def self.poof_in( mob )
-      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
+      pov_scope do
         pov(mob) do
           "{!{FWBANG! You appear in a burst of white smoke.\n"
         end
@@ -193,7 +195,7 @@ module Game
       Log::debug "mob #{mob.short_name} says #{msg}", "game"
       msg.lstrip!
       return unless msg.length > 0
-      pov_scope( ->(c,m){ Game::send_msg c, m } ) do
+      pov_scope do
         pov(mob) do
           "{!{FCYou say, '#{msg}'\n"
         end
