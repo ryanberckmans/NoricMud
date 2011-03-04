@@ -158,7 +158,17 @@ describe Connection do
     end
 
     it "strips out non-printable/bad characters from commands" do
-      pending "example of bad input"
+      cmd = "hey "
+      cmd += 7.chr
+      cmd += 0.chr
+      cmd += 12.chr
+      cmd += 11.chr
+      (240..255).each do |i| cmd += i.chr end
+      cmd += "man"
+      (240..255).each do |i| cmd += i.chr end
+      @client_socket.send cmd + "\n", 0
+      @connection.tick
+      @connection.next_command.should == "hey man"
     end
 
     it "doesn't report a client_disconnect when disconnect is on server side" do
