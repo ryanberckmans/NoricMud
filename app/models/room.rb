@@ -3,9 +3,11 @@ class Room < ActiveRecord::Base
 
   attr_accessor :mobs
 
-  after_initialize do |room|
-    room.mobs = []
-    Log::debug "loaded #{room.name}", "room"
+  after_initialize :on_load
+
+  def on_load
+    self.mobs = []
+    Log::debug "loaded #{name}", "room"
   end
 end
 
