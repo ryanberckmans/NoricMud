@@ -35,10 +35,10 @@ module Game
     process_new_logins
     process_character_commands
     send_char_msgs
-    send_prompts
     while char = @new_logouts.shift do
       $character_system.logout char
     end
+    send_prompts
     Log::debug "end tick", "game"
   end
 
@@ -52,7 +52,7 @@ module Game
   PROMPT = "\n{@{!{FU<prompt> "
   def self.send_prompts
     @msgs_this_tick.each_key do |char|
-      $character_system.send_msg char, PROMPT
+      $character_system.send_msg char, PROMPT if $character_system.connected? char
     end
   end
   
@@ -90,6 +90,10 @@ module Game
   def self.logout( char )
     raise "expected char to be online" unless $character_system.online? char
     Log::info "#{char.name} logging off", "game"
+    pov_scope do
+      pov(char.mob) do "Quitting...\n" end
+      pov(char.mob.room.mobs) do "#{char.name} quit.\n" end
+    end
     Helper::move_to( char.mob, nil )
     @new_logouts << char
   end
@@ -125,14 +129,9 @@ module Game
       cmd = $character_system.next_command char
       next unless cmd
       @msgs_this_tick[char] ||= ""
-      Commands::look char.mob if cmd == "look"
-      Commands::poof char.mob, @rooms[0] if cmd == "poof"
-      Commands::say char.mob, $' if cmd =~ /\Asay /
-      if cmd =~ /quit/
-        Log::info "#{char.name} quit", "game"
-        Helper::send_to_room char.mob.room, "#{char.name} quit.\n"
-        logout char
-      end
+      func = Commands::find cmd
+      next unless func
+      func[:value][char, func[:rest], func[:match]]
     end
   end
 
@@ -144,15 +143,23 @@ module Game
       Log::debug "moved #{mob.short_name} to room #{room ? room.name : "nil"}, previous room #{previous_room ? previous_room.name : "nil"}", "game"
       room.mobs << mob if room
     end
-
-    def self.send_to_room( room, msg )
-      pov_scope do
-        pov(room.mobs) do msg end
-      end
-    end
   end
 
   module Commands
+    @parser = AbbrevMap.new
+    @parser.add "say", ->(char,rest, match) { say(char.mob,rest) }
+    @parser.add "look", ->(char,rest, match) { look( char.mob ) }
+    @parser.add "quit", ->(char,rest, match) { quit( char ) if match == "quit" }
+
+    def self.find( cmd )
+      @parser.find cmd
+    end
+
+    def self.quit( char )
+      Log::info "#{char.name} quit", "game"
+
+      Game::logout char
+    end
     def self.poof_out( mob )
       pov_scope do
         pov(mob) do
