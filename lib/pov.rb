@@ -59,6 +59,10 @@ def pov(*receivers, &block)
   end
 end
 
+def pov_none(*receivers)
+  pov(receivers) do "" end
+end
+
 # example
 
 first = "Lashmaw, the infinium crystal blade's slash"

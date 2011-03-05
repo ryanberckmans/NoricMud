@@ -71,6 +71,16 @@ describe "issuing points of view with pov and pov_scope" do
       end
     end
 
+    it "sends the epsilon pov to reach receiver in pov_none" do
+      pov_scope do
+        pov_none "jim","alice"
+        pov("jim","alice","fred") do "zzz" end
+      end
+      @povs["jim"].should == ""
+      @povs["alice"].should == ""
+      @povs["fred"].should == "zzz"
+    end
+
     it "sends the pov to reach receiver after the pov_scope ends" do
       their_pov = "heyawesomepov"
       pov_scope do

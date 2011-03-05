@@ -70,7 +70,10 @@ module Game
   def self.character_reconnected( char )
     raise "expected char to be connected" unless $character_system.connected? char
     Log::info "#{char.name} reconnected", "game"
-    Helper::send_to_room char.mob.room, "#{char.name} reconnected.\n"
+    pov_scope do
+      pov(char.mob) do "Reconnected.\n" end
+      pov(char.mob.room.mobs) do "#{char.name} reconnected.\n" end
+    end
     Commands::look char.mob
     Game::send_msg char, COMMANDS
   end
@@ -79,7 +82,10 @@ module Game
     raise "expected char to be online" unless $character_system.online? char
     verify_mob_has_character char
     Log::info "#{char.name} disconnected (lost link)", "game"
-    Helper::send_to_room char.mob.room, "#{char.name} disconnected.\n"
+    pov_scope do
+      pov_none(char.mob)
+      pov(char.mob.room.mobs) do "#{char.name} disconnected.\n" end
+    end
   end
 
   def self.logout( char )
