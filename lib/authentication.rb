@@ -60,9 +60,53 @@ class Authentication
       @network.send connection, "{!{FYaccount name{FB>{@ "
       account = Account.find_or_initialize_by_name(Util::InFiber::wait_for_next_command(->{@network.next_command connection}).downcase)
       break unless account.new_record?
-      break if account.save
-      account.errors.each_value do |err| err.each do |msg| @network.send connection, "{!{FC#{msg}{@\n" end end
+      break if account.errors[:name].empty?
+      account.errors[:name].each do |msg| @network.send connection, "{!{FC#{msg}{@\n" end
     end
+
+    # i.e. account has a valid name, may or may not be a new account
+    
+    if account.new_record?
+      Log::debug "connection #{connection} creating new account #{account.name}", "authentication"
+      account = create connection, account
+    else
+      Log::debug "connection #{connection} authorizing account #{account.name}", "authentication"
+      account = authorize connection, account
+    end
+    account
+  end
+
+  def create( connection, account )
+    while true
+      @network.send connection, "{!{FYenter a password for new account {FC#{account.name}{FB>{@ "
+      account.password = Util::InFiber::wait_for_next_command(->{@network.next_command connection})
+      break if account.save
+      raise "expected no account.name errors" unless account.errors[:name].empty?
+      account.errors[:password].each do |msg| @network.send connection, "{!{FC#{msg}{@\n" end
+    end
+    Log::debug "connection #{connection} finished creating account #{account.name}", "authentication"
+    account
+  end
+
+  MAX_ATTEMPTS = 2
+  def authorize( connection, account )
+    attempts = 0
+    account = while true
+                @network.send connection, "{!{FYpassword for existing account {FC#{account.name}{FB>{@ "
+                password_attempt = Util::InFiber::wait_for_next_command(->{@network.next_command connection})
+                if password_attempt == account.password
+                  Log::debug "connection #{connection} authorized account #{account.name}", "authentication" if account
+                  @network.send connection, "{!{FCauthorized.{@\n"
+                  break account
+                end
+                @network.send connection, "{!{FCwrong password.{@\n"
+                attempts += 1
+                if attempts > MAX_ATTEMPTS
+                  @network.send connection, "{!{FYtoo many attempts. {FR:({@\n"
+                  Log::debug "connection #{connection} failed to authorize account #{account.name}", "authentication" if not account
+                  break nil
+                end
+              end
     account
   end
 end

@@ -53,7 +53,7 @@ class CharacterSelection
 
   def select_character_from_menu( account )
     character_menu = [
-                      "\n\nSelect a character from account {FC#{account.name}{FY:",
+                      "\nSelect a character from account {FC#{account.name}{FY:",
                       [nil, "New Character"],
                      ]
     account.characters.each do |char|
