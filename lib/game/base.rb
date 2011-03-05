@@ -180,7 +180,7 @@ module Game
     @parser.add "exits", ->(char,rest, match) { exits( char.mob ) }
     @parser.add "quit", ->(char,rest, match) { quit( char ) if match == "quit" }
     @parser.add "hp", ->(char,rest,match) { char.mob.hp -= 25; char.mob.hp = 1 if char.mob.hp < 1 }
-    @parser.add "energy", ->(char,rest,match) { char.mob.energy -= 10; char.mob.energy = 1 if char.mob.energy < 1 } 
+    @parser.add "energy", ->(char,rest,match) { char.mob.energy -= 10; char.mob.energy = 1 if char.mob.energy < 1 }
 
     def self.find( cmd )
       @parser.find cmd

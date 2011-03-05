@@ -6,6 +6,7 @@ require "yaml"
 
 ActiveRecord::Base.establish_connection YAML.load_file('config/database.yml')[ ENV['RAILS_ENV'] ]
 
+require "models/exit.rb"
 require "models/account.rb"
 require "models/character.rb"
 require "models/mob.rb"
