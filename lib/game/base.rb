@@ -51,10 +51,13 @@ module Game
     end
   end
 
-  PROMPT = "\n{@{!{FU<prompt> "
+  def self.prompt( char )
+    "\n{@{!{FU<#{char.mob.hp_color}{FUhp #{char.mob.energy_color}{FUe> "
+  end
+  
   def self.send_prompts
     @msgs_this_tick.each_key do |char|
-      $character_system.send_msg char, PROMPT if $character_system.online? char
+      $character_system.send_msg char, prompt(char) if $character_system.online? char
     end
   end
   
@@ -67,7 +70,7 @@ module Game
     Game::send_msg char, COMMANDS
   end
 
-  COMMANDS = "{!{FY--> {@Current commands are {!{FCn e s w u d{@, {!{FClook{@, {!{FCsay{@, {!{FCexits{@, {!{FCquit{@. Try losing link, reconnecting, multiplaying, creating multiple chars, breaking it, etc.\n"
+  COMMANDS = "{!{FY--> {@Current commands are {!{FCn e s w u d{@, {!{FCenergy{@, {!{FChp{@, {!{FClook{@, {!{FCsay{@, {!{FCexits{@, {!{FCquit{@. Try losing link, reconnecting, multiplaying, creating multiple chars, breaking it, etc.\n"
   def self.character_reconnected( char )
     raise "expected char to be connected" unless $character_system.connected? char
     Log::info "#{char.name} reconnected", "game"
@@ -176,6 +179,8 @@ module Game
     @parser.add "look", ->(char,rest, match) { look( char.mob ) }
     @parser.add "exits", ->(char,rest, match) { exits( char.mob ) }
     @parser.add "quit", ->(char,rest, match) { quit( char ) if match == "quit" }
+    @parser.add "hp", ->(char,rest,match) { char.mob.hp -= 25; char.mob.hp = 1 if char.mob.hp < 1 }
+    @parser.add "energy", ->(char,rest,match) { char.mob.energy -= 10; char.mob.energy = 1 if char.mob.energy < 1 } 
 
     def self.find( cmd )
       @parser.find cmd
