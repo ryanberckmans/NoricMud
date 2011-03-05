@@ -24,7 +24,7 @@ module Game
       char = entity
     end
     return unless char and $character_system.connected? char
-    @msgs_this_tick[char] ||= ""
+    @msgs_this_tick[char] ||= "\n"
     @msgs_this_tick[char] += msg
   end
 
@@ -125,7 +125,7 @@ module Game
     $character_system.each_connected_char do |char|
       cmd = $character_system.next_command char
       next unless cmd
-      @msgs_this_tick[char] ||= "" # hack, use presence of key to flag char for prompt
+      @msgs_this_tick[char] ||= ""
       Commands::look char.mob if cmd == "look"
       Commands::poof char.mob, @rooms[0] if cmd == "poof"
       Commands::say char.mob, $' if cmd =~ /\Asay /
