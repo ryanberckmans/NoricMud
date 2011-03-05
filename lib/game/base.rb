@@ -1,9 +1,6 @@
 
 module Game
   @rooms = Room.find :all
-  @rooms.each do |room|
-    room.mobs = []
-  end
 
   $character_system = nil
   @msgs_this_tick = {}
@@ -52,7 +49,7 @@ module Game
   PROMPT = "\n{@{!{FU<prompt> "
   def self.send_prompts
     @msgs_this_tick.each_key do |char|
-      $character_system.send_msg char, PROMPT if $character_system.connected? char
+      $character_system.send_msg char, PROMPT if $character_system.online? char
     end
   end
   
