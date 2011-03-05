@@ -25,6 +25,7 @@ Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
 require "pov.rb"
 require "abbrev_map.rb"
+require "command_handler.rb"
 require "network.rb"
 require "account_system.rb"
 require "character_system.rb"
