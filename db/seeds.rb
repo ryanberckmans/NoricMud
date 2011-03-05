@@ -10,6 +10,6 @@ pit = Room.create({ :name => 'A Bloody Combat Pit', :description => 'The stone w
 
 wild = Room.create({ :name => 'A Dense, Forested Wilderness', :description => 'You are in the forest. Surrounding you are the trunks of deciduous trees; high above you their broad leaves filter the sunlight to a trickle by day, and allow only brief glimpses of the moon at night. A cacophony of birdsong and chittering insects fills the air, forming a strangely haunting melody. The smell of vegetation in various stages of decomposition is a pungent reminder of your own mortality. Dry twigs and leaves snap beneath your feet as you walk, and legends of forest demons and spirits fill your thoughts.' })
 
-Exit.create({ :room => pit, :direction => Exit::WEST })
+Exit.create({ :room => pit, :direction => Exit::WEST, :destination => wild })
 
-Exit.create({ :room => wild, :direction => Exit::EAST })
+Exit.create({ :room => wild, :direction => Exit::EAST, :destination => pit })

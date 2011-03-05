@@ -1,6 +1,11 @@
 
 module Game
   @rooms = Room.find :all
+  @rooms.each do |room|
+    room.exits.each do |exit|
+      exit.destination = @rooms[@rooms.index exit.destination]
+    end
+  end
 
   $character_system = nil
   @msgs_this_tick = {}
@@ -62,7 +67,7 @@ module Game
     Game::send_msg char, COMMANDS
   end
 
-  COMMANDS = "{!{FY--> {@Current commands are {!{FClook{@, {!{FCsay, {!{FCquit{@. Try losing link, reconnecting, multiplaying, creating multiple chars, breaking it, etc.\n"
+  COMMANDS = "{!{FY--> {@Current commands are {!{FCn e s w u d{@, {!{FClook{@, {!{FCsay{@, {!{FCexits{@, {!{FCquit{@. Try losing link, reconnecting, multiplaying, creating multiple chars, breaking it, etc.\n"
   def self.character_reconnected( char )
     raise "expected char to be connected" unless $character_system.connected? char
     Log::info "#{char.name} reconnected", "game"
@@ -140,12 +145,36 @@ module Game
       Log::debug "moved #{mob.short_name} to room #{room ? room.name : "nil"}, previous room #{previous_room ? previous_room.name : "nil"}", "game"
       room.mobs << mob if room
     end
+
+    def self.exit_room( mob, exit, dir )
+      if exit
+        pov_scope do
+          pov_none(mob)
+          pov(mob.room.mobs) do "{!{FW#{mob.short_name} leaves #{dir}.\n" end
+        end
+        move_to( mob, exit.destination )
+        pov_scope do
+          pov_none(mob)
+          pov(mob.room.mobs) do "{!{FW#{mob.short_name} has arrived.\n" end
+        end
+        Game::Commands::look( mob )
+      else
+        Game::send_msg mob, "{@Alas, you cannot go that way...\n"
+      end
+    end
   end
 
   module Commands
     @parser = AbbrevMap.new
+    @parser.add "north", ->(char,rest, match) { Helper::exit_room(char.mob,char.mob.room.north,"north") }
+    @parser.add "south", ->(char,rest, match) { Helper::exit_room(char.mob,char.mob.room.south,"south") }
+    @parser.add "up", ->(char,rest, match) { Helper::exit_room(char.mob,char.mob.room.up,"up") }
+    @parser.add "down", ->(char,rest, match) { Helper::exit_room(char.mob,char.mob.room.down,"down") }
+    @parser.add "west", ->(char,rest, match) { Helper::exit_room(char.mob,char.mob.room.west,"west") }
+    @parser.add "east", ->(char,rest, match) { Helper::exit_room(char.mob,char.mob.room.east,"east") }
     @parser.add "say", ->(char,rest, match) { say(char.mob,rest) }
     @parser.add "look", ->(char,rest, match) { look( char.mob ) }
+    @parser.add "exits", ->(char,rest, match) { exits( char.mob ) }
     @parser.add "quit", ->(char,rest, match) { quit( char ) if match == "quit" }
 
     def self.find( cmd )
@@ -186,6 +215,19 @@ module Game
       Log::debug "mob #{mob.short_name} poofed to #{room.name}"
     end
 
+    def self.exits( mob )
+      return unless mob.room
+      room = mob.room
+      exits = "{!{FUObvious exits:\n"
+      exits += "North  - " + room.north.destination.name + "\n" if room.north
+      exits += "East   - " + room.east.destination.name + "\n"  if room.east
+      exits += "South  - " + room.south.destination.name + "\n"  if room.south
+      exits += "West   - " + room.west.destination.name + "\n"  if room.west
+      exits += "Up     - " + room.up.destination.name + "\n"  if room.up
+      exits += "Down   - " + room.down.destination.name + "\n"  if room.down
+      Game::send_msg mob, exits
+    end
+
     def self.look( mob )
       return unless mob.room and mob.char
       look = "{!"
@@ -198,6 +240,7 @@ module Game
         look += "\n"
       end
       Game::send_msg mob, look
+      exits( mob )
     end
 
     def self.say( mob, msg )

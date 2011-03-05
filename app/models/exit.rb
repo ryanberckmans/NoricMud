@@ -7,7 +7,12 @@ class Exit < ActiveRecord::Base
   DOWN = 5
 
   belongs_to :room
-  validates_presence_of :room, message:"Exit requires a room it's attached to."
+  belongs_to :destination, :class_name => "Room"
+  
+  validates_presence_of :room_id, message:"Exit requires a room it's attached to."
+  validates_presence_of :destination_id, message:"Exit requires a destination."
+  
+  
   validates_presence_of :direction, message:"Exit requires a direction."
   validates_numericality_of :direction, only_integer:true, greater_than_or_equal_to:NORTH, less_than_or_equal_to:DOWN, message:"Direction must be integer between Exit::NORTH and Exit::DOWN"
   validates_uniqueness_of :direction, :scope => :room_id, message:"Only one exit per direction in a room."
