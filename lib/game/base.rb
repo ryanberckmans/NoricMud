@@ -1,4 +1,3 @@
-require "pov.rb"
 
 module Game
   @rooms = Room.find :all
