@@ -14,6 +14,7 @@ ActiveRecord::Base.establish_connection YAML.load_file('config/database.yml')[ E
 require "models/account.rb"
 require "models/character.rb"
 require "models/mob.rb"
+require "models/exit.rb"
 require "models/room.rb"
 
 require "util.rb"
