@@ -79,7 +79,7 @@ class Authentication
 
   def create( connection, account )
     while true
-      @network.send connection, "{!{FYenter a password for new account {FC#{account.name}{FB>{@ "
+      @network.send connection, "{!{FYenter a (cleartext, throw-away) password for new account {FC#{account.name}{FB>{@ "
       account.password = Util::InFiber::wait_for_next_command(->{@network.next_command connection})
       break if account.save
       raise "expected no account.name errors" unless account.errors[:name].empty?
