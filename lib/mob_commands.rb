@@ -30,6 +30,7 @@ class MobCommands
     verify_exists mob
     removed = false
     @mob_handlers[mob].each_locator do |loc|
+      next unless loc # hack, sometimes locators are nil
       if loc.value == handler
         @mob_handlers[mob].delete_locator loc
         removed = true
@@ -46,7 +47,7 @@ class MobCommands
     dequeued = []
     begin
       while true
-        loc = @mob_handlers[mob].delete_min_locator
+        loc = @mob_handlers[mob].delete_max_locator
         break unless loc
         dequeued << loc
 
@@ -64,7 +65,10 @@ class MobCommands
         end
       end
     ensure
-      dequeued.each do |loc| @mob_handlers[mob].insert_locator loc end
+      dequeued.each do |loc|
+        raise unless loc.kind_of? Depq::Locator
+        @mob_handlers[mob].insert_locator loc
+      end
     end
     raise "expected mob to have same number of handlers after handle_cmd" unless @mob_handlers[mob].size == original_size
     cmd_handled

@@ -125,14 +125,120 @@ describe MobCommands do
             @cmd_say_called.should be_true
           end
 
-          it "same handle_cmd does same thing twice" do
-            pending
+          it "can call a command twice" do
+            @cmd_say_called.should be_false
+            @mob_commands.handle_cmd(@mob, "say hey").should be_true
+            @cmd_say_called.should be_true
+            @cmd_say_called = false
+            @cmd_say_called.should be_false
+            @mob_commands.handle_cmd(@mob, "say hey").should be_true
+            @cmd_say_called.should be_true
+          end
+
+          it "can remove the handler" do
+            expect { @mob_commands.remove_cmd_handler @mob, @handler }.to_not raise_error
+          end
+
+          context "and then the handler is removed" do
+            before :each do
+              @mob_commands.remove_cmd_handler @mob, @handler
+            end
+
+            it "no longer calls say" do
+              @cmd_say_called.should be_false
+              @mob_commands.handle_cmd(@mob, "say hey").should be_false
+              @cmd_say_called.should be_false
+            end
           end
         end
 
         context "with three handlers with differing priorities added" do
+          before :each do
+            @h1 = AbbrevMap.new
+            @h2 = AbbrevMap.new
+            @h3 = AbbrevMap.new
+            p1 = 100
+            p2 = 50
+            p3 = 10
+
+            @h1_west = false
+            @h2_west = false
+            @h1_cmd_west = ->(game,char,rest,match){ @h1_west = true }
+            @h2_cmd_west = ->(game,char,rest,match){ @h2_west = true }
+
+            @h1.add "west", @h1_cmd_west
+            @h2.add "west", @h2_cmd_west
+            
+            @h2_abandon = false
+            @h3_abandon = false
+            
+            @h2_cmd_abandon = ->(game,char,rest,match){ @h2_abandon = true; raise AbandonCallback.new }
+            @h3_cmd_abandon = ->(game,char,rest,match){ @h3_abandon = true }
+
+            @h2.add "abandon omg", @h2_cmd_abandon
+            @h3.add "abandon", @h3_cmd_abandon
+
+            @h1_error = ->(game,char,rest,match) { raise "real error" }
+            @h1.add "error", @h1_error
+
+            @inner = false
+            inner_map = AbbrevMap.new
+            inner_cmd = ->(game,char,rest,match){ @inner = true }
+            inner_map.add "omgcmd", inner_cmd
+            @h4 = ->(mob){ inner_map }
+            
+            @mob_commands.add_cmd_handler @mob, @h1, p1
+            @mob_commands.add_cmd_handler @mob, @h2, p2
+            @mob_commands.add_cmd_handler @mob, @h3, p3
+            @mob_commands.add_cmd_handler @mob, @h4, 999
+          end
+
+          it "calls the inner cmd with a handler wrapped in a proc" do
+            @inner.should be_false
+            @mob_commands.handle_cmd(@mob, "omgcmd ponies params").should be_true
+            @inner.should be_true
+          end
+
+          it "raises error when the cmd callback raises a real error" do
+            expect { @mob_commands.handle_cmd @mob, "error" }.to raise_error
+          end
+
+          it "calls the lower priority version of abandon after the higher priority raises AbandonCallback" do
+            @h2_abandon.should be_false
+            @h3_abandon.should be_false
+            @mob_commands.handle_cmd(@mob, "abandon omg ponies").should be_true
+            @h2_abandon.should be_true
+            @h3_abandon.should be_true
+          end
+
+          it "calls the highest priority version of west" do
+            @h1_west.should be_false
+            @h2_west.should be_false
+            @mob_commands.handle_cmd(@mob, "west").should be_true
+            @h1_west.should be_true
+            @h2_west.should be_false
+          end
+
+          it "returns false for a command that's not handled" do
+            @mob_commands.handle_cmd(@mob, "fake command").should be_false
+          end
+          
           it "removes a specific handler" do
-            pending
+            expect { @mob_commands.remove_cmd_handler @mob, @h1 }.to_not raise_error
+          end
+
+          context "with the highest priority west handler removed" do
+            before :each do
+              @mob_commands.remove_cmd_handler @mob, @h1
+            end
+            
+            it "calls the lower priority version of west" do
+              @h1_west.should be_false
+              @h2_west.should be_false
+              @mob_commands.handle_cmd(@mob, "west").should be_true
+              @h1_west.should be_false
+              @h2_west.should be_true
+            end
           end
         end # context three handlers differing priorities
       end # context when mob is added
