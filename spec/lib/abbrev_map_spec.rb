@@ -19,10 +19,6 @@ shared_examples_for "for each key,value" do
 end
 
 shared_examples_for "any" do
-  context "with nil key" do
-    validate_pair nil, nil
-  end
-
   context "with epsilon key" do
     validate_pair "", nil
   end
@@ -100,8 +96,29 @@ end
 
 describe AbbrevMap do
 
+  it "requires that non-nil default_callback be a Proc" do
+    proc = double("Proc")
+    proc.should_receive(:kind_of?).with(Proc).and_return true
+    expect { AbbrevMap.new 5 }.to raise_error
+    expect { AbbrevMap.new nil }.to_not raise_error
+    expect { AbbrevMap.new proc }.to_not raise_error
+  end
 
-  context "an instance" do
+  context "an instance with a default callback" do
+    before :each do
+      @default = ->{}
+      @map = AbbrevMap.new @default
+    end
+
+    it "returns the default callback if find is called with epsilon" do
+      res = @map.find("")
+      res[:value].should == @default
+      res[:match].should == ""
+      res[:rest].should == ""
+    end
+  end # instance with default callback
+  
+  context "an instance with no default callback" do
     before :each do
       @map = AbbrevMap.new
     end
@@ -113,9 +130,14 @@ describe AbbrevMap do
       result[:rest].should == rest
     end
 
-    it "raises error if key isn't a string" do
+    it "raises error on add if key isn't a string" do
       expect { @map.add 56, 3 }.to raise_error
       expect { @map.add nil, "hay" }.to raise_error
+    end
+
+    it "raises error on find if key isn't a string" do
+      expect { @map.find 56 }.to raise_error
+      expect { @map.find nil }.to raise_error
     end
 
     it "doesn't allow overwrites, uses first key,value added" do

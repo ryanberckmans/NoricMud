@@ -2,21 +2,29 @@ require 'strscan'
 
 module AbbrevMap
 
-  def self.new
-    Public.new
+  def self.new( default_value=nil )
+    Public.new default_value
   end
 
   class Public
-    def initialize
+    def initialize( default_value )
+      raise "expected default_value to be a Proc or nil" if default_value and not default_value.kind_of? Proc
+      @default_value = default_value
       @root = TrieNode.new
     end
 
     def add( key, value )
+      raise "expected key to be a string" unless key.kind_of? String
       @root.add key, value
       nil
     end
 
     def find( key )
+      raise "expected key to be a string" unless key.kind_of? String
+      if key.empty?
+        return nil unless @default_value
+        return { value:@default_value, match:"", rest:"" }
+      end
       @root.find key
     end
   end
