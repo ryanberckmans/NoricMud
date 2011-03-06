@@ -67,25 +67,25 @@ describe MobCommands do
           it_behaves_like "mob doesn't exist"
         end
 
-        it "raises error unless added cmd handler is a CommandHandler or Proc" do
+        it "raises error unless added cmd handler is a AbbrevMap or Proc" do
           priority = 5
           expect { @mob_commands.add_cmd_handler @mob, nil, priority }.to raise_error
           expect { @mob_commands.add_cmd_handler @mob, 5, priority }.to raise_error
           expect { @mob_commands.add_cmd_handler @mob, Object.new, priority }.to raise_error
-          expect { @mob_commands.add_cmd_handler @mob, CommandHandler.new, priority }.to_not raise_error
+          expect { @mob_commands.add_cmd_handler @mob, AbbrevMap.new, priority }.to_not raise_error
           expect { @mob_commands.add_cmd_handler @mob, ->{}, priority }.to_not raise_error
         end
         
         it "allows a single handler to be added" do
-          handler = CommandHandler.new
+          handler = AbbrevMap.new
           priority = 5
           expect { @mob_commands.add_cmd_handler @mob, handler, priority }.to_not raise_error
         end
 
         it "allows three handlers with differing priorities to be added" do
-          h1 = CommandHandler.new
-          h2 = CommandHandler.new
-          h3 = CommandHandler.new
+          h1 = AbbrevMap.new
+          h2 = AbbrevMap.new
+          h3 = AbbrevMap.new
           p1 = 1
           p2 = 5
           p3 = 500
@@ -99,7 +99,7 @@ describe MobCommands do
             @default_called = false
             @default = ->(game,char,rest,match){ @default_called = true }
             @priority = 10
-            @handler = CommandHandler.new @default
+            @handler = AbbrevMap.new @default
             @cmd_say_called = false
             @cmd_say = ->(game,char,rest,match){ @cmd_say_called = true; @rest = rest }
             @handler.add "say", @cmd_say

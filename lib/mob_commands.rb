@@ -21,7 +21,7 @@ class MobCommands
   end
 
   def add_cmd_handler(mob, handler, priority)
-    raise "expected handler to be Proc or CommandHandler" unless handler.kind_of? Proc or handler.kind_of? CommandHandler
+    raise "expected handler to be Proc or AbbrevMap" unless handler.kind_of? Proc or handler.kind_of? AbbrevMap
     verify_exists mob
     @mob_handlers[mob].insert handler, priority
   end
@@ -42,16 +42,18 @@ class MobCommands
     verify_exists mob
     raise "expected cmd to be a String" unless cmd.kind_of? String
     cmd_handled = false
+    original_size = @mob_handlers[mob].size
     dequeued = []
     begin
       while true
         loc = @mob_handlers[mob].delete_min_locator
         break unless loc
         dequeued << loc
+
         cmd_handler = loc.value
-        
         cmd_handler = cmd_handler[mob] if cmd_handler.kind_of? Proc
-        raise "expected cmd_handler to be CommandHandler" unless cmd_handler.kind_of? CommandHandler
+        raise "expected cmd_handler to be AbbrevMap" unless cmd_handler.kind_of? AbbrevMap
+        
         cmd_func = cmd_handler.find cmd
         next unless cmd_func
         begin
@@ -64,7 +66,7 @@ class MobCommands
     ensure
       dequeued.each do |loc| @mob_handlers[mob].insert_locator loc end
     end
-    
+    raise "expected mob to have same number of handlers after handle_cmd" unless @mob_handlers[mob].size == original_size
     cmd_handled
   end
 
