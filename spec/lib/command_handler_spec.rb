@@ -23,7 +23,7 @@ describe CommandHandler do
     end
 
     it "returns the default callback if find is called with epsilon" do
-      @handler.find("").should == @default
+      @handler.find("")[:value].should == @default
     end
   end # context an instance
 end

@@ -12,7 +12,7 @@ class CommandHandler
 
   def find( cmd )
     raise "expected cmd to be a string" unless cmd.kind_of? String
-    return @default_callback if cmd.empty?
+    return {value:@default_callback, match:"", rest:""} if cmd.empty?
     @abbrev_map.find cmd
   end
 end

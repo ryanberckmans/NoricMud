@@ -1,7 +1,12 @@
 require 'depq'
 
+class AbandonCallback < Exception
+end
+
 class MobCommands
-  def initialize
+  def initialize( game )
+    raise "expected a Game" unless game.kind_of? Game
+    @game = game
     @mob_handlers = {}
   end
 
@@ -16,6 +21,7 @@ class MobCommands
   end
 
   def add_cmd_handler(mob, handler, priority)
+    raise "expected handler to be Proc or CommandHandler" unless handler.kind_of? Proc or handler.kind_of? CommandHandler
     verify_exists mob
     @mob_handlers[mob].insert handler, priority
   end
@@ -34,6 +40,32 @@ class MobCommands
 
   def handle_cmd( mob, cmd )
     verify_exists mob
+    raise "expected cmd to be a String" unless cmd.kind_of? String
+    cmd_handled = false
+    dequeued = []
+    begin
+      while true
+        loc = @mob_handlers[mob].delete_min_locator
+        break unless loc
+        dequeued << loc
+        cmd_handler = loc.value
+        
+        cmd_handler = cmd_handler[mob] if cmd_handler.kind_of? Proc
+        raise "expected cmd_handler to be CommandHandler" unless cmd_handler.kind_of? CommandHandler
+        cmd_func = cmd_handler.find cmd
+        next unless cmd_func
+        begin
+          cmd_func[:value].call( @game, mob, cmd_func[:rest], cmd_func[:match] )
+          cmd_handled = true
+          break
+        rescue AbandonCallback
+        end
+      end
+    ensure
+      dequeued.each do |loc| @mob_handlers[mob].insert_locator loc end
+    end
+    
+    cmd_handled
   end
 
   private
