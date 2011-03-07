@@ -27,6 +27,12 @@ class Game
     pov_send ->(c,m){ send_msg c, m }
   end
 
+  def all_characters
+    chars = []
+    @character_system.each_connected_char do |char| chars << char end
+    chars
+  end
+
   def connected?( char )
     @character_system.connected? char
   end
@@ -194,6 +200,7 @@ class Game
     @cmd_map.add "west", ->(game, mob, rest, match) { Helper::exit_room(game, mob,mob.room.west,"west") }
     @cmd_map.add "east", ->(game, mob, rest, match) { Helper::exit_room(game, mob,mob.room.east,"east") }
     @cmd_map.add "say", ->(game, mob, rest, match) { say(mob, rest) }
+    @cmd_map.add "shout", ->(game, mob, rest, match) { shout(game, mob, rest) }
     @cmd_map.add "look", ->(game, mob, rest, match) { look( game, mob ) }
     @cmd_map.add "exits", ->(game, mob, rest, match) { exits( game, mob ) }
     @cmd_map.add "quit", ->(game, mob, rest, match) { quit( game, mob.char ) if match == "quit" }
@@ -272,10 +279,24 @@ class Game
       return unless msg.length > 0
       pov_scope do
         pov(mob) do
-          "{!{FCYou say, '#{msg}'\n"
+          "{!{FCYou say, '#{msg}'.\n"
         end
         pov(mob.room.mobs) do
-          "{!{FC#{mob.short_name} says, '#{msg}'\n"
+          "{!{FC#{mob.short_name} says, '#{msg}'.\n"
+        end
+      end
+    end
+
+    def self.shout(game, mob, msg )
+      Log::debug "mob #{mob.short_name} shouts #{msg}", "game"
+      msg.lstrip!
+      return unless msg.length > 0
+      pov_scope do
+        pov(mob.char) do
+          "{!{FMYou shout, '#{msg}'.\n"
+        end
+        pov(game.all_characters) do
+          "{!{FMYou hear #{mob.short_name} shout, '#{msg}'.\n"
         end
       end
     end

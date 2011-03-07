@@ -22,6 +22,7 @@ describe MobCommands do
     context "with an unadded mob" do
       before :each do
         @mob = double("Mob")
+        @mob.stub(:short_name).and_return "Fred"
       end
 
       shared_examples_for "mob doesn't exist" do
