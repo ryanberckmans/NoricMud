@@ -1,6 +1,8 @@
 require "core_commands/base.rb"
+require "combat/base.rb"
 
 class Game
+  
   def initialize( character_system )
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
@@ -12,9 +14,17 @@ class Game
       end
     end
 
+    @login_room = @rooms.each do |room|
+      break room if room.name == "A Bloody Combat Pit"
+    end
+    @respawn_room = @rooms.each do |room|
+      break room if room.name == "Within Illuminated Mists"
+    end
+
     @mob_commands = MobCommands.new self
 
     @core_commands = CoreCommands.new self
+    @combat = Combat.new self
 
     @msgs_this_tick = {}
     @new_logouts = []
@@ -28,6 +38,10 @@ class Game
     @secret_cmds2 = ->(mob) { if mob.hp < 150 then @rage else nil end }
     
     pov_send ->(c,m){ send_msg c, m }
+  end
+
+  def respawn_room
+    @respawn_room
   end
 
   def mob_commands
@@ -53,7 +67,7 @@ class Game
     end
     return unless char and @character_system.connected? char
     @msgs_this_tick[char] ||= "\n"
-    @msgs_this_tick[char] += msg
+    @msgs_this_tick[char] += msg + "{@"
   end
 
   def tick
@@ -128,7 +142,7 @@ class Game
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
     @mob_commands.add_cmd_handler char.mob, @secret_cmds2, 20
     Log::info "#{char.name} logging on", "game"
-    CoreCommands::poof self, char.mob, @rooms[0]
+    CoreCommands::poof self, char.mob, @login_room
     CoreCommands::look self, char.mob
     send_msg char, COMMANDS
   end
