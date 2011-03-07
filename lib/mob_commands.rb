@@ -7,12 +7,14 @@ class MobCommands
   def initialize( game )
     raise "expected a Game" unless game.kind_of? Game
     @game = game
+    @default_handlers = []
     @mob_handlers = {}
   end
 
   def add(mob)
     raise "mob already exists" if @mob_handlers[mob]
     @mob_handlers[mob] = Depq.new
+    add_default_cmd_handlers mob
     Log::info "added #{mob.short_name}", "mobcommands"
   end
 
@@ -22,8 +24,15 @@ class MobCommands
     Log::info "removed #{mob.short_name}", "mobcommands"
   end
 
+  def add_default_cmd_handler( handler, priority )
+    raise "expected handler to be Proc or AbbrevMap" unless handler.kind_of? AbbrevMap or handler.kind_of? Proc
+    raise "expected priority to be Integer" unless priority.kind_of? Fixnum
+    @default_handlers << [handler, priority]
+  end
+
   def add_cmd_handler(mob, handler, priority)
-    raise "expected handler to be Proc or AbbrevMap" unless handler.kind_of? Proc or handler.kind_of? AbbrevMap
+    raise "expected handler to be Proc or AbbrevMap" unless handler.kind_of? AbbrevMap or handler.kind_of? Proc
+    raise "expected priority to be Integer" unless priority.kind_of? Fixnum
     verify_exists mob
     @mob_handlers[mob].insert handler, priority
   end
@@ -61,6 +70,9 @@ class MobCommands
         
         cmd_func = cmd_handler.find cmd
         next unless cmd_func
+        raise "expected cmd_func[:value] to be a Proc" unless cmd_func[:value].kind_of? Proc
+        raise "expected cmd_func[:match] to be a String" unless cmd_func[:match].kind_of? String
+        raise "expected cmd_func[:rest] to be a String" unless cmd_func[:rest].kind_of? String
         begin
           cmd_func[:value].call( @game, mob, cmd_func[:rest], cmd_func[:match] )
           cmd_handled = true
@@ -81,5 +93,13 @@ class MobCommands
   private
   def verify_exists( mob )
     raise "expected mob to be present in commandhandler list" unless @mob_handlers[mob]
+  end
+
+  def add_default_cmd_handlers( mob )
+    @default_handlers.each do |arr|
+      handler = arr[0]
+      priority = arr[1]
+      add_cmd_handler mob, handler, priority
+    end
   end
 end

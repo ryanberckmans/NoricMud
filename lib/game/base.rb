@@ -1,3 +1,4 @@
+require "core_commands/base.rb"
 
 class Game
   def initialize( character_system )
@@ -13,6 +14,8 @@ class Game
 
     @mob_commands = MobCommands.new self
 
+    @core_commands = CoreCommands.new self
+
     @msgs_this_tick = {}
     @new_logouts = []
 
@@ -25,6 +28,10 @@ class Game
     @secret_cmds2 = ->(mob) { if mob.hp < 150 then @rage else nil end }
     
     pov_send ->(c,m){ send_msg c, m }
+  end
+
+  def mob_commands
+    @mob_commands
   end
 
   def all_characters

@@ -17,6 +17,25 @@ describe MobCommands do
       @mob_commands = MobCommands.new @game
     end
 
+    it "allows a default handler to be added" do
+      expect { @mob_commands.add_default_cmd_handler AbbrevMap.new, 0 }.to_not raise_error
+    end
+
+    it "raises error unless added default handler is a Proc or AbbrevMap" do
+      priority = 5
+      expect { @mob_commands.add_default_cmd_handler nil, priority }.to raise_error
+      expect { @mob_commands.add_default_cmd_handler 5, priority }.to raise_error
+      expect { @mob_commands.add_default_cmd_handler Object.new, priority }.to raise_error
+      expect { @mob_commands.add_default_cmd_handler AbbrevMap.new, priority }.to_not raise_error
+      expect { @mob_commands.add_default_cmd_handler ->{}, priority }.to_not raise_error
+    end
+
+    it "raises error unless added default handler has integer priority" do
+      expect { @mob_commands.add_default_cmd_handler AbbrevMap.new, nil }.to raise_error
+      expect { @mob_commands.add_default_cmd_handler AbbrevMap.new, "foo" }.to raise_error
+      expect { @mob_commands.add_default_cmd_handler AbbrevMap.new, 5 }.to_not raise_error
+    end
+
     subject { @mob_commands }
 
     context "with an unadded mob" do
@@ -48,6 +67,29 @@ describe MobCommands do
       end # shared examples mob doesn't exist
 
       it_behaves_like "mob doesn't exist"
+
+      context "with a default cmd handler" do
+        before :each do
+          @default = double("AbbrevMap")
+          @default.stub(:kind_of?).with(AbbrevMap).and_return true
+          @default.stub(:kind_of?).with(Proc).and_return false
+          @result = nil
+          @default.stub(:find).with("foo").and_return({ value:->game,mob,match,rest{@result = "bar"}, match:"", rest:""})
+          @mob_commands.add_default_cmd_handler @default, 0
+        end
+
+        context "after mob is added" do
+          before :each do
+            @mob_commands.add @mob
+          end
+
+          it "recognizes the default cmd handler" do
+            @result.should be_nil
+            @mob_commands.handle_cmd @mob, "foo"
+            @result.should == "bar"
+          end
+        end
+      end
       
       context "after mob is added" do
         before :each do
@@ -67,6 +109,12 @@ describe MobCommands do
             @mob_commands.remove @mob
           end
           it_behaves_like "mob doesn't exist"
+        end
+
+        it "raises error unless added cmd handler has integer priority" do
+          expect { @mob_commands.add_cmd_handler @mob, AbbrevMap.new, nil }.to raise_error
+          expect { @mob_commands.add_cmd_handler @mob, AbbrevMap.new, "foo" }.to raise_error
+          expect { @mob_commands.add_cmd_handler @mob, AbbrevMap.new, 5 }.to_not raise_error
         end
 
         it "raises error unless added cmd handler is a AbbrevMap or Proc" do
