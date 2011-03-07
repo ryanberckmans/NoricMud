@@ -33,43 +33,49 @@ def random_command
   $cmds.sample
 end
 
-def async_char
+def async_char( bot_num )
   thread = Thread.new do
+    sleep bot_num * 1.0 / 2
     random_char = ""
     10.times { random_char += (Random.new.rand(1..26) + 96).chr }
     random_account = Random.new.rand(10000..40000).to_s
     s = login_char random_account, random_char
     i = 0
     $bots += 1
-    while true
-      data = s.recv_nonblock(1024) rescue nil
-      #puts data if data
-      sleep 0.25
-      if i > 2
-        cmd = random_command
-        #puts cmd
-        s.send cmd + "\n", 0
-        if cmd == "quit"
-          $bots -= 1
-          Thread.exit
+    puts "bot #{bot_num} connected"
+    begin
+      while true
+        data = s.recv_nonblock(1024) rescue nil
+        #puts data if data
+        sleep 0.25
+        if i > 2
+          cmd = random_command
+          #puts cmd
+          s.send cmd + "\n", 0
+          if cmd == "quit"
+            Thread.exit
+          end
+          i = 0
         end
-        i = 0
+        i += 1
       end
-      i += 1
+    ensure
+      puts "bot #{bot_num} disconnected"
+      $bots -= 1
     end
   end
   thread
 end
+
 threads = []
 $bots = 0
-ARGV[0].to_i.times { threads << async_char }
+ARGV[0].to_i.times { |i| threads << async_char(i) }
 old_bots = nil
 while true
-  puts "#{$bots} connected" if $bots != old_bots
+  puts "#{$bots} total connected" if $bots != old_bots
   old_bots = $bots
   sleep 5
   break if $bots < 1
 end
 threads.each do |t| t.join end
 puts "done"
-
