@@ -181,9 +181,9 @@ describe Connection do
       @client_socket.recv(1024).should == ""
     end
 
-    it "raises an error when disconnecting a disconnected connection" do
+    it "allows disconnecting a disconnected connection" do
       @connection.disconnect
-      expect { @connection.disconnect }.to raise_error
+      expect { @connection.disconnect }.to_not raise_error
     end
 
     it "stops reporting commands when disconnected" do

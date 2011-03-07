@@ -40,6 +40,7 @@ def async_char
     random_account = Random.new.rand(10000..40000).to_s
     s = login_char random_account, random_char
     i = 0
+    $bots += 1
     while true
       data = s.recv_nonblock(1024) rescue nil
       #puts data if data
@@ -60,13 +61,14 @@ def async_char
   thread
 end
 threads = []
-$bots = ARGV[0].to_i
-$bots.times { threads << async_char }
+$bots = 0
+ARGV[0].to_i.times { threads << async_char }
 old_bots = nil
 while true
   puts "#{$bots} connected" if $bots != old_bots
   old_bots = $bots
   sleep 5
+  break if $bots < 1
 end
 threads.each do |t| t.join end
 puts "done"

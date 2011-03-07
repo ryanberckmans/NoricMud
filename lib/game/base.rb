@@ -114,7 +114,7 @@ class Game
       pov(char.mob) do "Reconnected.\n" end
       pov(char.mob.room.mobs) do "#{char.name} reconnected.\n" end
     end
-    Commands::look char.mob
+    Commands::look self, char.mob
     send_msg char, COMMANDS
   end
 

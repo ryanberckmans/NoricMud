@@ -52,7 +52,7 @@ class Connection
   end
 
   def disconnect
-    raise "connection already disconnected" unless @connected
+    Log::warn "disconnect: connection #{id} was already disconnected", "connections" unless @connected
     @socket.close rescue nil
     @raw = ""
     @connected = false
