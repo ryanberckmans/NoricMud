@@ -16,6 +16,10 @@ class Game
     @msgs_this_tick = {}
     @new_logouts = []
 
+    @secret_cmds = AbbrevMap.new
+    @secret_cmds.add "east", ->(game,mob,rest,match) { if mob.room.name =~ /Pit/ then send_msg mob.char, "The {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal is {FRclosed{@. {!{FMPurple monkey dishwasher{@.\n" else raise AbandonCallback.new end }
+    @secret_cmds.add "heal", ->(game,mob,rest,match) { if mob.room.name =~ /Subterranean Forest/ then send_msg mob.char, "A bright {!{FGsubterranean forest aura{@ heals your wounds.\n"; mob.hp = mob.hp_max; mob.energy = mob.energy_max else raise AbandonCallback.new end }
+    
     pov_send ->(c,m){ send_msg c, m }
   end
 
@@ -84,6 +88,7 @@ class Game
     char.mob.char = char
     @mob_commands.add char.mob
     @mob_commands.add_cmd_handler char.mob, Commands::map, 0
+    @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
     Log::info "#{char.name} logging on", "game"
     Commands::poof char.mob, @rooms[0]
     Commands::look self, char.mob
@@ -143,7 +148,8 @@ class Game
       cmd = @character_system.next_command char
       next unless cmd
       @msgs_this_tick[char] ||= ""
-      @mob_commands.handle_cmd char.mob, cmd
+      next if cmd.empty?
+      send_msg char, "Thou must be no such command.\n" unless @mob_commands.handle_cmd( char.mob, cmd )
     end
   end
 
