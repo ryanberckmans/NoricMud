@@ -21,7 +21,7 @@ class Game
     @secret_cmds.add "heal", ->(game,mob,rest,match) { if mob.room.name =~ /Subterranean Forest/ then send_msg mob.char, "A bright {!{FGsubterranean forest aura{@ heals your wounds.\n"; mob.hp = mob.hp_max; mob.energy = mob.energy_max else raise AbandonCallback.new end }
 
     @rage = AbbrevMap.new
-    @rage.add "rage", ->(game,mob,rest,match) { game.send_msg mob, "{!{FC***{@Secret {!{RRAGE ACTIVATED{@ because your hp is low.{!{FC***\n" }
+    @rage.add "rage", ->(game,mob,rest,match) { game.send_msg mob, "{!{FC***{@Secret {!{FRRAGE ACTIVATED{@ because your hp is low.{!{FC***\n" }
     @secret_cmds2 = ->(mob) { if mob.hp < 150 then @rage else nil end }
     
     pov_send ->(c,m){ send_msg c, m }
