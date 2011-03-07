@@ -1,3 +1,4 @@
+require "spec_helper.rb"
 
 describe MobCommands do
 

@@ -13,11 +13,13 @@ class MobCommands
   def add(mob)
     raise "mob already exists" if @mob_handlers[mob]
     @mob_handlers[mob] = Depq.new
+    Log::info "added #{mob.short_name}", "mobcommands"
   end
 
   def remove(mob)
     verify_exists mob
     @mob_handlers.delete mob
+    Log::info "removed #{mob.short_name}", "mobcommands"
   end
 
   def add_cmd_handler(mob, handler, priority)
@@ -42,6 +44,7 @@ class MobCommands
   def handle_cmd( mob, cmd )
     verify_exists mob
     raise "expected cmd to be a String" unless cmd.kind_of? String
+    Log::debug "handling cmd #{cmd} for #{mob.short_name}", "mobcommands"
     cmd_handled = false
     original_size = @mob_handlers[mob].size
     dequeued = []
@@ -66,7 +69,7 @@ class MobCommands
       end
     ensure
       dequeued.each do |loc|
-        raise unless loc.kind_of? Depq::Locator
+        raise "expected locator to be a Depq::Locator" unless loc.kind_of? Depq::Locator
         @mob_handlers[mob].insert_locator loc
       end
     end
