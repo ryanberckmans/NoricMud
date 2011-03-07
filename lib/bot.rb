@@ -23,6 +23,10 @@ $cmds << "up"
 $cmds << "down"
 $cmds << "say bleep blap"
 $cmds << "look"
+$cmds << "rage"
+$cmds << "heal"
+$cmds << "hp"
+$cmds << "energy"
 def random_command
   return "quit" if Random.new.rand(1..100) > 99
   $cmds.sample
@@ -37,13 +41,16 @@ def async_char
     i = 0
     while true
       data = s.recv_nonblock(1024) rescue nil
-      puts data if data
+      #puts data if data
       sleep 0.25
       if i > 2
         cmd = random_command
-        puts cmd
+        #puts cmd
         s.send cmd + "\n", 0
-        Thread.exit if cmd == "quit"
+        if cmd == "quit"
+          $bots -= 1
+          Thread.exit
+        end
         i = 0
       end
       i += 1
@@ -52,6 +59,14 @@ def async_char
   thread
 end
 threads = []
-ARGV[0].to_i.times { threads << async_char }
+$bots = ARGV[0].to_i
+$bots.times { threads << async_char }
+old_bots = nil
+while true
+  puts "#{$bots} connected" if $bots != old_bots
+  old_bots = $bots
+  sleep 5
+end
 threads.each do |t| t.join end
+puts "done"
 

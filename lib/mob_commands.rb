@@ -56,6 +56,7 @@ class MobCommands
 
         cmd_handler = loc.value
         cmd_handler = cmd_handler[mob] if cmd_handler.kind_of? Proc
+        next unless cmd_handler
         raise "expected cmd_handler to be AbbrevMap" unless cmd_handler.kind_of? AbbrevMap
         
         cmd_func = cmd_handler.find cmd

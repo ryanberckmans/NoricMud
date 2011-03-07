@@ -19,6 +19,10 @@ class Game
     @secret_cmds = AbbrevMap.new
     @secret_cmds.add "east", ->(game,mob,rest,match) { if mob.room.name =~ /Pit/ then send_msg mob.char, "The {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal is {FRclosed{@. {!{FMPurple monkey dishwasher{@.\n" else raise AbandonCallback.new end }
     @secret_cmds.add "heal", ->(game,mob,rest,match) { if mob.room.name =~ /Subterranean Forest/ then send_msg mob.char, "A bright {!{FGsubterranean forest aura{@ heals your wounds.\n"; mob.hp = mob.hp_max; mob.energy = mob.energy_max else raise AbandonCallback.new end }
+
+    @rage = AbbrevMap.new
+    @rage.add "rage", ->(game,mob,rest,match) { game.send_msg mob, "{!{FC***{@Secret {!{RRAGE ACTIVATED{@ because your hp is low.{!{FC***\n" }
+    @secret_cmds2 = ->(mob) { if mob.hp < 150 then @rage else nil end }
     
     pov_send ->(c,m){ send_msg c, m }
   end
@@ -59,8 +63,8 @@ class Game
     raise "expected char to be online" unless @character_system.online? char
     Log::info "#{char.name} logging off", "game"
     pov_scope do
-      pov(char.mob) do "Quitting...\n" end
-      pov(char.mob.room.mobs) do "#{char.name} quit.\n" end
+      pov(char.mob) do "{@Quitting...\n" end
+      pov(char.mob.room.mobs) do "{@#{char.name} quit.\n" end
     end
     Helper::move_to( char.mob, nil )
     @new_logouts << char
@@ -89,6 +93,7 @@ class Game
     @mob_commands.add char.mob
     @mob_commands.add_cmd_handler char.mob, Commands::map, 0
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
+    @mob_commands.add_cmd_handler char.mob, @secret_cmds2, 20
     Log::info "#{char.name} logging on", "game"
     Commands::poof char.mob, @rooms[0]
     Commands::look self, char.mob
