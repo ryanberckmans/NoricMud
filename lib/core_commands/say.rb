@@ -1,6 +1,5 @@
 
 module CoreCommands
-  add_cmd "say", ->game,mob,rest,match { say game, mob, rest }
   def self.say( game, mob, msg )
     Log::debug "mob #{mob.short_name} says #{msg}", "game"
     msg.lstrip!
@@ -10,7 +9,7 @@ module CoreCommands
     end
     pov_scope do
       pov(mob) do
-        "{!{FCYou NEWsay, '#{msg}'.\n"
+        "{!{FCYou say, '#{msg}'.\n"
       end
       pov(mob.room.mobs) do
         "{!{FC#{mob.short_name} says, '#{msg}'.\n"
