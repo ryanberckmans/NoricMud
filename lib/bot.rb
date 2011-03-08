@@ -29,6 +29,7 @@ $cmds << "heal"
 $cmds << "hp"
 $cmds << "energy"
 $cmds << "kill random"
+$cmds << "fight random"
 def random_command
   return "quit" if Random.new.rand(1..100) > 99
   $cmds.sample

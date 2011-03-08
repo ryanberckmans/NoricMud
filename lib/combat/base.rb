@@ -22,6 +22,17 @@ module Combat
       @game = game
       @game.mob_commands.add_default_cmd_handler Combat::commands, COMBAT_COMMANDS_HANDLER_PRIORITY
       @in_combat = {}
+
+      @in_combat_cmds = AbbrevMap.new
+      @in_combat_cmds.add "north", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "south", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "east", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "west", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "up", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "down", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "kill", ->(game, mob, rest, match) { game.send_msg mob, "You're already fighting!!\n" }
+      @in_combat_cmds.add "fight random", ->(game, mob, rest, match) { game.send_msg mob, "You're already fighting someone random!!\n" }
+      @game.mob_commands.add_default_cmd_handler ->(mob){ @in_combat_cmds if in_combat? mob }, COMBAT_COMMANDS_HANDLER_PRIORITY + 2
     end
 
     def tick
@@ -39,6 +50,11 @@ module Combat
         fight_over
       end
       Log::info "end tick", "combat"
+    end
+
+    def target( mob )
+      raise "expected mob to be in combat" unless in_combat? mob
+      @in_combat[mob]
     end
 
     def in_combat?( mob )
@@ -100,6 +116,7 @@ module Combat
 
   add_cmd "kill", ->game,mob,rest,match { kill game, mob, rest }
   add_cmd "kill random", ->game,mob,rest,match { green_beam game, mob }
+  add_cmd "fight random", ->game,mob,rest,match { kill game, mob, mob.room.mobs.sample.short_name }
 
   def self.damage( game, mob, amount )
     raise "expected mob to be a Mob" unless mob.kind_of? Mob
@@ -121,7 +138,7 @@ module Combat
         return
       end
     end
-    game.send_msg attacker, "No one here by the name of #{target}.\n"
+    game.send_msg attacker, "They aren't here.\n"
   end
   
   def self.green_beam( game, mob )
