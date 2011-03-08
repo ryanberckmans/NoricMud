@@ -48,9 +48,19 @@ class Game
     @mob_commands
   end
 
-  def all_characters
+  def combat
+    @combat
+  end
+
+  def all_connected_characters
     chars = []
     @character_system.each_connected_char do |char| chars << char end
+    chars
+  end
+
+  def all_characters
+    chars = []
+    @character_system.each_char do |char| chars << char end
     chars
   end
 
@@ -77,6 +87,7 @@ class Game
     process_new_reconnections
     process_new_logins
     process_character_commands
+    @combat.tick
     send_char_msgs
     while char = @new_logouts.shift do
       @mob_commands.remove char.mob

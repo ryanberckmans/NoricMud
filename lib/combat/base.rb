@@ -21,11 +21,109 @@ module Combat
     def initialize( game )
       @game = game
       @game.mob_commands.add_default_cmd_handler Combat::commands, COMBAT_COMMANDS_HANDLER_PRIORITY
+      @in_combat = {}
     end
-  end
 
+    def tick
+      # combat.tick should be called after player commands are processed, so new fights happen this tick
+      @game.all_characters.each do |char|
+        mob = char.mob
+        mob.attack_cooldown -= 1
+        mob.attack_cooldown = 0 if mob.attack_cooldown < 0
+      end
+      Log::info "start tick", "combat"
+      @in_combat.delete_if do |attacker,defender|
+        fight_over = attacker.room != defender.room
+        Log::debug "fight between #{attacker.short_name}, #{defender.short_name} is over", "combat" if fight_over
+        tick_fight attacker, defender unless fight_over
+        fight_over
+      end
+      Log::info "end tick", "combat"
+    end
+
+    def in_combat?( mob )
+      raise "expected mob to be a Mob" unless mob.kind_of? Mob
+      @in_combat.key? mob
+    end
+
+    def start_combat( attacker, defender )
+      raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
+      raise "expected defender to be a Mob" unless defender.kind_of? Mob
+      raise "expected attacker to differ from defender" if attacker == defender
+      raise "expected attacker to not be fighting" if in_combat? attacker
+      @in_combat[attacker] = defender
+      Log::debug "#{attacker.short_name} starting fighting #{defender.short_name}", "combat"
+      start_combat( defender, attacker ) unless in_combat? defender
+    end
+
+    def end_combat( attacker )
+      raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
+      raise "expected attacker to be fighting" unless in_combat? attacker
+      @in_combat.delete attacker
+      Log::debug "#{attacker.short_name} stopped fighting", "combat"
+    end
+
+    private
+    def tick_fight( attacker, defender )
+      Log::debug "ticking fight, attacker #{attacker.short_name}, defender #{defender.short_name}", "combat"
+      raise "expected attacker to have positive hp" unless attacker.hp > 0
+      raise "expected defender to have positive hp" unless defender.hp > 0
+      if attacker.attack_cooldown < 1
+        attacker.attack_cooldown = attacker.attack_cooldown_max
+        if Random.new.rand(1..2) > 1
+          melee_hit attacker, defender
+        else
+          melee_miss attacker, defender
+        end
+      end
+    end
+    
+    def melee_miss( attacker, defender )
+      Log::debug "#{attacker.short_name} melee missed #{defender.short_name}", "combat"
+      pov_scope do
+        pov(attacker) { "{!{FGYour slash misses #{defender.short_name}.\n" }
+        pov(defender) { "{!{FG#{attacker.short_name}'s slash misses you.\n" }
+        pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s slash misses #{defender.short_name}.\n" }
+      end
+    end
+    
+    def melee_hit( attacker, defender )
+      Log::debug "#{attacker.short_name} melee hit #{defender.short_name}", "combat"
+      pov_scope do
+        pov(attacker) { "{!{FGYour slash decimates #{defender.short_name}!\n" }
+        pov(defender) { "{!{FG#{attacker.short_name}'s slash decimates you!\n" }
+        pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s slash decimates #{defender.short_name}!\n" }
+      end
+      Combat::damage @game, defender, 20
+    end
+  end # end Public
+
+  add_cmd "kill", ->game,mob,rest,match { kill game, mob, rest }
   add_cmd "kill random", ->game,mob,rest,match { green_beam game, mob }
 
+  def self.damage( game, mob, amount )
+    raise "expected mob to be a Mob" unless mob.kind_of? Mob
+    raise "expected amount to be an Integer" unless amount.kind_of? Fixnum
+    mob.hp -= amount
+    death game, mob if mob.hp < 1
+  end
+
+  def self.kill( game, attacker, target )
+    raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
+    raise "expected target to be a String" unless target.kind_of? String
+    if target.empty?
+      game.send_msg attacker, "Yes! Sate your bloodlust!! But on who?\n"
+      return
+    end
+    attacker.room.mobs.each do |mob_in_room|
+      if mob_in_room.short_name =~ Regexp.new( target, Regexp::IGNORECASE) and attacker != mob_in_room
+        game.combat.start_combat attacker, mob_in_room
+        return
+      end
+    end
+    game.send_msg attacker, "No one here by the name of #{target}.\n"
+  end
+  
   def self.green_beam( game, mob )
     dies = mob.room.mobs.sample
     if dies == mob
@@ -40,7 +138,7 @@ module Combat
         pov(mob.room.mobs) { "A jet of malicious {!{FGgreen light{@ surges forth from {!{FY#{mob.short_name}'s{@ hand and strikes {!{FY#{dies.short_name}{@ in the chest.\n" }
       end
     end
-    death game, dies
+    damage( game, dies, dies.hp )
   end
 
   def self.restore( mob )
@@ -49,6 +147,7 @@ module Combat
   end
 
   def self.death( game, mob )
+    Log::info "#{mob.short_name} died", "combat"
     pov_scope do
       pov(mob) { "{@\nYou're {!{FRDEAD!!{@ It is strangely {!{FCpainless{@.\n" }
       pov(mob.room.mobs) { "{!{FY#{mob.short_name}{@ is {!{FRDEAD{@!!\nThe lifeless husk that was once {!{FY#{mob.short_name}{@ implodes in a shower of sparks.\n" }

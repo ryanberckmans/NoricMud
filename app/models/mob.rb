@@ -1,7 +1,7 @@
 class Mob < ActiveRecord::Base
   validates_presence_of :short_name, :long_name
 
-  attr_accessor :room, :char, :hp_max, :hp, :energy_max, :energy
+  attr_accessor :room, :char, :hp_max, :hp, :energy_max, :energy, :attack_cooldown, :attack_cooldown_max
 
   after_initialize :on_load
 
@@ -10,6 +10,8 @@ class Mob < ActiveRecord::Base
     self.energy_max = 100
     self.hp = 250
     self.energy = 100
+    self.attack_cooldown_max = 12
+    self.attack_cooldown = 0
   end
 
   def hp_color

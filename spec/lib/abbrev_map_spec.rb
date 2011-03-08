@@ -96,6 +96,10 @@ end
 
 describe AbbrevMap do
 
+  it "should rename/change default/catchall callbacks" do
+    pending "two types of 'default' callbacks; epsilon callback, for find ''; catchall callback, if find * returns nil"
+  end
+
   it "requires that non-nil default_callback be a Proc" do
     proc = double("Proc")
     proc.should_receive(:kind_of?).with(Proc).and_return true

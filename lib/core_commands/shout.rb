@@ -11,7 +11,7 @@ module CoreCommands
       pov(mob.char) do
         "{!{FMYou shout, '#{msg}'.\n"
       end
-      pov(game.all_characters) do
+      pov(game.all_connected_characters) do
         "{!{FMYou hear #{mob.short_name} shout, '#{msg}'.\n"
       end
     end
