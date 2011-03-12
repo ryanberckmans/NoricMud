@@ -17,9 +17,11 @@ class Game
     @login_room = @rooms.each do |room|
       break room if room.name == "A Bloody Combat Pit"
     end
+    raise "expected login_room to be a Room" unless @login_room.kind_of? Room
     @respawn_room = @rooms.each do |room|
       break room if room.name == "Within Illuminated Mists"
     end
+    raise "expected respawn_room to be a Room" unless @respawn_room.kind_of? Room
 
     @mob_commands = MobCommands.new self
 
