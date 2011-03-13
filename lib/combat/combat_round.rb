@@ -21,6 +21,7 @@ module Combat
       raise "expected attacker to differ from defender" if attacker == defender
       Log::debug "attacker #{attacker.short_name} aggressed defender #{defender.short_name}", "combatround"
       engage attacker, defender unless engaged? attacker
+      engage defender, attacker unless engaged? defender
       nil
     end
 
@@ -35,7 +36,7 @@ module Combat
       @engaged.key? mob
     end
 
-    def still_need_to_attack?( attacker )
+    def attacking_this_round?( attacker )
       raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
       raise "expected attacker to be engaged" unless engaged? attacker
       @engaged[attacker].in_queue?
@@ -48,7 +49,6 @@ module Combat
       run_schedule { |attacker,defender| block.call attacker, defender }
       nil
     end
-
 
     def valid_attack?( attacker )
       raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
@@ -66,7 +66,22 @@ module Combat
       raise "expected mob to be a Mob" unless mob.kind_of? Mob
       raise "expected mob to be engaged" unless engaged? mob
       @engaged.delete mob
+      attackers_of(mob).each do |attacker|
+        raise "expected attacker's fight to be invalid after mob disengaged" if valid_attack? attacker
+        attacker_attackers = attackers_of(attacker)
+        if attacker_attackers.empty?
+          disengage attacker
+        else
+          engage( attacker, attacker_attackers.first )
+        end
+      end
       nil
+    end
+
+    def attackers_of( mob )
+      attackers = [] 
+      @engaged.each_value { |val| attackers << val.value.attacker if val.value.defender == mob }
+      attackers
     end
     
     def engage( attacker, defender )
@@ -89,13 +104,10 @@ module Combat
     def run_schedule(&block)
       return nil unless block_given?
       while val = @round_schedule_depq.delete_min
-        puts "val #{val.attacker}"
         next unless valid_attack? val.attacker
-        puts "yielding"
         yield val.attacker, target_of(val.attacker)
       end
       nil
     end
-
   end # class Combat
 end

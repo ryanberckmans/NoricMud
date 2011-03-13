@@ -8,9 +8,9 @@ module CoreCommands
     mob.room.mobs.each do |mob_in_room|
       next if mob_in_room == mob
       look += "{!{FG#{mob_in_room.long_name} is here"
-      if game.combat.in_combat? mob_in_room
+      if game.combat.engaged? mob_in_room
         look += ", fighting "
-        target = game.combat.target mob_in_room
+        target = game.combat.target_of mob_in_room
         if target == mob
           look += "You!"
         else
