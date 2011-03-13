@@ -14,6 +14,10 @@ class Mob < ActiveRecord::Base
     self.attack_cooldown = 0
   end
 
+  def condition
+    "#{short_name} has #{hp.to_s}/#{hp_max.to_s}hp."
+  end
+
   def hp_color
     quartile = hp * 1.0 / hp_max
     quartile_color(quartile) + hp.to_s

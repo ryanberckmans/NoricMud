@@ -52,6 +52,7 @@ module Combat
 
     def valid_attack?( attacker )
       raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
+      raise "expected attacker to have a Room" unless attacker.room
       return false unless engaged? attacker
       target = target_of(attacker)
       return false unless target

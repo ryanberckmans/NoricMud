@@ -33,6 +33,9 @@ module Combat
       @in_combat_cmds.add "west", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "up", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "down", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "kill", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone!!\n" }
+      @in_combat_cmds.add "kill random", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone random!!\n" }
+      @in_combat_cmds.add "slay random", ->(game, mob, rest, match) { game.send_msg mob, "Momma always says, no slaying while fighting.\n" }
       @in_combat_cmds.add "quit", ->(game, mob, rest, match) { game.send_msg mob, "You haven't yet mastered the quit-while-fighting skill.\n" }
       @game.mob_commands.add_default_cmd_handler ->(mob){ @in_combat_cmds if @combat_round.engaged? mob }, COMBAT_COMMANDS_HANDLER_PRIORITY + 2
     end
@@ -48,13 +51,18 @@ module Combat
       @ticks_until_combat_round -= 1
       if @ticks_until_combat_round < 1
         @combat_round.next_round do |attacker, defender|
-          3.times { Combat.melee_try @game, attacker, defender; break unless @combat_round.valid_attack? attacker }
+          melee_round attacker, defender
+          @game.send_msg attacker, "{!{FM#{defender.condition}\n" if @combat_round.valid_attack? attacker
         end
         @ticks_until_combat_round = COMBAT_ROUND_TICK_INTERVAL
       end
       Log::info "end tick", "combat"
     end
 
+    def aggress( attacker, defender )
+      @combat_round.aggress attacker, defender
+    end
+    
     def target_of( mob )
       @combat_round.target_of mob
     end
@@ -70,8 +78,13 @@ module Combat
     def disengage( attacker )
       @combat_round.disengage attacker
     end
+
+    def melee_round( attacker, defender )
+      3.times { Combat.melee_try @game, attacker, defender; break unless @combat_round.valid_attack? attacker }
+    end
   end # end Public
 
+  
   def self.melee_try( game, attacker, defender )
     Random.new.rand(0..1) > 0 ? melee_miss( game, attacker, defender) : melee_hit( game, attacker, defender)
   end
@@ -79,27 +92,30 @@ module Combat
   def self.melee_miss( game, attacker, defender )
     Log::debug "#{attacker.short_name} melee missed #{defender.short_name}", "combat"
     pov_scope do
-      pov(attacker) { "{!{FGYour slash misses #{defender.short_name}.\n" }
-      pov(defender) { "{!{FG#{attacker.short_name}'s slash misses you.\n" }
+      pov(attacker) { "{!{FGYour slash {FYmisses{FG #{defender.short_name}.\n" }
+      pov(defender) { "{!{FY#{attacker.short_name}'s slash misses you.\n" }
       pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s slash misses #{defender.short_name}.\n" }
     end
+    Combat::damage game, attacker, defender, 0
   end
   
   def self.melee_hit( game, attacker, defender )
     Log::debug "#{attacker.short_name} melee hit #{defender.short_name}", "combat"
     pov_scope do
-      pov(attacker) { "{!{FGYour slash decimates #{defender.short_name}!\n" }
-      pov(defender) { "{!{FG#{attacker.short_name}'s slash decimates you!\n" }
+      pov(attacker) { "{!{FGYour slash {FMdecimates{FG #{defender.short_name}!\n" }
+      pov(defender) { "{!{FY#{attacker.short_name}'s slash decimates you!\n" }
       pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s slash decimates #{defender.short_name}!\n" }
     end
-    Combat::damage game, defender, 20
+    Combat::damage game, attacker, defender, 20
   end
 
-  def self.damage( game, mob, amount )
-    raise "expected mob to be a Mob" unless mob.kind_of? Mob
+  def self.damage( game, damager, receiver, amount )
+    raise "expected receiver to be a Mob" unless receiver.kind_of? Mob
+    raise "expected damager to be a Mob" unless damager.kind_of? Mob
     raise "expected amount to be an Integer" unless amount.kind_of? Fixnum
-    mob.hp -= amount
-    death game, mob if mob.hp < 1
+    game.combat.aggress damager, receiver
+    receiver.hp -= amount
+    death game, receiver if receiver.hp < 1
   end
 
   def self.kill( game, attacker, target )
@@ -111,7 +127,7 @@ module Combat
     end
     attacker.room.mobs.each do |mob_in_room|
       if mob_in_room.short_name =~ Regexp.new( target, Regexp::IGNORECASE) and attacker != mob_in_room
-        game.combat.engage attacker, mob_in_room
+        game.combat.melee_round attacker, mob_in_room
         return
       end
     end
@@ -132,7 +148,7 @@ module Combat
         pov(mob.room.mobs) { "A jet of malicious {!{FGgreen light{@ surges forth from {!{FY#{mob.short_name}'s{@ hand and strikes {!{FY#{dies.short_name}{@ in the chest.\n" }
       end
     end
-    damage( game, dies, dies.hp )
+    damage( game, mob, dies, dies.hp )
   end
 
   def self.restore( mob )
