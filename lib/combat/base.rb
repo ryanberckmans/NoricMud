@@ -134,6 +134,21 @@ module Combat
     end
   end
 
+  def self.glance( game, mob, target )
+    raise "expected mob to be a Mob" unless mob.kind_of? Mob
+    if target.empty?
+      CoreCommands::look game, mob
+      return
+    end
+    mob.room.mobs.each do |mob_in_room|
+      if mob_in_room.short_name =~ Regexp.new( target, Regexp::IGNORECASE)
+        game.send_msg mob, "{!{FY#{mob_in_room.condition}\n"        
+        return
+      end
+    end
+    game.send_msg mob, "You do not see that here.\n"
+  end
+
   def self.kill( game, attacker, target )
     raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
     raise "expected target to be a String" unless target.kind_of? String
