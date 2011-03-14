@@ -33,6 +33,8 @@ $cmds << "fight random"
 $cmds << "flee"
 $cmds << "help"
 $cmds << "glance A"
+$cmds << "where"
+$cmds << "who"
 def random_command
   return "quit" if Random.new.rand(1..100) > 99
   $cmds.sample

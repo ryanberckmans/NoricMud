@@ -8,10 +8,14 @@ class Room < ActiveRecord::Base
   after_initialize :on_load
 
   def has_exit?( dir )
-    exits.each do |exit|
-      return true if exit.direction == dir
-    end
-    false
+    self.exit[dir]
+  end
+
+  def delete_exit( dir )
+    raise "expected to have exit #{Exit.i_to_s dir}" unless has_exit? dir
+    xit = self.exit[dir]
+    self.exit.delete dir
+    xit.destroy
   end
   
   def on_load

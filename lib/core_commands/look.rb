@@ -3,7 +3,9 @@ module CoreCommands
   def self.look( game, mob )
     return unless mob.room and mob.char
     look = "{!"
-    look += "{FY#{mob.room.name}\n"
+    look += "{FY#{mob.room.name}"
+    look += " ##{mob.room.id.to_s}" if show_room_id? mob
+    look += "\n"
     look += "{FM#{mob.room.description}\n" unless not mob.room.description or mob.room.description.empty?
     mob.room.mobs.each do |mob_in_room|
       next if mob_in_room == mob

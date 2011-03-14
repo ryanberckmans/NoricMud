@@ -65,6 +65,7 @@ class Exit < ActiveRecord::Base
     exit = Exit.create({ :room => from, :direction => dir, :destination => to })
     raise "Failed to create exit from #{from.to_s} to #{to.to_s} direction #{dir.to_s}" if exit.new_record?
     from.exit[dir] = exit
+    from.exits true
   end
 
   belongs_to :room

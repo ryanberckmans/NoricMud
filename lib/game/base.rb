@@ -8,11 +8,6 @@ class Game
     @character_system = character_system
 
     @rooms = Room.find :all
-    @rooms.each do |room|
-      room.exits.each do |exit|
-        exit.destination = @rooms[@rooms.index exit.destination]
-      end
-    end
 
     @login_room = @rooms.each do |room|
       break room if room.name == "A Bloody Combat Pit"
