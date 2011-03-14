@@ -17,6 +17,14 @@ class Room < ActiveRecord::Base
     self.exit.delete dir
     xit.destroy
   end
+
+  def adjacent_mobs
+    adj = []
+    self.exit.each_value do |exit|
+      adj += exit.destination.mobs
+    end
+    adj
+  end
   
   def on_load
     self.mobs = []

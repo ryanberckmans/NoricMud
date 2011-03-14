@@ -36,13 +36,13 @@ $cmds << "glance A"
 $cmds << "where"
 $cmds << "who"
 def random_command
-  return "quit" if Random.new.rand(1..100) > 99
+  return "quit" if Random.new.rand(1..1000) > 999
   $cmds.sample
 end
 
 def async_char( bot_num )
   thread = Thread.new do
-    sleep bot_num * 1.0 / 2
+    sleep bot_num * 1.0 / 4
     random_char = ""
     10.times { random_char += (Random.new.rand(1..26) + 96).chr }
     random_account = Random.new.rand(10000..40000).to_s

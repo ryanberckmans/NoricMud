@@ -193,6 +193,7 @@ module Combat
     pov_scope do
       pov(mob) { "{@\nYou're {!{FRDEAD!!{@ It is strangely {!{FCpainless{@.\n" }
       pov(mob.room.mobs) { "{!{FY#{mob.short_name}{@ is {!{FRDEAD{@!!\nThe lifeless husk that was once {!{FY#{mob.short_name}{@ implodes in a shower of sparks.\n" }
+      pov(mob.room.adjacent_mobs) { "{@You hear a blood-curdling death cry!\n" }
     end
     game.move_to( mob, game.respawn_room )
     restore mob

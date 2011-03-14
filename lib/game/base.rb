@@ -27,7 +27,28 @@ class Game
     @new_logouts = []
 
     @secret_cmds = AbbrevMap.new
-    @secret_cmds.add "east", ->(game,mob,rest,match) { if mob.room.name =~ /Pit/ then send_msg mob.char, "The {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal is {!{FRclosed{@. {!{FMPurple monkey dishwasher{@.\n" else raise AbandonCallback.new end }
+    @secret_cmds.add "east", ->(game,mob,rest,match) do
+      raise AbandonCallback.new if mob.room.name != "A Bloody Combat Pit" or game.combat.engaged? mob
+      
+      if (Random.new.rand(1..4) > 1) then
+        pov_scope {
+          pov(mob) { "You fail to focus your concentration and the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal remains {!{FRclosed{@.\n" }
+          pov(mob.room.mobs) { "#{mob.short_name} takes a run at it, but the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal remains {!{FRclosed{@.\n" }
+        }
+        return
+      end
+      
+      pov_scope do
+        pov(mob) { "You crash into the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal and tear it {!{FGopen{@. You fall through the light and find yourself elsewhere.\n" }
+        pov(mob.room.mobs) { "#{mob.short_name} crashes through the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal, tearing it {!{FGopen{@. The portal flares rainbow and weaves itself shut.\n" }
+      end
+      move_to mob, Room.find(:all).sample
+      pov_scope do
+        pov_none(mob)
+        pov(mob.room.mobs) { "#{mob.short_name} appears in a blinding flash of {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@light.\n" }
+      end
+      CoreCommands.look self, mob
+    end
     @secret_cmds.add "heal", ->(game,mob,rest,match) { if mob.room.name =~ /Subterranean Forest/ then send_msg mob.char, "A bright {!{FGsubterranean forest aura{@ heals your wounds.\n"; mob.hp = mob.hp_max; mob.energy = mob.energy_max else raise AbandonCallback.new end }
 
     @rage = AbbrevMap.new
@@ -86,18 +107,14 @@ class Game
     process_character_commands
     @combat.tick
     send_char_msgs
-    while char = @new_logouts.shift do
-      @mob_commands.remove char.mob
-      @character_system.logout char
-    end
+    while char = @new_logouts.shift do do_logout char end
     send_prompts
     Log::debug "end tick", "game"
   end
 
   def logout( char )
+    raise "expected char to be a Character" unless char.kind_of? Character
     raise "expected char to be online" unless @character_system.online? char
-    Log::info "#{char.name} logging off", "game"
-    move_to( char.mob, nil )
     @new_logouts << char
   end
 
@@ -129,6 +146,20 @@ class Game
   end
 
   private
+  def do_logout( char )
+    raise "expected char to be online" unless @character_system.online? char
+    Log::info "#{char.name} logging off", "game"
+    mob = char.mob
+    pov_scope do
+      pov(mob) do "{@Quitting...\n" end
+      pov(mob.room.mobs) do "{@#{mob.char.name} quit.\n" end
+    end
+    move_to( mob, nil )
+    @msgs_this_tick.delete char
+    @mob_commands.remove mob
+    @character_system.logout char
+  end
+
   def send_char_msgs
     @msgs_this_tick.each_pair do |char,msg|
       @character_system.send_msg char, msg
@@ -141,12 +172,11 @@ class Game
   
   def send_prompts
     @msgs_this_tick.each_key do |char|
-      @character_system.send_msg char, prompt(char) if @character_system.online? char
+      @character_system.send_msg char, prompt(char)
     end
   end
   
   def login( char )
-    verify_mob_has_no_character char
     char.mob.char = char
     @mob_commands.add char.mob
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
