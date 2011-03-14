@@ -127,7 +127,7 @@ module Combat
     if Random.new.rand(0..3) > 0 and attacker.room.exits.size > 0
       game.combat.disengage attacker if game.combat.engaged? attacker
       exit = attacker.room.exits.sample
-      game.exit_room attacker, exit, Exit.direction_to_s(exit.direction), "flies"
+      game.exit_room attacker, exit, "flies"
       game.send_msg attacker, "{!{FRYou flee in a near-blind panic.\n"
     else
       game.send_msg attacker, "{!{FRIn your panic-stricken state, you fail to get away!\n"

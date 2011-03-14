@@ -27,6 +27,9 @@ module CoreCommands
     commands << "help"
     commands << "?"
     commands << "commands"
+    commands << "goto"
+    commands << "room create"
+    commands << "room default name"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
     game.send_msg mob, help

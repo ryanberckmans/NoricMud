@@ -114,13 +114,13 @@ class Game
     room.mobs << mob if room
   end
 
-  def exit_room( mob, exit, dir, verb="leaves" )
+  def exit_room( mob, exit, verb="leaves" )
     raise "expected mob to be a Mob" unless mob.kind_of? Mob
     if exit
       raise "expected exit to be an Exit" unless exit.kind_of? Exit
       pov_scope do
         pov_none(mob)
-        pov(mob.room.mobs) do "{!{FW#{mob.short_name} #{verb} #{dir}.\n" end
+        pov(mob.room.mobs) do "{!{FW#{mob.short_name} #{verb} #{Exit.i_to_s exit.direction}.\n" end
       end
       move_to( mob, exit.destination )
       pov_scope do
@@ -159,10 +159,8 @@ class Game
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
     CoreCommands::look self, char.mob
-    send_msg char, COMMANDS
   end
 
-  COMMANDS = "{!{FY--> {@Current commands are {!{FCn e s w u d{@, {!{FCenergy{@, {!{FChp{@, {!{FClook{@, {!{FCsay{@, {!{FCexits{@, {!{FCquit{@. Try losing link, reconnecting, multiplaying, creating multiple chars, breaking it, etc.\n"
   def character_reconnected( char )
     raise "expected char to be connected" unless @character_system.connected? char
     Log::info "#{char.name} reconnected", "game"
@@ -171,7 +169,6 @@ class Game
       pov(char.mob.room.mobs) do "#{char.name} reconnected.\n" end
     end
     CoreCommands::look self, char.mob
-    send_msg char, COMMANDS
   end
 
   def character_disconnected( char )

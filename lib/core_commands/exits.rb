@@ -4,12 +4,13 @@ module CoreCommands
     return unless mob.room
     room = mob.room
     exits = "{!{FUObvious exits:\n"
-    exits += "North  - " + room.north.destination.name + "\n" if room.north
-    exits += "East   - " + room.east.destination.name + "\n"  if room.east
-    exits += "South  - " + room.south.destination.name + "\n"  if room.south
-    exits += "West   - " + room.west.destination.name + "\n"  if room.west
-    exits += "Up     - " + room.up.destination.name + "\n"  if room.up
-    exits += "Down   - " + room.down.destination.name + "\n"  if room.down
+    Exit::DIRECTION_I_TO_S.each_pair do |dir_int, dir_string|
+      next unless room.exit[dir_int]
+      exit_in_dir = "#{dir_string.capitalize}"
+      while exit_in_dir.length < 7 do exit_in_dir += " " end
+      exit_in_dir += "- #{room.exit[dir_int].destination.name}\n"
+      exits += exit_in_dir
+    end
     game.send_msg mob, exits
   end
 end

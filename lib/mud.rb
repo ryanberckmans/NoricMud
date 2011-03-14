@@ -8,6 +8,8 @@ require "yaml"
 
 ActiveRecord::Base.establish_connection YAML.load_file('config/database.yml')[ ENV['RAILS_ENV'] ]
 
+require "abbrev_map.rb"
+
 require "models/account.rb"
 require "models/character.rb"
 require "models/mob.rb"
@@ -26,7 +28,6 @@ Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
 require "pov.rb"
-require "abbrev_map.rb"
 require "network.rb"
 require "account_system.rb"
 require "character_system.rb"

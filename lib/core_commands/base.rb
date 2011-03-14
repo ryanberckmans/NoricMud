@@ -24,12 +24,12 @@ module CoreCommands
     end
   end
   
-  add_cmd "north", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.north,"north") }
-  add_cmd "south", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.south,"south") }
-  add_cmd "up", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.up,"up") }
-  add_cmd "down", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.down,"down") }
-  add_cmd "west", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.west,"west") }
-  add_cmd "east", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.east,"east") }
+  add_cmd "north", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.exit[Exit::NORTH]) }
+  add_cmd "south", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.exit[Exit::SOUTH]) }
+  add_cmd "up", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.exit[Exit::UP]) }
+  add_cmd "down", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.exit[Exit::DOWN]) }
+  add_cmd "west", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.exit[Exit::WEST]) }
+  add_cmd "east", ->(game, mob, rest, match) { game.exit_room(mob,mob.room.exit[Exit::EAST]) }
   add_cmd "say", ->game,mob,rest,match { say game, mob, rest }
   add_cmd "quit", ->(game, mob, rest, match) { quit game, mob, match }
   add_cmd "shout", ->(game, mob, rest, match) { shout(game, mob, rest) }
@@ -46,6 +46,9 @@ module CoreCommands
   add_cmd "help", ->game,mob,rest,match { help game, mob }
   add_cmd "commands", ->game,mob,rest,match { help game, mob }
   add_cmd "?", ->game,mob,rest,match { help game, mob }
+  add_cmd "goto", ->game,mob,rest,match { goto game, mob, rest }
+  add_cmd "room create", ->game,mob,rest,match { room_create game, mob, rest }
+  add_cmd "room default name", ->game,mob,rest,match { room_default_name game, mob, rest }
 end
 
 
