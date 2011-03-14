@@ -18,7 +18,7 @@ module Combat
     def aggress( attacker, defender )
       raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
       raise "expected defender to be a Mob" unless defender.kind_of? Mob
-      raise "expected attacker to differ from defender" if attacker == defender
+      return if attacker == defender
       Log::debug "attacker #{attacker.short_name} aggressed defender #{defender.short_name}", "combatround"
       engage attacker, defender unless engaged? attacker
       engage defender, attacker unless engaged? defender
