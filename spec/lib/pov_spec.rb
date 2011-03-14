@@ -48,6 +48,7 @@ describe "issuing points of view with pov and pov_scope" do
     pov_send ->(receiver,pov) { @povs[receiver] ||= ""; @povs[receiver] += pov }
   end
 
+  pending "should alias pov_none as pov(mob) without a block"
   pending "should require an explicit ostream, instead of using global pov_send, perhaps using pov_scope( game )"
 
   it "raises error when pov(receiver) is used outside a pov_scope" do

@@ -114,20 +114,22 @@ class Game
     room.mobs << mob if room
   end
 
-  def exit_room( game, mob, exit, dir )
+  def exit_room( mob, exit, dir, verb="leaves" )
+    raise "expected mob to be a Mob" unless mob.kind_of? Mob
     if exit
+      raise "expected exit to be an Exit" unless exit.kind_of? Exit
       pov_scope do
         pov_none(mob)
-        pov(mob.room.mobs) do "{!{FW#{mob.short_name} leaves #{dir}.\n" end
+        pov(mob.room.mobs) do "{!{FW#{mob.short_name} #{verb} #{dir}.\n" end
       end
       move_to( mob, exit.destination )
       pov_scope do
         pov_none(mob)
         pov(mob.room.mobs) do "{!{FW#{mob.short_name} has arrived.\n" end
       end
-      CoreCommands::look( game, mob )
+      CoreCommands::look( self, mob )
     else
-      game.send_msg mob, "{@Alas, you cannot go that way...\n"
+      send_msg mob, "{@Alas, you cannot go that way...\n"
     end
   end
 

@@ -84,7 +84,6 @@ module Combat
     end
   end # end Public
 
-  
   def self.melee_try( game, attacker, defender )
     Random.new.rand(0..1) > 0 ? melee_miss( game, attacker, defender) : melee_hit( game, attacker, defender)
   end
@@ -116,6 +115,23 @@ module Combat
     game.combat.aggress damager, receiver
     receiver.hp -= amount
     death game, receiver if receiver.hp < 1
+  end
+
+  def self.flee( game, attacker )
+    raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
+    raise "expected attacker to have a room" unless attacker.room
+    pov_scope do
+      pov_none(attacker)
+      pov(attacker.room.mobs) { "{!{FR#{attacker.short_name} becomes panic-stricken and attemps to flee.\n" }
+    end
+    if Random.new.rand(0..3) > 0 and attacker.room.exits.size > 0
+      game.combat.disengage attacker if game.combat.engaged? attacker
+      exit = attacker.room.exits.sample
+      game.exit_room attacker, exit, Exit.direction_to_s(exit.direction), "flies"
+      game.send_msg attacker, "{!{FRYou flee in a near-blind panic.\n"
+    else
+      game.send_msg attacker, "{!{FRIn your panic-stricken state, you fail to get away!\n"
+    end
   end
 
   def self.kill( game, attacker, target )
