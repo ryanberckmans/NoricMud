@@ -35,8 +35,6 @@ module CoreCommands
   add_cmd "shout", ->(game, mob, rest, match) { shout(game, mob, rest) }
   add_cmd "look", ->(game, mob, rest, match) { look( game, mob ) }
   add_cmd "exits", ->(game, mob, rest, match) { exits( game, mob ) }
-  add_cmd "hp", ->(game, mob, rest, match) { mob.hp -= 25; mob.hp = 1 if mob.hp < 1 }
-  add_cmd "energy", ->(game, mob, rest, match) { mob.energy -= 10; mob.energy = 1 if mob.energy < 1  }
   add_cmd "flee", ->game,mob,rest,match { Combat.flee game, mob }
   add_cmd "glance", ->game,mob,rest,match { Combat.glance game, mob, rest }
   add_cmd "kill", ->game,mob,rest,match { Combat.kill game, mob, rest }

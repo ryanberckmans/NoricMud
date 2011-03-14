@@ -4,6 +4,67 @@ files.each do |f| require f end
 module Combat
   @commands = AbbrevMap.new
   COMBAT_COMMANDS_HANDLER_PRIORITY = 10
+
+  DAMAGE_TIER = {
+    barely_touch:0,
+    scratch:2,
+    bruise:3,
+    hit:4,
+    injure:5,
+    wound:7,
+    draw_blood:9,
+    smite:11,
+    massacre:14,
+    decimate:20,
+    devastate:25,
+    maim:30,
+    mutilate:40,
+    pulverise:50,
+    demolish:60,
+    mangle:70,
+    obliterate:80,
+    annihilate:90,
+    horribly_maim:100,
+    visciously_rend:130,
+  }
+
+  DAMAGE_COLOR_TIER = {
+    DAMAGE_TIER[:barely_touch] => "{!{FY",
+    DAMAGE_TIER[:draw_blood]  => "{!{FC",
+    DAMAGE_TIER[:maim] => "{!{FM",
+    DAMAGE_TIER[:annihilate] => "{!{FR"
+  }
+
+  DAMAGE_PERCENT_TEXT = {
+    24.0 => "dismembers",
+    31.0 => "eviscerates",
+    51.0 => "disembowels",
+    76.0 => "decapitates",
+    100.0 => "kills",
+  }
+  
+  DAMAGE_TEXT = {
+    barely_touch:"barely touches",
+    scratch:"scratches",
+    bruise:"bruises",
+    hit:"hits",
+    injure:"injures",
+    wound:"wounds",
+    draw_blood:"draws blood from",
+    smite:"smites",
+    massacre:"massacres",
+    decimate:"decimates",
+    devastate:"devastates",
+    maim:"maims",
+    mutilate:"mutilates",
+    pulverise:"pulverises",
+    demolish:"demolishes",
+    mangle:"mangles",
+    obliterate:"obliterates",
+    annihilate:"annihilates",
+    horribly_maim:"horribly_maims",
+    visciously_rend:"visciously_rends",
+  }
   
   def self.new( game )
     Public.new game
@@ -25,6 +86,7 @@ module Combat
       @game.mob_commands.add_default_cmd_handler Combat::commands, COMBAT_COMMANDS_HANDLER_PRIORITY
       @combat_round = CombatRound.new
       @ticks_until_combat_round = COMBAT_ROUND_TICK_INTERVAL
+      @weapon = Weapon.new @game
       
       @in_combat_cmds = AbbrevMap.new
       @in_combat_cmds.add "north", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
@@ -80,34 +142,34 @@ module Combat
     end
 
     def melee_round( attacker, defender )
-      3.times { Combat.melee_try @game, attacker, defender; break unless @combat_round.valid_attack? attacker }
+      3.times { @weapon.melee_attack attacker, defender; break unless @combat_round.valid_attack? attacker }
     end
   end # end Public
 
-  def self.melee_try( game, attacker, defender )
-    Random.new.rand(0..1) > 0 ? melee_miss( game, attacker, defender) : melee_hit( game, attacker, defender)
+  def self.damage_color( amount )
+    color = ""
+    DAMAGE_COLOR_TIER.each_pair do |min_amount,col|
+      color = col if amount > min_amount
+    end
+    color
   end
   
-  def self.melee_miss( game, attacker, defender )
-    Log::debug "#{attacker.short_name} melee missed #{defender.short_name}", "combat"
-    pov_scope do
-      pov(attacker) { "{!{FGYour slash {FYmisses{FG #{defender.short_name}.\n" }
-      pov(defender) { "{!{FY#{attacker.short_name}'s slash misses you.\n" }
-      pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s slash misses #{defender.short_name}.\n" }
+  def self.damage_text( amount )
+    label = ""
+    DAMAGE_TIER.each_pair do |damage,min_amount|
+      label = DAMAGE_TEXT[damage] if amount > min_amount
     end
-    Combat::damage game, attacker, defender, 0
-  end
-  
-  def self.melee_hit( game, attacker, defender )
-    Log::debug "#{attacker.short_name} melee hit #{defender.short_name}", "combat"
-    pov_scope do
-      pov(attacker) { "{!{FGYour slash {FMdecimates{FG #{defender.short_name}!\n" }
-      pov(defender) { "{!{FY#{attacker.short_name}'s slash decimates you!\n" }
-      pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s slash decimates #{defender.short_name}!\n" }
-    end
-    Combat::damage game, attacker, defender, 20
+    label
   end
 
+  def self.damage_percent_text( percent )
+    label = nil
+    DAMAGE_PERCENT_TEXT.each_pair do |min_amount,text|
+      label = text if percent > min_amount
+    end
+    label
+  end
+  
   def self.damage( game, damager, receiver, amount )
     raise "expected receiver to be a Mob" unless receiver.kind_of? Mob
     raise "expected damager to be a Mob" unless damager.kind_of? Mob
@@ -192,7 +254,7 @@ module Combat
     game.combat.disengage mob if game.combat.engaged? mob
     pov_scope do
       pov(mob) { "{@\nYou're {!{FRDEAD!!{@ It is strangely {!{FCpainless{@.\n" }
-      pov(mob.room.mobs) { "{!{FY#{mob.short_name}{@ is {!{FRDEAD{@!!\nThe lifeless husk that was once {!{FY#{mob.short_name}{@ implodes in a shower of sparks.\n" }
+      pov(mob.room.mobs) { "{!{FR#{mob.short_name} is DEAD!!\n{@The lifeless husk that was once {!{FY#{mob.short_name}{@ implodes in a shower of sparks.\n" }
       pov(mob.room.adjacent_mobs) { "{@You hear a blood-curdling death cry!\n" }
     end
     game.move_to( mob, game.respawn_room )

@@ -15,6 +15,7 @@ def login_char( account, char )
 end
 
 $cmds = []
+$cmds << "nosuchcommand"
 $cmds << "west"
 $cmds << "north"
 $cmds << "east"
@@ -26,8 +27,6 @@ $cmds << "shout live for the swarm"
 $cmds << "look"
 $cmds << "rage"
 $cmds << "heal"
-$cmds << "hp"
-$cmds << "energy"
 $cmds << "kill random"
 $cmds << "fight random"
 $cmds << "flee"

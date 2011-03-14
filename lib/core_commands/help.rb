@@ -16,8 +16,6 @@ module CoreCommands
     commands << "shout"
     commands << "look"
     commands << "exits"
-    commands << "hp"
-    commands << "energy"
     commands << "flee"
     commands << "glance"
     commands << "kill"
