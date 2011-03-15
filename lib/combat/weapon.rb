@@ -7,6 +7,13 @@ module Combat
       axe:2,
     }
 
+    ATTACK_SPEED = {
+      # continuous attacks per combat round
+      dagger:2.0,
+      sword:1.0,
+      axe:0.6,
+    }
+
     DAMAGE_TYPE = {
       dagger:"pierce",
       sword:"slash",
@@ -26,7 +33,7 @@ module Combat
           pov(defender) { "{!{FCBlue lightning forks from #{attacker.short_name}'s dagger, striking you.\n"}
           pov(attacker.room.mobs) { "{!{FCBlue lightning forks from #{attacker.short_name}'s dagger, striking #{defender.short_name}.\n"}
         end
-        damage = Random.new.rand(1..5) + 5
+        damage = game.combat.weapon.roll_damage attacker
         damage
       },
       sword:->(game,attacker,defender){
@@ -35,24 +42,24 @@ module Combat
           pov(defender) { "{!{FRLiquid fire erupts from #{attacker.short_name}'s sword, searing you.\n"}
           pov(attacker.room.mobs) { "{!{FRLiquid fire erupts from #{attacker.short_name}'s sword, searing #{defender.short_name}.\n"}
         end
-        damage = Random.new.rand(1..5) + 5
+        damage = game.combat.weapon.roll_damage attacker
         damage
       },
       axe:->(game,attacker,defender){
         pov_scope do
-          pov(attacker) { "{!{FBBlack energy crackles and surges forth as your axe hits #{defender.short_name}.\n" }
-          pov(defender) { "{!{FBBlack energy crackles and surges forth as #{attacker.short_name}'s axe hits you.\n" }
-          pov(attacker.room.mobs) { "{!{FBBlack energy crackles and surges forth as #{attacker.short_name}'s axe hits #{defender.short_name}.\n" }
+          pov(attacker) { "{!{FBMenacing black energy crackles forth from your axe and coils around #{defender.short_name}.\n" }
+          pov(defender) { "{!{FBMenacing black energy crackles forth from #{attacker.short_name}'s axe and coils around you.\n" }
+          pov(attacker.room.mobs) { "{!{FBMenacing black energy crackles forth from #{attacker.short_name}'s axe and coils around #{defender.short_name}\n" }
         end
-        damage = Random.new.rand(1..5) + 5
+        damage = game.combat.weapon.roll_damage attacker
         damage
       },
     }
 
     CRITICAL_CHANCE = {
       # cumulative chance in 1000
-      critical:950,
-      mega_critical:990,
+      critical:900,
+      mega_critical:966,
     }
 
     CRITICAL = {
@@ -76,7 +83,7 @@ module Combat
     end
 
     def melee_attack( attacker, defender )
-      Random.new.rand(0..1) > 0 ? melee_miss( attacker, defender) : melee_hit( attacker, defender)
+      Random.new.rand(0..2) < 1 ? melee_miss( attacker, defender) : melee_hit( attacker, defender)
     end
     
     def melee_miss( attacker, defender )
@@ -128,6 +135,11 @@ module Combat
       Combat::damage @game, attacker, defender, damage
     end
 
+    def attack_speed( mob )
+      default_weapon mob
+      ATTACK_SPEED[@weapons[mob]]
+    end
+
     def damage_type( mob )
       default_weapon mob
       DAMAGE_TYPE[@weapons[mob]]
@@ -149,7 +161,7 @@ module Combat
     def proc( attacker, defender )
       default_weapon attacker
       damage = 0
-      damage = PROC[@weapons[attacker]].(@game, attacker, defender) if Random.new.rand(1..10) > 9
+      damage = PROC[@weapons[attacker]].(@game, attacker, defender) if Random.new.rand(1..10) > 8
       damage
     end
 

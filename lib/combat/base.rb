@@ -96,6 +96,7 @@ module Combat
       @in_combat_cmds.add "up", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "down", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "kill", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone!!\n" }
+      @in_combat_cmds.add "weapon", ->(game, mob, rest, match) { game.send_msg mob, "You can't change weapons in combat!!\n" }
       @in_combat_cmds.add "kill random", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone random!!\n" }
       @in_combat_cmds.add "slay random", ->(game, mob, rest, match) { game.send_msg mob, "Momma always says, no slaying while fighting.\n" }
       @in_combat_cmds.add "quit", ->(game, mob, rest, match) { game.send_msg mob, "You haven't yet mastered the quit-while-fighting skill.\n" }
@@ -111,14 +112,14 @@ module Combat
       Log::info "start tick", "combat"
       @game.all_characters.each do |char|
         mob = char.mob
-        mob.attack_cooldown -= 1
-        mob.attack_cooldown = 0 if mob.attack_cooldown < 0
+        mob.attack_cooldown -= @weapon.attack_speed(mob) / COMBAT_ROUND_TICK_INTERVAL
+        mob.attack_cooldown = 0.0 if mob.attack_cooldown < 0
+        Log::debug "mob #{mob.short_name} attack cooldown reduced by weapon speed to #{mob.attack_cooldown}", "combat"
       end
       @ticks_until_combat_round -= 1
       if @ticks_until_combat_round < 1
         @combat_round.next_round do |attacker, defender|
           melee_round attacker, defender
-          @game.send_msg attacker, "{!{FM#{defender.condition}\n" if @combat_round.valid_attack? attacker
         end
         @ticks_until_combat_round = COMBAT_ROUND_TICK_INTERVAL
       end
@@ -146,7 +147,19 @@ module Combat
     end
 
     def melee_round( attacker, defender )
-      3.times { @weapon.melee_attack attacker, defender; break unless @combat_round.valid_attack? attacker }
+      Log::debug "attacker #{attacker.short_name} started melee_round with #{attacker.attack_cooldown} cooldown", "combat"
+      attacked = false
+      while attacker.attack_cooldown < @weapon.attack_speed(attacker) do
+        Log::debug "attacker #{attacker.short_name} had enough cooldown (#{attacker.attack_cooldown}) for another melee attack", "combat"
+        attacked = true
+        attacker.attack_cooldown += 1.0
+        @weapon.melee_attack attacker, defender
+        break unless @combat_round.valid_attack? attacker
+      end
+      if attacked && @combat_round.valid_attack?( attacker)
+        @game.send_msg attacker, "{!{FM#{defender.condition}\n"
+      end
+      Log::debug "attacker #{attacker.short_name} finished the melee round with cooldown #{attacker.attack_cooldown}", "combat"
     end
   end # end Public
 

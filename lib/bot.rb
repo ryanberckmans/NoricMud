@@ -36,7 +36,7 @@ $cmds << "where"
 $cmds << "who"
 $cmds << "weapon"
 def random_command
-  return "quit" if Random.new.rand(1..1000) > 999
+  return "quit" if Random.new.rand(1..10000) > 9998
   $cmds.sample
 end
 
