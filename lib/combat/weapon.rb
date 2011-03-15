@@ -10,7 +10,7 @@ module Combat
     DAMAGE_TYPE = {
       dagger:"pierce",
       sword:"slash",
-      axe:"chop",
+      axe:"slice",
     }
 
     DAMAGE_DICE = {
@@ -19,10 +19,40 @@ module Combat
       axe:[3,9],
     }
 
+    PROC = {
+      dagger:->(game,attacker,defender){
+        pov_scope do
+          pov(attacker) { "{!{FCBlue lightning forks from your dagger, striking #{defender.short_name}.\n" }
+          pov(defender) { "{!{FCBlue lightning forks from #{attacker.short_name}'s dagger, striking you.\n"}
+          pov(attacker.room.mobs) { "{!{FCBlue lightning forks from #{attacker.short_name}'s dagger, striking #{defender.short_name}.\n"}
+        end
+        damage = Random.new.rand(1..5) + 5
+        damage
+      },
+      sword:->(game,attacker,defender){
+        pov_scope do
+          pov(attacker) { "{!{FRLiquid fire erupts from your sword, searing #{defender.short_name}.\n" }
+          pov(defender) { "{!{FRLiquid fire erupts from #{attacker.short_name}'s sword, searing you.\n"}
+          pov(attacker.room.mobs) { "{!{FRLiquid fire erupts from #{attacker.short_name}'s sword, searing #{defender.short_name}.\n"}
+        end
+        damage = Random.new.rand(1..5) + 5
+        damage
+      },
+      axe:->(game,attacker,defender){
+        pov_scope do
+          pov(attacker) { "{!{FBBlack energy crackles and surges forth as your axe hits #{defender.short_name}.\n" }
+          pov(defender) { "{!{FBBlack energy crackles and surges forth as #{attacker.short_name}'s axe hits you.\n" }
+          pov(attacker.room.mobs) { "{!{FBBlack energy crackles and surges forth as #{attacker.short_name}'s axe hits #{defender.short_name}.\n" }
+        end
+        damage = Random.new.rand(1..5) + 5
+        damage
+      },
+    }
+
     CRITICAL_CHANCE = {
       # cumulative chance in 1000
-      critical:500,
-      mega_critical:750,
+      critical:950,
+      mega_critical:990,
     }
 
     CRITICAL = {
@@ -55,7 +85,7 @@ module Combat
       pov_scope do
         pov(attacker) { "{!{FGYour #{type} {FYmisses{FG #{defender.short_name}.\n" }
         pov(defender) { "{!{FY#{attacker.short_name}'s #{type} misses you.\n" }
-        pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s #{type} misses #{defender.short_name}.\n" }
+        # pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s #{type} misses #{defender.short_name}.\n" }
       end
       Combat::damage @game, attacker, defender, 0
     end
@@ -63,7 +93,7 @@ module Combat
     def melee_hit( attacker, defender )
       raise "expected attacker to be a mob" unless attacker.kind_of? Mob
       raise "expected defender to be a mob" unless defender.kind_of? Mob
-      Log::debug "#{attacker.short_name} melee hit #{defender.short_name}", "combat"
+      Log::debug "#{attacker.short_name} melee hit #{defender.short_name}", "weapons"
       type = damage_type attacker
       chance = Random.new.rand(1..1000)
       crit = nil
@@ -81,7 +111,6 @@ module Combat
         damage_text = damage_percent_text 
         damage_color = "{!{FR"
       end
-
       if crit
         pov_scope do
           pov(attacker) do "{!{FRYou #{CRITICAL_TEXT[crit]} hit #{defender.short_name}!\n" end
@@ -94,6 +123,8 @@ module Combat
         pov(defender) { "{!{FY#{attacker.short_name}'s #{type} #{damage_text} you!\n" }
         pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s #{type} #{damage_text} #{defender.short_name}!\n" }
       end
+      damage += proc( attacker, defender )
+      Log::debug "#{attacker.short_name} did #{damage} total damage from melee hit", "weapons"
       Combat::damage @game, attacker, defender, damage
     end
 
@@ -115,12 +146,24 @@ module Combat
       damage.to_i
     end
 
-    def proc( mob )
-      default_weapon mob
+    def proc( attacker, defender )
+      default_weapon attacker
+      damage = 0
+      damage = PROC[@weapons[attacker]].(@game, attacker, defender) if Random.new.rand(1..10) > 9
+      damage
     end
 
-    def set_weapon( mob, rest )
+    def weapon_cycle( mob )
       default_weapon mob
+      Log::debug "mob #{mob.short_name} cycling weapon, initial weapon #{@weapons[mob].to_s}", "weapon"
+      if @weapons[mob] == :axe
+        @weapons[mob] = :dagger
+      elsif @weapons[mob] == :sword
+        @weapons[mob] = :axe
+      else
+        @weapons[mob] = :sword
+      end
+      @game.send_msg mob, "Your weapon: {!{FG#{@weapons[mob].to_s}\n"
     end
   end # class Weapon
 end

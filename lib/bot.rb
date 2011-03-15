@@ -34,6 +34,7 @@ $cmds << "help"
 $cmds << "glance A"
 $cmds << "where"
 $cmds << "who"
+$cmds << "weapon"
 def random_command
   return "quit" if Random.new.rand(1..1000) > 999
   $cmds.sample

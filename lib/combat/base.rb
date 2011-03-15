@@ -29,7 +29,7 @@ module Combat
   }
 
   DAMAGE_COLOR_TIER = {
-    DAMAGE_TIER[:barely_touch] => "{!{FY",
+    DAMAGE_TIER[:barely_touch] => "{!{FW",
     DAMAGE_TIER[:draw_blood]  => "{!{FC",
     DAMAGE_TIER[:maim] => "{!{FM",
     DAMAGE_TIER[:annihilate] => "{!{FR"
@@ -100,6 +100,10 @@ module Combat
       @in_combat_cmds.add "slay random", ->(game, mob, rest, match) { game.send_msg mob, "Momma always says, no slaying while fighting.\n" }
       @in_combat_cmds.add "quit", ->(game, mob, rest, match) { game.send_msg mob, "You haven't yet mastered the quit-while-fighting skill.\n" }
       @game.mob_commands.add_default_cmd_handler ->(mob){ @in_combat_cmds if @combat_round.engaged? mob }, COMBAT_COMMANDS_HANDLER_PRIORITY + 2
+    end
+
+    def weapon
+      @weapon
     end
 
     def tick
