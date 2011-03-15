@@ -119,7 +119,9 @@ module Combat
       @ticks_until_combat_round -= 1
       if @ticks_until_combat_round < 1
         @combat_round.next_round do |attacker, defender|
+          orig = attacker.attack_cooldown
           melee_round attacker, defender
+          @game.send_msg attacker, "{!{FM#{defender.condition}\n" if orig != attacker.attack_cooldown && @combat_round.valid_attack?(attacker)
         end
         @ticks_until_combat_round = COMBAT_ROUND_TICK_INTERVAL
       end
@@ -148,16 +150,12 @@ module Combat
 
     def melee_round( attacker, defender )
       Log::debug "attacker #{attacker.short_name} started melee_round with #{attacker.attack_cooldown} cooldown", "combat"
-      attacked = false
       while attacker.attack_cooldown < @weapon.attack_speed(attacker) do
         Log::debug "attacker #{attacker.short_name} had enough cooldown (#{attacker.attack_cooldown}) for another melee attack", "combat"
         attacked = true
         attacker.attack_cooldown += 1.0
         @weapon.melee_attack attacker, defender
         break unless @combat_round.valid_attack? attacker
-      end
-      if attacked && @combat_round.valid_attack?( attacker)
-        @game.send_msg attacker, "{!{FM#{defender.condition}\n"
       end
       Log::debug "attacker #{attacker.short_name} finished the melee round with cooldown #{attacker.attack_cooldown}", "combat"
     end
@@ -236,7 +234,7 @@ module Combat
       return
     end
     attacker.room.mobs.each do |mob_in_room|
-      if mob_in_room.short_name =~ Regexp.new( target, Regexp::IGNORECASE) and attacker != mob_in_room
+      if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE) and attacker != mob_in_room
         game.combat.melee_round attacker, mob_in_room
         return
       end

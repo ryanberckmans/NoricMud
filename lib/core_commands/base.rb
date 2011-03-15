@@ -55,4 +55,5 @@ module CoreCommands
   add_cmd "room list", ->game,mob,rest,match { room_list game, mob }
   add_cmd "where", ->game,mob,rest,match { where game, mob }
   add_cmd "weapon", ->game,mob,rest,match { game.combat.weapon.weapon_cycle mob }
+  add_cmd "god", ->game,mob,rest,match { mob.god = true }
 end

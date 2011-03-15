@@ -1,7 +1,7 @@
 class Mob < ActiveRecord::Base
   validates_presence_of :short_name, :long_name
 
-  attr_accessor :room, :char, :hp_max, :hp, :energy_max, :energy, :attack_cooldown
+  attr_accessor :room, :char, :hp_max, :hp, :energy_max, :energy, :attack_cooldown, :god
 
   after_initialize :on_load
 
@@ -11,6 +11,7 @@ class Mob < ActiveRecord::Base
     self.hp = 250
     self.energy = 100
     self.attack_cooldown = 0.0
+    self.god = false
   end
 
   def condition

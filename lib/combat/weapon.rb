@@ -154,6 +154,7 @@ module Combat
         damage += Random.new.rand(1..dice[1])
       end
       damage *= critical_multiplier
+      damage *= 4.0 if mob.god
       Log::debug "mob #{mob.short_name} rolled damage #{damage} with weapon #{@weapons[mob].to_s}, crit multiplier #{critical_multiplier}", "weapon"
       damage.to_i
     end
