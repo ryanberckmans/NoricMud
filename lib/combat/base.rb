@@ -57,13 +57,13 @@ module Combat
     devastate:"devastates",
     maim:"maims",
     mutilate:"mutilates",
-    pulverise:"pulverises",
+    pulverise:"pulverizes",
     demolish:"demolishes",
     mangle:"mangles",
     obliterate:"obliterates",
     annihilate:"annihilates",
-    horribly_maim:"horribly_maims",
-    visciously_rend:"visciously_rends",
+    horribly_maim:"horribly maims",
+    visciously_rend:"visciously rends",
   }
   
   def self.new( game )
