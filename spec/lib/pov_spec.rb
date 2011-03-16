@@ -48,6 +48,10 @@ describe "issuing points of view with pov and pov_scope" do
     pov_send ->(receiver,pov) { @povs[receiver] ||= ""; @povs[receiver] += pov }
   end
 
+  pending "should refactor pov(*receivers), only call block once, call block zero times if all receivers have no player attached"
+
+  pending "should create some sort of pov_once( game, *receivers ) { pov } api to replace game.send_msg"
+  
   pending "should alias pov_none as pov(mob) without a block"
   pending "should require an explicit ostream, instead of using global pov_send, perhaps using pov_scope( game )"
 
