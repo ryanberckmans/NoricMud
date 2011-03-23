@@ -1,6 +1,7 @@
 require "core_commands/base.rb"
 require "combat/base.rb"
 require "lag.rb"
+require "cooldown.rb"
 require "regen.rb"
 require "abilities/base.rb"
 
@@ -10,6 +11,7 @@ class Game
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
+    @cooldown = Cooldown.new
     @lag = Lag.new
     @regen = Regen.new self
     
@@ -113,6 +115,7 @@ class Game
     process_new_reconnections
     process_new_logins
     @lag.tick
+    @cooldown.tick
     @regen.tick
     process_character_commands
     @combat.tick
@@ -158,6 +161,14 @@ class Game
   def add_lag( mob, lag )
     @lag.add_lag mob, lag
     nil
+  end
+
+  def add_cooldown( mob, ability, cooldown )
+    @cooldown.add_cooldown mob, ability, cooldown
+  end
+
+  def in_cooldown?( mob, ability )
+    @cooldown.in_cooldown? mob, ability
   end
 
   private

@@ -152,12 +152,12 @@ module Combat
       attack_speed = @weapon.attack_speed(attacker) # cache the same attack speed for entire round to prevent changes mid-around
       Log::debug "attacker #{attacker.short_name} started melee_round with #{attacker.attack_cooldown} cooldown, attack speed #{attack_speed}", "combat"
       if attacker.attack_cooldown < attack_speed then
-      while attacker.attack_cooldown < attack_speed do
-        Log::debug "attacker #{attacker.short_name} had enough cooldown (#{attacker.attack_cooldown}) for another melee attack", "combat"
-        attacker.attack_cooldown += 1.0
-        @weapon.melee_attack attacker, defender
-        break unless @combat_round.valid_attack? attacker
-      end
+        while attacker.attack_cooldown < attack_speed do
+          Log::debug "attacker #{attacker.short_name} had enough cooldown (#{attacker.attack_cooldown}) for another melee attack", "combat"
+          attacker.attack_cooldown += 1.0
+          @weapon.melee_attack attacker, defender
+          break unless @combat_round.valid_attack? attacker
+        end
       else
         Log::debug "attacker #{attacker.short_name} had insufficient cooldown (#{attacker.attack_cooldown}) to attack", "combat"
         @game.send_msg attacker, "{@Your attack speed hasn't recovered from your latest melee!\n"

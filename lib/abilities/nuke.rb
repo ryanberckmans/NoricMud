@@ -1,7 +1,9 @@
 
 module Abilities
+  NUKE = ->game,attacker,defender{ nuke game, attacker, defender }
   NUKE_COST = 15
   NUKE_LAG = Combat::COMBAT_ROUND
+  NUKE_COOLDOWN = 5 * Combat::COMBAT_ROUND
   NUKE_DAMAGE = 50
   class << self
     def nuke( game, attacker, defender )

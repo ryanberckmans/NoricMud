@@ -40,6 +40,7 @@ $cmds << "glance A"
 $cmds << "where"
 $cmds << "who"
 $cmds << "weapon"
+$cmds << "cast nuke"
 def random_command
   return "quit" if Random.new.rand(1..10000) > 9998
   $cmds.sample

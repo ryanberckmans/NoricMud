@@ -27,6 +27,7 @@ class Lag
       raise "expected mob lag to be positive" if @lag[mob] < 0
       Log::debug "mob #{mob.short_name} has lag #{@lag[mob]}", "lag"
     end
+    Log::debug "end tick", "lag"
   end
 
   private  
