@@ -46,14 +46,14 @@ module Abilities
     else
       if target =~ /^me$/i
         target_mob = attacker
-        break
-      end
-      attacker.room.mobs.each do |mob_in_room|
-        if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE)
-          target_mob = mob_in_room
-          break
+      else
+        attacker.room.mobs.each do |mob_in_room|
+          if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE)
+            target_mob = mob_in_room
+            break
+          end
         end
-      end
+      end # end if target == me
     end
 
     return nil unless attempt_energy_use game, attacker, energy_cost
