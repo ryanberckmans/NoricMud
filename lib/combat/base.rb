@@ -2,6 +2,8 @@ files = Dir.glob Util.here "*.rb"
 files.each do |f| require f end
 
 module Combat
+  COMBAT_ROUND = 12 # pulses
+  
   @commands = AbbrevMap.new
   COMBAT_COMMANDS_HANDLER_PRIORITY = 10
 
@@ -79,8 +81,6 @@ module Combat
   end
 
   class Public
-    COMBAT_ROUND = 12 # pulses
-    
     def initialize( game )
       @game = game
       @game.mob_commands.add_default_cmd_handler Combat::commands, COMBAT_COMMANDS_HANDLER_PRIORITY

@@ -18,6 +18,7 @@ require "models/room.rb"
 
 require "util.rb"
 require "log.rb"
+require "physical_state/base.rb"
 
 Log::get ENV['RAILS_ENV'], { :default => true, :level => Logger::DEBUG }
 Log::info "============================== booting ==============================", "mud"

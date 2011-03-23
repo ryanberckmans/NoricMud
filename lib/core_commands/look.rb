@@ -9,7 +9,7 @@ module CoreCommands
     look += "{FM#{mob.room.description}\n" unless not mob.room.description or mob.room.description.empty?
     mob.room.mobs.each do |mob_in_room|
       next if mob_in_room == mob
-      look += "{!{FG#{mob_in_room.long_name} is here"
+      look += "{!{FG#{mob_in_room.long_name} is #{mob.state.to_s.downcase}here"
       if game.combat.engaged? mob_in_room
         look += ", fighting "
         target = game.combat.target_of mob_in_room
