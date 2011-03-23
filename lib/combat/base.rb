@@ -5,7 +5,7 @@ module Combat
   COMBAT_ROUND = 12 # pulses
   
   @commands = AbbrevMap.new
-  COMBAT_COMMANDS_HANDLER_PRIORITY = 10
+  COMBAT_COMMANDS_HANDLER_PRIORITY = 50
 
   DAMAGE_TIER = {
     barely_touch:0,

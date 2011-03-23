@@ -3,7 +3,7 @@ files.each do |f| require f end
 
 module CoreCommands
   @commands = AbbrevMap.new
-  CORE_COMMANDS_HANDLER_PRIORITY = 2
+  CORE_COMMANDS_HANDLER_PRIORITY = 5
   
   def self.new( game )
     Public.new game

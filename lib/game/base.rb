@@ -2,6 +2,7 @@ require "core_commands/base.rb"
 require "combat/base.rb"
 require "lag.rb"
 require "regen.rb"
+require "abilities/base.rb"
 
 class Game
   
@@ -27,6 +28,8 @@ class Game
 
     @core_commands = CoreCommands.new self
     @combat = Combat.new self
+
+    @mob_commands.add_default_cmd_handler Abilities::commands, Abilities::ABILITIES_HANDLER_PRIORITY
 
     @msgs_this_tick = {}
     @new_logouts = []
