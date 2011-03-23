@@ -32,7 +32,6 @@ require "pov.rb"
 require "network.rb"
 require "account_system.rb"
 require "character_system.rb"
-require "lag.rb"
 require "mob_commands.rb"
 require "game/base.rb"
 

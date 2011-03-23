@@ -1,5 +1,7 @@
 require "core_commands/base.rb"
 require "combat/base.rb"
+require "lag.rb"
+require "regen.rb"
 
 class Game
   
@@ -8,6 +10,8 @@ class Game
     @character_system = character_system
 
     @lag = Lag.new
+    @regen = Regen.new self
+    
     @rooms = Room.find :all
 
     @login_room = @rooms.each do |room|
@@ -106,6 +110,7 @@ class Game
     process_new_reconnections
     process_new_logins
     @lag.tick
+    @regen.tick
     process_character_commands
     @combat.tick
     send_char_msgs
@@ -242,7 +247,6 @@ class Game
     @character_system.each_connected_char do |char|
       if @lag.lagged? char.mob
         Log::debug "#{char.name} was lagged and didn't get a cmd this tick", "game"
-        send_msg char, "{@You are recovering from your last action!\n"
         next
       end
       cmd = @character_system.next_command char

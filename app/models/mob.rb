@@ -4,6 +4,7 @@ class Mob < ActiveRecord::Base
   attr_accessor :room, :char, :hp_max, :hp, :energy_max, :energy, :attack_cooldown, :god, :state
 
   after_initialize :on_load
+  after_find :on_load
 
   def on_load
     self.hp_max = 250

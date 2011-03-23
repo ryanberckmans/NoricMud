@@ -192,10 +192,10 @@ module Combat
   
   def self.damage( game, damager, receiver, amount )
     raise "expected receiver to be a Mob" unless receiver.kind_of? Mob
-    raise "expected damager to be a Mob" unless damager.kind_of? Mob
     raise "expected amount to be an Integer" unless amount.kind_of? Fixnum
-    game.combat.aggress damager, receiver
+    game.combat.aggress damager, receiver if damager and damager.kind_of? Mob
     receiver.hp -= amount
+    receiver.hp = receiver.hp_max if receiver.hp > receiver.hp_max
     death game, receiver if receiver.hp < 1
   end
 
