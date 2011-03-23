@@ -7,6 +7,7 @@ class Game
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
+    @lag = Lag.new
     @rooms = Room.find :all
 
     @login_room = @rooms.each do |room|
@@ -104,6 +105,7 @@ class Game
     process_new_disconnections
     process_new_reconnections
     process_new_logins
+    @lag.tick
     process_character_commands
     @combat.tick
     send_char_msgs
@@ -145,6 +147,11 @@ class Game
     end
   end
 
+  def add_lag( mob, lag )
+    @lag.add_lag mob, lag
+    nil
+  end
+
   private
   def do_logout( char )
     raise "expected char to be online" unless @character_system.online? char
@@ -183,7 +190,6 @@ class Game
     @mob_commands.add_cmd_handler char.mob, @secret_cmds2, 20
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
-    CoreCommands::look self, char.mob
   end
 
   def character_reconnected( char )
@@ -234,6 +240,11 @@ class Game
 
   def process_character_commands
     @character_system.each_connected_char do |char|
+      if @lag.lagged? char.mob
+        Log::debug "#{char.name} was lagged and didn't get a cmd this tick", "game"
+        send_msg char, "{@You are recovering from your last action!\n"
+        next
+      end
       cmd = @character_system.next_command char
       next unless cmd
       @msgs_this_tick[char] ||= ""

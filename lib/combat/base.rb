@@ -79,13 +79,13 @@ module Combat
   end
 
   class Public
-    COMBAT_ROUND_TICK_INTERVAL = 12
+    COMBAT_ROUND = 12 # pulses
     
     def initialize( game )
       @game = game
       @game.mob_commands.add_default_cmd_handler Combat::commands, COMBAT_COMMANDS_HANDLER_PRIORITY
       @combat_round = CombatRound.new
-      @ticks_until_combat_round = COMBAT_ROUND_TICK_INTERVAL
+      @ticks_until_combat_round = COMBAT_ROUND
       @weapon = Weapon.new @game
       
       @in_combat_cmds = AbbrevMap.new
@@ -112,7 +112,7 @@ module Combat
       Log::info "start tick", "combat"
       @game.all_characters.each do |char|
         mob = char.mob
-        mob.attack_cooldown -= @weapon.attack_speed(mob) / COMBAT_ROUND_TICK_INTERVAL
+        mob.attack_cooldown -= @weapon.attack_speed(mob) / COMBAT_ROUND
         mob.attack_cooldown = 0.0 if mob.attack_cooldown < 0
         Log::debug "mob #{mob.short_name} attack cooldown reduced by weapon speed to #{mob.attack_cooldown}", "combat"
       end
@@ -123,7 +123,7 @@ module Combat
           melee_round attacker, defender
           @game.send_msg attacker, "{!{FM#{defender.condition}\n" if orig != attacker.attack_cooldown && @combat_round.valid_attack?(attacker)
         end
-        @ticks_until_combat_round = COMBAT_ROUND_TICK_INTERVAL
+        @ticks_until_combat_round = COMBAT_ROUND
       end
       Log::info "end tick", "combat"
     end
@@ -149,13 +149,18 @@ module Combat
     end
 
     def melee_round( attacker, defender )
-      Log::debug "attacker #{attacker.short_name} started melee_round with #{attacker.attack_cooldown} cooldown", "combat"
-      while attacker.attack_cooldown < @weapon.attack_speed(attacker) do
+      attack_speed = @weapon.attack_speed(attacker) # cache the same attack speed for entire round to prevent changes mid-around
+      Log::debug "attacker #{attacker.short_name} started melee_round with #{attacker.attack_cooldown} cooldown, attack speed #{attack_speed}", "combat"
+      if attacker.attack_cooldown < attack_speed then
+      while attacker.attack_cooldown < attack_speed do
         Log::debug "attacker #{attacker.short_name} had enough cooldown (#{attacker.attack_cooldown}) for another melee attack", "combat"
-        attacked = true
         attacker.attack_cooldown += 1.0
         @weapon.melee_attack attacker, defender
         break unless @combat_round.valid_attack? attacker
+      end
+      else
+        Log::debug "attacker #{attacker.short_name} had insufficient cooldown (#{attacker.attack_cooldown}) to attack", "combat"
+        @game.send_msg attacker, "{@Your attack speed hasn't recovered from your latest melee!\n"
       end
       Log::debug "attacker #{attacker.short_name} finished the melee round with cooldown #{attacker.attack_cooldown}", "combat"
     end
@@ -226,6 +231,7 @@ module Combat
     game.send_msg mob, "You do not see that here.\n"
   end
 
+  KILL_LAG = COMBAT_ROUND
   def self.kill( game, attacker, target )
     raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
     raise "expected target to be a String" unless target.kind_of? String
@@ -233,6 +239,7 @@ module Combat
       game.send_msg attacker, "Yes! Sate your bloodlust!! But on who?\n"
       return
     end
+    game.add_lag attacker, KILL_LAG
     attacker.room.mobs.each do |mob_in_room|
       if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE) and attacker != mob_in_room
         game.combat.melee_round attacker, mob_in_room
@@ -243,6 +250,7 @@ module Combat
   end
   
   def self.green_beam( game, mob )
+    game.add_lag mob, KILL_LAG
     dies = mob.room.mobs.sample
     if dies == mob
       pov_scope do

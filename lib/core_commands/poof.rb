@@ -25,6 +25,7 @@ module CoreCommands
   def self.poof( game, mob, room )
     poof_out mob if mob.room
     game.move_to mob, room
+    look game, mob
     poof_in mob if mob.room
     Log::debug "mob #{mob.short_name} poofed to #{room.name}"
   end

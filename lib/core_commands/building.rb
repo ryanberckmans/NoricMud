@@ -160,7 +160,6 @@ module CoreCommands
         game.send_msg mob, usage
       elsif room
         poof game, mob, room
-        look game, mob
       else
         game.send_msg mob, "No such room.\n"
       end
