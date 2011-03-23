@@ -44,8 +44,12 @@ module Abilities
       game.send_msg attacker, "{@Upon who?\n"
       return nil
     else
+      if target =~ /^me$/i
+        target_mob = attacker
+        break
+      end
       attacker.room.mobs.each do |mob_in_room|
-        if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE) and attacker != mob_in_room
+        if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE)
           target_mob = mob_in_room
           break
         end
@@ -65,4 +69,5 @@ module Abilities
   end
   
   add_cmd "cast nuke", ->(game, mob, rest, match) { use_ability( game, mob, rest, NUKE, NUKE_COST, NUKE_COOLDOWN, NUKE_LAG, NUKE_CHANNEL) }
+  add_cmd "cast heal", ->(game, mob, rest, match) { use_ability( game, mob, rest, HEAL, HEAL_COST, HEAL_COOLDOWN, HEAL_LAG, HEAL_CHANNEL) }
 end
