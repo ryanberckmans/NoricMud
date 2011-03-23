@@ -2,6 +2,7 @@ require "core_commands/base.rb"
 require "combat/base.rb"
 require "lag.rb"
 require "cooldown.rb"
+require "channel.rb"
 require "regen.rb"
 require "abilities/base.rb"
 
@@ -11,6 +12,7 @@ class Game
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
+    @channel = Channel.new self
     @cooldown = Cooldown.new
     @lag = Lag.new
     @regen = Regen.new self
@@ -118,6 +120,7 @@ class Game
     @cooldown.tick
     @regen.tick
     process_character_commands
+    @channel.tick
     @combat.tick
     send_char_msgs
     while char = @new_logouts.shift do do_logout char end
@@ -169,6 +172,10 @@ class Game
 
   def in_cooldown?( mob, ability )
     @cooldown.in_cooldown? mob, ability
+  end
+
+  def channel( mob, ability, channel_duration )
+    @channel.channel mob, ability, channel_duration
   end
 
   private
@@ -261,6 +268,10 @@ class Game
     @character_system.each_connected_char do |char|
       if @lag.lagged? char.mob
         Log::debug "#{char.name} was lagged and didn't get a cmd this tick", "game"
+        next
+      end
+      if @channel.channeling? char.mob
+        Log::debug "#{char.name} was channeling and didn't get a cmd this tick", "game"
         next
       end
       cmd = @character_system.next_command char

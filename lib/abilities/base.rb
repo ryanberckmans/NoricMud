@@ -24,13 +24,19 @@ module Abilities
     end
   end
 
-  def self.use_ability( game, attacker, target, ability, energy_cost, cooldown )
+  def self.use_ability( game, attacker, target, ability, energy_cost, cooldown, lag, channel )
     raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
     raise "expected target to be a String" unless target.kind_of? String
     if game.in_cooldown? attacker, ability
       game.send_msg attacker, "{@That ability is currently cooling down!\n"
       return nil
     end
+
+    if channel > 0
+      game.channel attacker, ->{ use_ability game, attacker, target, ability, energy_cost, cooldown, lag, 0 }, channel
+      return nil
+    end
+    
     target_mob = nil
     if target.empty? and game.combat.engaged? attacker
       target_mob = game.combat.target_of attacker
@@ -54,8 +60,9 @@ module Abilities
       game.send_msg attacker, "Nobody here by that name.\n"
     end
     game.add_cooldown attacker, ability, cooldown
+    game.add_lag attacker, lag
     true
   end
   
-  add_cmd "cast nuke", ->(game, mob, rest, match) { game.add_lag mob, NUKE_LAG if use_ability( game, mob, rest, NUKE, NUKE_COST, NUKE_COOLDOWN) }
+  add_cmd "cast nuke", ->(game, mob, rest, match) { use_ability( game, mob, rest, NUKE, NUKE_COST, NUKE_COOLDOWN, NUKE_LAG, NUKE_CHANNEL) }
 end

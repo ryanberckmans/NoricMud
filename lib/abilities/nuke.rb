@@ -2,6 +2,7 @@
 module Abilities
   NUKE = ->game,attacker,defender{ nuke game, attacker, defender }
   NUKE_COST = 15
+  NUKE_CHANNEL = Combat::COMBAT_ROUND
   NUKE_LAG = Combat::COMBAT_ROUND
   NUKE_COOLDOWN = 5 * Combat::COMBAT_ROUND
   NUKE_DAMAGE = 50
