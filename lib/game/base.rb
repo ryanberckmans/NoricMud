@@ -122,8 +122,8 @@ class Game
     process_character_commands
     @channel.tick
     @combat.tick
-    send_char_msgs
     while char = @new_logouts.shift do do_logout char end
+    send_char_msgs
     send_prompts
     Log::debug "end tick", "game"
   end
@@ -189,6 +189,7 @@ class Game
       pov(mob.room.mobs) do "{@#{mob.char.name} quit.\n" end
     end
     move_to( mob, nil )
+    @character_system.send_msg char, @msgs_this_tick[char]
     @msgs_this_tick.delete char
     @mob_commands.remove mob
     @character_system.logout char

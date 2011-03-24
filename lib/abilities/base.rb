@@ -19,7 +19,10 @@ module Abilities
       false
     else
       mob.energy -= energy
-      game.send_msg mob, "{!{FWYou invoke the magic and are drained of #{energy} energy.\n"
+      pov_scope do
+        pov(mob) { "{!{FWYou invoke the magic and are drained of #{energy} energy.\n" }
+        pov(mob.room.mobs) { "{!{FW#{mob.short_name} invokes magic and is drained of energy.\n" }
+      end
       true
     end
   end

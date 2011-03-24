@@ -41,6 +41,8 @@ $cmds << "where"
 $cmds << "who"
 $cmds << "weapon"
 $cmds << "cast nuke"
+$cmds << "cast stun"
+$cmds << "cast heal me"
 def random_command
   return "quit" if Random.new.rand(1..10000) > 9998
   $cmds.sample
