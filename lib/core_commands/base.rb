@@ -57,4 +57,11 @@ module CoreCommands
   add_cmd "where", ->game,mob,rest,match { where game, mob }
   add_cmd "weapon", ->game,mob,rest,match { game.combat.weapon.weapon_cycle mob }
   add_cmd "god", ->game,mob,rest,match { mob.god = true }
+  add_cmd "meditate", ->game,mob,rest,match {
+    if mob.state == PhysicalState::Resting
+      PhysicalState.transition game, mob, PhysicalState::Meditating
+    else
+      game.send_msg mob, "{@You must be resting to meditate.\n"
+    end
+  }
 end

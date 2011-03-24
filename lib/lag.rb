@@ -1,6 +1,7 @@
 class Lag
   def initialize
     @lag = {}
+    @actions = {}
   end
 
   def lagged?( mob )
@@ -13,6 +14,13 @@ class Lag
     @lag[mob]
   end
 
+  def recovery_action( mob, action )
+    default_lag mob
+    raise "expected mob not to have an action" if @actions.key? mob 
+    @actions[mob] = action
+    nil
+  end
+
   def add_lag( mob, lag ) # lag in pulses
     raise "expected lag to be an integer" unless lag.kind_of? Fixnum
     default_lag mob
@@ -23,8 +31,14 @@ class Lag
   def tick
     Log::debug "start tick", "lag"
     @lag.each_key do |mob|
-      @lag[mob] -= 1 unless @lag[mob] < 1
-      raise "expected mob lag to be positive" if @lag[mob] < 0
+      if @lag[mob] > 0
+        @lag[mob] -= 1
+        if @lag[mob] < 1
+          Log::debug "mob #{mob.short_name} recovered from lag", "lag"
+          @actions[mob].call if @actions[mob]
+          @actions.delete mob
+        end
+      end
       Log::debug "mob #{mob.short_name} has lag #{@lag[mob]}", "lag"
     end
     Log::debug "end tick", "lag"

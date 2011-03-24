@@ -38,6 +38,7 @@ module Abilities
   private
   def self.ability_damage( game, attacker, defender, damage )
     damage = (damage * 1.5).to_i if defender.state == PhysicalState::Resting
+    damage = (damage * 3).to_i if defender.state == PhysicalState::Meditating
     Combat.damage game, attacker, defender, damage
   end
   

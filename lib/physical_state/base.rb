@@ -1,7 +1,7 @@
 require Util.here "standing.rb"
 require Util.here "channeling.rb"
 require Util.here "resting.rb"
-# require Util.here "meditating.rb"
+require Util.here "meditating.rb"
 
 module PhysicalState
   class << self

@@ -165,6 +165,10 @@ class Game
     nil
   end
 
+  def lag_recovery_action( mob, action )
+    @lag.recovery_action mob, action
+  end
+
   def add_cooldown( mob, ability, cooldown )
     @cooldown.add_cooldown mob, ability, cooldown
   end

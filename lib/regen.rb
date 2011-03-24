@@ -18,6 +18,10 @@ class Regen
         Log::debug "#{char.name} regen as resting", "regen"
         regen_hp mob, 8
         regen_energy mob, 8
+      elsif mob.state == PhysicalState::Meditating then
+        Log::debug "#{char.name} regen as meditating", "regen"
+        regen_hp mob, 16
+        regen_energy mob, 16
       else
         Log::debug "#{char.name} regen as standing", "regen"
         regen_hp mob, 2

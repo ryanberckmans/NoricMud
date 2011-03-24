@@ -111,6 +111,7 @@ module Combat
       crit_mult = CRITICAL[crit] if crit
       damage = roll_damage attacker, crit_mult
       damage = (damage * 1.5).to_i if defender.state == PhysicalState::Resting
+      damage = (damage * 3).to_i if defender.state == PhysicalState::Meditating
       damage_text = Combat.damage_text damage
       damage_color = Combat.damage_color damage
       damage_percent_text = Combat.damage_percent_text(damage * 100.0 /  defender.hp)
@@ -164,6 +165,7 @@ module Combat
       damage = 0
       damage = PROC[@weapons[attacker]].(@game, attacker, defender) if Random.new.rand(1..10) > 8
       damage = (damage * 1.5).to_i if defender.state == PhysicalState::Resting
+      damage = (damage * 3).to_i if defender.state == PhysicalState::Meditating
       damage
     end
 

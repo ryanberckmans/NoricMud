@@ -92,7 +92,7 @@ module Combat
       raise "expected attacker to differ from defender" if attacker == defender
       Log::debug "attacker #{attacker.short_name} engaged defender #{defender.short_name}", "combatround"
       @engaged[ attacker ] = Depq::Locator.new OpenStruct.new({start_time:Time.now, attacker:attacker, defender:defender})
-      PhysicalState::transition @game, attacker, PhysicalState::Standing if attacker.state == PhysicalState::Resting
+      PhysicalState::transition @game, attacker, PhysicalState::Standing if attacker.state == PhysicalState::Resting or attacker.state == PhysicalState::Meditating
       engage defender, attacker unless engaged? defender
       nil
     end

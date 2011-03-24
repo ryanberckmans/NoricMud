@@ -41,6 +41,7 @@ module CoreCommands
     commands << "cast stun"
     commands << "rest"
     commands << "stand"
+    commands << "meditate"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
     game.send_msg mob, help

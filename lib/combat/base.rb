@@ -199,6 +199,11 @@ module Combat
         pov(receiver) { "{!{FRYou reel in shock as you take significant damage while resting!\n" }
         pov(receiver.room.mobs) { "{!{FR#{receiver.short_name} reels in shock as he takes significant damage while resting!\n"}
       end
+    elsif amount > 0 and receiver.state == PhysicalState::Meditating
+      pov_scope do
+        pov(receiver) { "{!{FRYou reel in shock as you take massive damage while meditating!\n" }
+        pov(receiver.room.mobs) { "{!{FR#{receiver.short_name} reels in shock as he takes massive damage while meditating!\n"}
+      end
     end
     game.combat.aggress damager, receiver if damager and damager.kind_of? Mob
     receiver.hp -= amount
