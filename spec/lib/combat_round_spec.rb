@@ -4,7 +4,8 @@ describe Combat::CombatRound do
 
   context "an instance" do
     before :each do
-      @round = Combat::CombatRound.new
+      @game = double "Game"
+      @round = Combat::CombatRound.new @game
     end
 
     it "should raise error if target_of mob isn't a Mob" do
@@ -32,6 +33,7 @@ describe Combat::CombatRound do
         @first_mob = double "Mob"
         @first_mob.stub(:kind_of?).with(Mob).and_return true
         @first_mob.stub(:short_name).and_return "fred"
+        @first_mob.stub(:state).and_return "standing"
       end
 
       it "should find nil as the target_of first mob" do
@@ -47,6 +49,7 @@ describe Combat::CombatRound do
           @second_mob = double "Mob"
           @second_mob.stub(:kind_of?).with(Mob).and_return true
           @second_mob.stub(:short_name).and_return "jim"
+          @second_mob.stub(:state).and_return "standing"
         end
 
         it "should find nil as the target_of second mob" do

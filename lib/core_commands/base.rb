@@ -46,14 +46,14 @@ module CoreCommands
   add_cmd "commands", ->game,mob,rest,match { help game, mob }
   add_cmd "?", ->game,mob,rest,match { help game, mob }
   add_cmd "goto", ->game,mob,rest,match { goto game, mob, rest }
-  add_cmd "room create", ->game,mob,rest,match { room_create game, mob, rest }
-  add_cmd "room toggle id", ->game,mob,rest,match { room_toggle_show_id game, mob }
-  add_cmd "room name", ->game,mob,rest,match { room_name game, mob, rest }
-  add_cmd "room description", ->game,mob,rest,match { room_desc game, mob, rest }
-  add_cmd "room default name", ->game,mob,rest,match { room_default_name game, mob, rest }
-  add_cmd "room exit", ->game,mob,rest,match { room_exit game, mob, rest }
-  add_cmd "room unexit", ->game,mob,rest,match { room_unexit game, mob, rest }
-  add_cmd "room list", ->game,mob,rest,match { room_list game, mob }
+  add_cmd "room create", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_create game, mob, rest }
+  add_cmd "room toggle id", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_toggle_show_id game, mob }
+  add_cmd "room name", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_name game, mob, rest }
+  add_cmd "room description", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_desc game, mob, rest }
+  add_cmd "room default name", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_default_name game, mob, rest }
+  add_cmd "room exit", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_exit game, mob, rest }
+  add_cmd "room unexit", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_unexit game, mob, rest }
+  add_cmd "room list", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_list game, mob }
   add_cmd "where", ->game,mob,rest,match { where game, mob }
   add_cmd "weapon", ->game,mob,rest,match { game.combat.weapon.weapon_cycle mob }
   add_cmd "god", ->game,mob,rest,match { mob.god = true }

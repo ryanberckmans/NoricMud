@@ -36,6 +36,11 @@ module Abilities
   end
 
   private
+  def self.ability_damage( game, attacker, defender, damage )
+    damage = (damage * 1.5).to_i if defender.state == PhysicalState::Resting
+    Combat.damage game, attacker, defender, damage
+  end
+  
   def self.use_ability( game, attacker, target, ability, energy_cost, cooldown, lag, channel )
     raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
     raise "expected target to be a String" unless target.kind_of? String

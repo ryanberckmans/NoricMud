@@ -13,7 +13,7 @@ class Mob < ActiveRecord::Base
     self.energy = 100
     self.attack_cooldown = 0.0
     self.god = false
-    self.state = PhysicalState::Standing
+    self.state = nil
   end
 
   def condition

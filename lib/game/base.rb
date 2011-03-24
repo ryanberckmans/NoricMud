@@ -63,10 +63,6 @@ class Game
     end
     @secret_cmds.add "heal", ->(game,mob,rest,match) { if mob.room.name =~ /Subterranean Forest/ then send_msg mob.char, "A bright {!{FGsubterranean forest aura{@ heals your wounds.\n"; mob.hp = mob.hp_max; mob.energy = mob.energy_max else raise AbandonCallback.new end }
 
-    @rage = AbbrevMap.new
-    @rage.add "rage", ->(game,mob,rest,match) { game.send_msg mob, "{!{FC***{@Secret {!{FRRAGE ACTIVATED{@ because your hp is low.{!{FC***\n" }
-    @secret_cmds2 = ->(mob) { if mob.hp < 150 then @rage else nil end }
-    
     pov_send ->(c,m){ send_msg c, m }
   end
 
@@ -221,9 +217,9 @@ class Game
     char.mob.char = char
     @mob_commands.add char.mob
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
-    @mob_commands.add_cmd_handler char.mob, @secret_cmds2, 20
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
+    PhysicalState::transition self, char.mob, PhysicalState::Standing
   end
 
   def character_reconnected( char )

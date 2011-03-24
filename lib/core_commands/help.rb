@@ -39,6 +39,8 @@ module CoreCommands
     commands << "cast heal"
     commands << "cast nuke"
     commands << "cast stun"
+    commands << "rest"
+    commands << "stand"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
     game.send_msg mob, help

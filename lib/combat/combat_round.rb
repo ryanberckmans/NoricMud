@@ -1,7 +1,8 @@
 
 module Combat
   class CombatRound
-    def initialize
+    def initialize( game )
+      @game = game
       @engaged = {}
       @round_schedule_depq = Depq.new( ->a,b{
                                          x = nil
@@ -91,6 +92,7 @@ module Combat
       raise "expected attacker to differ from defender" if attacker == defender
       Log::debug "attacker #{attacker.short_name} engaged defender #{defender.short_name}", "combatround"
       @engaged[ attacker ] = Depq::Locator.new OpenStruct.new({start_time:Time.now, attacker:attacker, defender:defender})
+      PhysicalState::transition @game, attacker, PhysicalState::Standing if attacker.state == PhysicalState::Resting
       engage defender, attacker unless engaged? defender
       nil
     end

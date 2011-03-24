@@ -14,7 +14,7 @@ module Abilities
         pov(defender) { "A bolt of red-orange light leaps from #{attacker.short_name}'s hand and stuns you!\n" }
         pov(attacker.room.mobs) { "A bolt of red-orange light leaps from #{attacker.short_name}'s hand and stuns #{defender.short_name}!\n" }
       end
-      Combat::damage( game, attacker, defender, STUN_DAMAGE )
+      ability_damage game, attacker, defender, STUN_DAMAGE
       game.add_lag defender, STUN_TARGET_LAG
     end
   end

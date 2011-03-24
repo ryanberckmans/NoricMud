@@ -1,5 +1,5 @@
 class Regen
-  REGEN_INTERVAL = 5 * Combat::COMBAT_ROUND
+  REGEN_INTERVAL = 2 * Combat::COMBAT_ROUND
   
   def initialize( game )
     @game = game
@@ -14,13 +14,14 @@ class Regen
     @game.all_characters.each do |char|
       mob = char.mob
       Log::debug "regenerating #{char.name}", "regen"
-      case mob.state.class
-      when PhysicalState::Standing.class then
-        regen_hp mob, 5
-        regen_energy mob, 5
+      if mob.state == PhysicalState::Resting then
+        Log::debug "#{char.name} regen as resting", "regen"
+        regen_hp mob, 8
+        regen_energy mob, 8
       else
-        Log::debug "state not found #{char.name}", "regen"
-        raise "state not found", "regen"
+        Log::debug "#{char.name} regen as standing", "regen"
+        regen_hp mob, 2
+        regen_energy mob, 2
       end
     end
   end

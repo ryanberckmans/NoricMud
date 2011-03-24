@@ -84,7 +84,7 @@ module Combat
     def initialize( game )
       @game = game
       @game.mob_commands.add_default_cmd_handler Combat::commands, COMBAT_COMMANDS_HANDLER_PRIORITY
-      @combat_round = CombatRound.new
+      @combat_round = CombatRound.new @game
       @ticks_until_combat_round = COMBAT_ROUND
       @weapon = Weapon.new @game
       
@@ -95,6 +95,7 @@ module Combat
       @in_combat_cmds.add "west", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "up", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "down", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "rest", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "kill", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone!!\n" }
       @in_combat_cmds.add "weapon", ->(game, mob, rest, match) { game.send_msg mob, "You can't change weapons in combat!!\n" }
       @in_combat_cmds.add "kill random", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone random!!\n" }
@@ -193,6 +194,12 @@ module Combat
   def self.damage( game, damager, receiver, amount )
     raise "expected receiver to be a Mob" unless receiver.kind_of? Mob
     raise "expected amount to be an Integer" unless amount.kind_of? Fixnum
+    if amount > 0 and receiver.state == PhysicalState::Resting
+      pov_scope do
+        pov(receiver) { "{!{FRYou reel in shock as you take significant damage while resting!\n" }
+        pov(receiver.room.mobs) { "{!{FR#{receiver.short_name} reels in shock as he takes significant damage while resting!\n"}
+      end
+    end
     game.combat.aggress damager, receiver if damager and damager.kind_of? Mob
     receiver.hp -= amount
     receiver.hp = receiver.hp_max if receiver.hp > receiver.hp_max

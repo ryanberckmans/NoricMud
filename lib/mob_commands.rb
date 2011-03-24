@@ -9,6 +9,7 @@ class MobCommands
     @game = game
     @default_handlers = []
     @mob_handlers = {}
+    @dequeued = []
   end
 
   def add(mob)
@@ -35,6 +36,7 @@ class MobCommands
     raise "expected priority to be Integer" unless priority.kind_of? Fixnum
     verify_exists mob
     @mob_handlers[mob].insert handler, priority
+    Log::debug "mob #{mob.short_name} added handler #{handler.to_s} with priority #{priority}", "mobcommands"
   end
 
   def remove_cmd_handler( mob, handler )
@@ -47,7 +49,14 @@ class MobCommands
         removed = true
       end
     end
+    @dequeued.each do |loc|
+      if loc.value == handler
+        @dequeued.delete loc
+        removed = true
+      end
+    end
     raise "no handler was matched for removal" unless removed
+    Log::debug "mob #{mob.short_name} removed handler #{handler.to_s}", "mobcommands"
   end
 
   def handle_cmd( mob, cmd )
@@ -56,12 +65,13 @@ class MobCommands
     Log::debug "handling cmd #{cmd} for #{mob.short_name}", "mobcommands"
     cmd_handled = false
     original_size = @mob_handlers[mob].size
-    dequeued = []
+    raise "expected @dequeued to be empty" unless @dequeued.empty?
+    @dequeued = []
     begin
       while true
         loc = @mob_handlers[mob].delete_max_locator
         break unless loc
-        dequeued << loc
+        @dequeued << loc
 
         cmd_handler = loc.value
         cmd_handler = cmd_handler[mob] if cmd_handler.kind_of? Proc
@@ -81,12 +91,12 @@ class MobCommands
         end
       end
     ensure
-      dequeued.each do |loc|
+      @dequeued.each do |loc|
         raise "expected locator to be a Depq::Locator" unless loc.kind_of? Depq::Locator
         @mob_handlers[mob].insert_locator loc
       end
+      @dequeued.clear
     end
-    raise "expected mob to have same number of handlers after handle_cmd" unless @mob_handlers[mob].size == original_size
     cmd_handled
   end
 
