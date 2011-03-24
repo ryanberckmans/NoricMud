@@ -21,7 +21,7 @@ module PhysicalState
         }
         pov_scope do
           pov(mob) { "{@You meditate for awhile....\n" }
-          pov(mob.room.mobs) { "{@#{mob.short_name} begins meditating.\n" }
+          pov(mob.room.mobs) { "{@#{mob.short_name} began meditating.\n" }
         end
       end
 

@@ -20,8 +20,13 @@ class Cooldown
     Log::debug "start tick", "cooldown"
     @cooldown.each_key do |mob|
       @cooldown[mob].each_key do |ability|
-        @cooldown[mob][ability] -= 1 unless @cooldown[mob][ability] < 1
-        Log::debug "mob #{mob.short_name} reduced cooldown to #{@cooldown[mob][ability]} for ability #{ability.to_s}", "cooldown"
+        if @cooldown[mob][ability] > 0
+          @cooldown[mob][ability] -= 1
+          if @cooldown[mob][ability] < 1
+            Log::debug "mob #{mob.short_name} finished cooling down ability #{ability.to_s}", "cooldown"
+          end
+          Log::debug "mob #{mob.short_name} reduced cooldown to #{@cooldown[mob][ability]} for ability #{ability.to_s}", "cooldown"
+        end
       end
     end
     Log::debug "end tick", "cooldown"

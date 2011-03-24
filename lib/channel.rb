@@ -19,6 +19,7 @@ class Channel
         pov(mob) { "{!{FCYour channeling has been {FRinterrupted{FC!\n" }
         pov(mob.room.mobs) { "{!{FC#{mob.short_name}'s channeling is {FRinterrupted{FC!\n" }
       end
+      PhysicalState::transition @game, mob, PhysicalState::Standing
       Log::debug "#{mob.short_name} cancelled channeling", "channel"
     end
   end
