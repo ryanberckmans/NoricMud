@@ -207,6 +207,11 @@ module Combat
         pov(receiver.room.mobs) { "{!{FR#{receiver.short_name} reels in shock as he takes massive damage while meditating!\n"}
       end
     end
+    if amount > receiver.hp_max / 3
+      pov_scope do
+        pov(receiver) { "{!{FRYou reel in shock from sudden blood loss!\n" }
+      end
+    end
     game.combat.aggress damager, receiver if damager and damager.kind_of? Mob
     receiver.hp -= amount
     receiver.hp = receiver.hp_max if receiver.hp > receiver.hp_max
