@@ -1,5 +1,6 @@
 require "core_commands/base.rb"
 require "combat/base.rb"
+require "breath.rb"
 require "lag.rb"
 require "cooldown.rb"
 require "channel.rb"
@@ -12,6 +13,7 @@ class Game
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
+    @breath = Breath.new self
     @channel = Channel.new self
     @cooldown = Cooldown.new
     @lag = Lag.new
@@ -116,6 +118,7 @@ class Game
     process_new_disconnections
     process_new_reconnections
     process_new_logins
+    @breath.tick
     @lag.tick
     @cooldown.tick
     @regen.tick
@@ -146,6 +149,7 @@ class Game
     raise "expected mob to be a Mob" unless mob.kind_of? Mob
     if exit
       raise "expected exit to be an Exit" unless exit.kind_of? Exit
+      return unless @breath.try_move mob
       pov_scope do
         pov_none(mob)
         pov(mob.room.mobs) do "{!{FW#{mob.short_name} #{verb} #{Exit.i_to_s exit.direction}.\n" end
@@ -179,6 +183,10 @@ class Game
     @channel.channel mob, ability, channel_duration
   end
 
+  def channeling?( mob )
+    @channel.channeling? mob
+  end
+
   private
   def do_logout( char )
     raise "expected char to be online" unless @character_system.online? char
@@ -202,7 +210,7 @@ class Game
   end
 
   def prompt( char )
-    "\n{@{!{FU<#{char.mob.hp_color}{FUhp #{char.mob.energy_color}{FUe> "
+    "\n{@{!{FU<#{char.mob.hp_color}{FUhp #{char.mob.energy_color}{FUe #{@breath.breath_color char.mob}{FUbr> "
   end
   
   def send_prompts

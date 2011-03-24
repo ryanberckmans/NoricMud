@@ -31,9 +31,9 @@ class Channel
       pov(mob) { "{!{FCYou begin channeling!\n" }
       pov(mob.room.mobs) { "{!{FCThe air crackles as #{mob.short_name} begins channeling!\n"}
     end
-    PhysicalState::transition @game, mob, PhysicalState::Channeling
     @channel[mob] += channel_duration
     @ability[mob] = ability
+    PhysicalState::transition @game, mob, PhysicalState::Channeling
     nil
   end
 

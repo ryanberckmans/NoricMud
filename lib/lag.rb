@@ -14,7 +14,7 @@ class Lag
   end
 
   def add_lag( mob, lag ) # lag in pulses
-    raise unless lag.kind_of? Fixnum
+    raise "expected lag to be an integer" unless lag.kind_of? Fixnum
     default_lag mob
     @lag[mob] += lag
     @lag[mob]

@@ -6,6 +6,7 @@ module PhysicalState
       end
       
       def on_enter( game, mob )
+        raise "expected mob to be channeling" unless game.channeling? mob
         Log::debug "mob #{mob.short_name} entered channeling", "state"
       end
 
