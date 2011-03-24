@@ -9,6 +9,19 @@ class Channel
     default_channel mob
     @channel[mob] > 0
   end
+
+  def cancel_channel( mob )
+    default_channel mob
+    if channeling? mob
+      @channel[mob] = 0
+      @ability.delete mob
+      pov_scope do
+        pov(mob) { "{!{FCYour channeling has been {FRinterrupted{FC!\n" }
+        pov(mob.room.mobs) { "{!{FC#{mob.short_name}'s channeling is {FRinterrupted{FC!\n" }
+      end
+      Log::debug "#{mob.short_name} cancelled channeling", "channel"
+    end
+  end
   
   def channel( mob, ability, channel_duration ) # channel_duration in pulses
     raise unless channel_duration.kind_of? Fixnum

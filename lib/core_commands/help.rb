@@ -36,6 +36,9 @@ module CoreCommands
     commands << "room list"
     commands << "where"
     commands << "weapon"
+    commands << "cast heal"
+    commands << "cast nuke"
+    commands << "cast stun"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
     game.send_msg mob, help

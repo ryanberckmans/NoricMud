@@ -163,6 +163,7 @@ class Game
 
   def add_lag( mob, lag )
     @lag.add_lag mob, lag
+    @channel.cancel_channel mob
     nil
   end
 

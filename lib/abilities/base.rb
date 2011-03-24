@@ -70,4 +70,5 @@ module Abilities
   
   add_cmd "cast nuke", ->(game, mob, rest, match) { use_ability( game, mob, rest, NUKE, NUKE_COST, NUKE_COOLDOWN, NUKE_LAG, NUKE_CHANNEL) }
   add_cmd "cast heal", ->(game, mob, rest, match) { use_ability( game, mob, rest, HEAL, HEAL_COST, HEAL_COOLDOWN, HEAL_LAG, HEAL_CHANNEL) }
+  add_cmd "cast stun", ->(game, mob, rest, match) { use_ability( game, mob, rest, STUN, STUN_COST, STUN_COOLDOWN, STUN_LAG, STUN_CHANNEL) }
 end
