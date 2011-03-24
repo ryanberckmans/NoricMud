@@ -16,6 +16,7 @@ class Breath
   LOW_BR = 40
   BR_REGEN = 9
   COLLAPSE_DISTANCE = 2
+  FAIL_MOVE_BREATH = -7
   
   def initialize( game )
     @game = game
@@ -54,7 +55,7 @@ class Breath
     breath_cost = 0
     breath_cost = BREATH_COST[distance] if BREATH_COST.key? distance
     @last_breath[mob] = @time
-    if @breath[mob] - breath_cost < -10 # allow people to use slightly more breath than they have
+    if @breath[mob] - breath_cost < FAIL_MOVE_BREATH # allow people to use slightly more breath than they have
       if distance < COLLAPSE_DISTANCE
         # movement too close together, collapse
         fail_move_with_collapse mob

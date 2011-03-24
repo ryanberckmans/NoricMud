@@ -35,8 +35,6 @@ class Game
     @core_commands = CoreCommands.new self
     @combat = Combat.new self
 
-    @mob_commands.add_default_cmd_handler Abilities::commands, Abilities::ABILITIES_HANDLER_PRIORITY
-
     @msgs_this_tick = {}
     @new_logouts = []
 

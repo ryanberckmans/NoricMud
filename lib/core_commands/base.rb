@@ -38,6 +38,7 @@ module CoreCommands
   add_cmd "flee", ->game,mob,rest,match { Combat.flee game, mob }
   add_cmd "glance", ->game,mob,rest,match { Combat.glance game, mob, rest }
   add_cmd "kill", ->game,mob,rest,match { Combat.kill game, mob, rest }
+  add_cmd "cast", ->game,mob,rest,match { Abilities::cast game, mob, rest }
   add_cmd "slay random", ->game,mob,rest,match { Combat.green_beam game, mob }
   add_cmd "kill random", ->game,mob,rest,match { Combat.kill game, mob, mob.room.mobs.sample.short_name }
   add_cmd "who", ->game,mob,rest,match { who game, mob }

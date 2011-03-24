@@ -223,8 +223,12 @@ module Combat
       return
     end
     mob.room.mobs.each do |mob_in_room|
-      if mob_in_room.short_name =~ Regexp.new( target, Regexp::IGNORECASE)
-        game.send_msg mob, "{!{FY#{mob_in_room.condition}\n"        
+      if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE)
+        pov_scope do
+          pov(mob) { "{!{FY#{mob_in_room.condition}\n" }
+          pov(mob_in_room) { "{!{FY#{mob.short_name} glances at you.\n" }
+          pov(mob.room.mobs) { "{!{FY#{mob.short_name} glances at #{mob_in_room.short_name}.\n" }
+        end
         return
       end
     end

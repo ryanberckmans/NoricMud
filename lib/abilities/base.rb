@@ -2,15 +2,10 @@ files = Dir.glob Util.here "*.rb"
 files.each do |f| require f end
 
 module Abilities
-  @commands = AbbrevMap.new
-  ABILITIES_HANDLER_PRIORITY = 15
+  @abilities = AbbrevMap.new
   
-  def self.add_cmd( cmd, callback )
-    @commands.add cmd, callback
-  end
-
-  def self.commands
-    @commands
+  def self.add_ability( cmd, callback )
+    @abilities.add cmd, callback
   end
 
   def self.attempt_energy_use( game, mob, energy )
@@ -27,6 +22,20 @@ module Abilities
     end
   end
 
+  def self.cast( game, mob, rest )
+    if rest.empty?
+      game.send_msg mob, "{@Cast what spell?\n"
+      return
+    end
+    ability = @abilities.find rest
+    if ability
+      ability[:value].call game, mob, ability[:rest]
+    else
+      game.send_msg mob, "{@You cannot cast this unknown spell.\n"
+    end
+  end
+
+  private
   def self.use_ability( game, attacker, target, ability, energy_cost, cooldown, lag, channel )
     raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
     raise "expected target to be a String" unless target.kind_of? String
@@ -70,8 +79,8 @@ module Abilities
     game.add_lag attacker, lag
     true
   end
-  
-  add_cmd "cast nuke", ->(game, mob, rest, match) { use_ability( game, mob, rest, NUKE, NUKE_COST, NUKE_COOLDOWN, NUKE_LAG, NUKE_CHANNEL) }
-  add_cmd "cast heal", ->(game, mob, rest, match) { use_ability( game, mob, rest, HEAL, HEAL_COST, HEAL_COOLDOWN, HEAL_LAG, HEAL_CHANNEL) }
-  add_cmd "cast stun", ->(game, mob, rest, match) { use_ability( game, mob, rest, STUN, STUN_COST, STUN_COOLDOWN, STUN_LAG, STUN_CHANNEL) }
+
+  add_ability "nuke", ->(game, mob, rest ) { use_ability( game, mob, rest, NUKE, NUKE_COST, NUKE_COOLDOWN, NUKE_LAG, NUKE_CHANNEL) }
+  add_ability "heal", ->(game, mob, rest ) { use_ability( game, mob, rest, HEAL, HEAL_COST, HEAL_COOLDOWN, HEAL_LAG, HEAL_CHANNEL) }
+  add_ability "stun", ->(game, mob, rest ) { use_ability( game, mob, rest, STUN, STUN_COST, STUN_COOLDOWN, STUN_LAG, STUN_CHANNEL) }
 end
