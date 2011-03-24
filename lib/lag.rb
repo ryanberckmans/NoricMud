@@ -38,8 +38,8 @@ class Lag
           @actions[mob].call if @actions[mob]
           @actions.delete mob
         end
+        Log::debug "mob #{mob.short_name} has lag #{@lag[mob]}", "lag"
       end
-      Log::debug "mob #{mob.short_name} has lag #{@lag[mob]}", "lag"
     end
     Log::debug "end tick", "lag"
   end

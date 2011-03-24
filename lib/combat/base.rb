@@ -113,9 +113,11 @@ module Combat
       Log::info "start tick", "combat"
       @game.all_characters.each do |char|
         mob = char.mob
-        mob.attack_cooldown -= @weapon.attack_speed(mob) / COMBAT_ROUND
-        mob.attack_cooldown = 0.0 if mob.attack_cooldown < 0
-        Log::debug "mob #{mob.short_name} attack cooldown reduced by weapon speed to #{mob.attack_cooldown}", "combat"
+        if mob.attack_cooldown > 0
+          mob.attack_cooldown -= @weapon.attack_speed(mob) / COMBAT_ROUND
+          mob.attack_cooldown = 0.0 if mob.attack_cooldown < 0
+          Log::debug "mob #{mob.short_name} attack cooldown reduced by weapon speed to #{mob.attack_cooldown}", "combat"
+        end
       end
       @ticks_until_combat_round -= 1
       if @ticks_until_combat_round < 1
