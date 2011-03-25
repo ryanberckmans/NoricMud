@@ -16,8 +16,37 @@ class Mob < ActiveRecord::Base
     self.state = nil
   end
 
+  CONDIITON_DEATH_TEXT = "is dead."
+  CONDITION_MAX_HP_TEXT = "is in excellent condition."
+  CONDITION_PERCENT_TEXT = {
+    0.0 => "barely clings to life.",
+    8.0 => "pales visibly as death nears.",
+    15.0 => "is covered with blood from oozing wounds.",
+    22.0 => "has many grievous wounds.",
+    29.0 => "looks pretty awful.",
+    36.0 => "has some large, gaping wounds.",
+    41.0 => "has some nasty wounds and bleeding cuts.",
+    48.0 => "grimaces with pain.",
+    55.0 => "has quite a few wounds.",
+    62.0 => "winces in pain.",
+    69.0 => "has some minor wounds.",
+    76.0 => "has some small wounds and bruises.",
+    83.0 => "has a nasty looking welt on the forehead.",
+    90.0 => "has a few scratches.",
+  }
+
   def condition
-    "#{short_name} has #{hp.to_s}/#{hp_max.to_s}hp."
+    if hp == 0
+      label = CONDITION_DEATH_TEXT
+    elsif hp == hp_max
+      label = CONDITION_MAX_HP_TEXT
+    else
+      percent = hp * 100.0 / hp_max
+      CONDITION_PERCENT_TEXT.each_pair do |min_amount,text|
+        label = text if percent > min_amount
+      end
+    end
+    short_name + " " + label
   end
 
   def hp_color
