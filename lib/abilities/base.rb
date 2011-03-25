@@ -76,6 +76,8 @@ module Abilities
       end # end if target == me
     end
 
+    energy_cost = (energy_cost * 0.5).to_i unless target_mob # half mana for missed target
+
     return nil unless attempt_energy_use game, attacker, energy_cost
 
     if target_mob

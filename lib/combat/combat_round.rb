@@ -100,7 +100,7 @@ module Combat
     private
     def create_schedule
       @round_schedule_depq.clear
-      @engaged.each_value { |val| @round_schedule_depq.insert_locator val }
+      @engaged.each_value { |val| val.value.start_time = Random.new.rand(1..100); @round_schedule_depq.insert_locator val }
       nil
     end
 

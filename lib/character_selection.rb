@@ -70,7 +70,7 @@ class CharacterSelection
       char.account = account
       char.mob = Mob.new({:short_name => char.name, :long_name => "{FGLegionnaire {FY#{char.name}{FG the legendary hero"})
       break if char.save
-      char.errors.each_value do |err| err.each do |msg| @account_system.send_msg account, "{!{FC#{msg}{@\n" end end
+      char.errors.each do |err, msg| @account_system.send_msg account, "{!{FC#{msg}{@\n" end
     end
     char
   end

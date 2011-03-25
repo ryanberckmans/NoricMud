@@ -9,9 +9,9 @@ module Combat
 
     ATTACK_SPEED = {
       # continuous attacks per combat round
-      dagger:2.0,
-      sword:1.0,
-      axe:0.6,
+      dagger:2.5,
+      sword:1.25,
+      axe:0.75,
     }
 
     DAMAGE_TYPE = {

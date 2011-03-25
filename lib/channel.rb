@@ -31,7 +31,7 @@ class Channel
     raise "expected mob not to be channeling" if @channel[mob] > 0
     pov_scope do
       pov(mob) { "{!{FCYou begin channeling!\n" }
-      pov(mob.room.mobs) { "{!{FCThe air crackles as #{mob.short_name} begins channeling!\n"}
+      pov(mob.room.mobs) { "{!{FCThe air crackles as #{mob.short_name} begins channeling!\n"} if @game.combat.engaged? mob
     end
     @channel[mob] += channel_duration
     @ability[mob] = ability
@@ -49,7 +49,7 @@ class Channel
           Log::debug "mob #{mob.short_name} finished channeling, executing ability", "channel"
           pov_scope do
             pov(mob) { "{!{FCYou finish channeling!\n" }
-            pov(mob.room.mobs) { "{!{FC#{mob.short_name} finishes channeling!\n"}
+            pov(mob.room.mobs) { "{!{FC#{mob.short_name} finishes channeling!\n"} if @game.combat.engaged? mob
           end
           PhysicalState::transition @game, mob, PhysicalState::Standing
           @ability[mob].call
@@ -57,7 +57,7 @@ class Channel
         elsif @channel[mob] % 8 == 0
           pov_scope do
             pov(mob) { "{!{FCYou continue to channel!\n" }
-            pov(mob.room.mobs) { "{!{FC#{mob.short_name} continues to channel energy!\n"}
+            pov(mob.room.mobs) { "{!{FC#{mob.short_name} continues to channel energy!\n"} if @game.combat.engaged? mob
           end
         end
       end # if channel[mob] > 0

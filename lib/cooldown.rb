@@ -21,12 +21,14 @@ class Cooldown
   end
 
   def in_cooldown?( mob, ability )
-    default_ability_cooldown mob, ability
+    return false unless @cooldown[mob]
+    return false unless @cooldown[mob][ability]
     @cooldown[mob][ability] > 0
   end
   
   def add_cooldown( mob, ability, cooldown, recovery_action=nil ) # cooldown in pulses
     raise unless cooldown.kind_of? Fixnum
+    return unless cooldown > 0
     raise "expected ability to be a String" unless ability.kind_of? String
     default_ability_cooldown mob, ability
     Log::debug "mob #{mob.short_name} added cooldown #{cooldown} to ability #{ability.to_s}", "cooldown"
