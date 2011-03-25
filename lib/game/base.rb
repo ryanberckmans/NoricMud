@@ -202,6 +202,7 @@ class Game
     @character_system.send_msg char, @msgs_this_tick[char]
     @msgs_this_tick.delete char
     @mob_commands.remove mob
+    @cooldown.delete mob
     @character_system.logout char
   end
 

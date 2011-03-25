@@ -4,6 +4,13 @@ class Cooldown
     @actions = {}
   end
 
+  def delete( mob )
+    raise "expected mob to be a Mob" unless mob.kind_of? Mob
+    Log::debug "mob #{mob.short_name} deleted", "cooldown"
+    @cooldown.delete mob
+    @actions.delete mob
+  end
+
   def cooldowns( mob )
     default_cooldown mob
     if @cooldown[mob].size > 0
