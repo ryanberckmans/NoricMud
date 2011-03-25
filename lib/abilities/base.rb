@@ -42,16 +42,18 @@ module Abilities
     Combat.damage game, attacker, defender, damage
   end
   
-  def self.use_ability( game, attacker, target, ability, energy_cost, cooldown, lag, channel )
+  def self.use_ability( game, attacker, target, ability, ability_name, energy_cost, cooldown, lag, channel )
     raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
     raise "expected target to be a String" unless target.kind_of? String
-    if game.in_cooldown? attacker, ability
+    raise "expected ability to be a Proc" unless ability.kind_of? Proc
+    raise "expected ability_name to be a String" unless ability_name.kind_of? String
+    if game.in_cooldown? attacker, ability_name
       game.send_msg attacker, "{@That ability is currently cooling down!\n"
       return nil
     end
 
     if channel > 0
-      game.channel attacker, ->{ use_ability game, attacker, target, ability, energy_cost, cooldown, lag, 0 }, channel
+      game.channel attacker, ->{ use_ability game, attacker, target, ability, ability_name, energy_cost, cooldown, lag, 0 }, channel
       return nil
     end
     
@@ -81,12 +83,14 @@ module Abilities
     else
       game.send_msg attacker, "Nobody here by that name.\n"
     end
-    game.add_cooldown attacker, ability, cooldown
+    game.add_cooldown attacker, ability_name, cooldown, ->{ game.send_msg attacker, "#{ability_name.capitalize} has finished cooling down.\n" }
     game.add_lag attacker, lag
     true
   end
 
-  add_ability "nuke", ->(game, mob, rest ) { use_ability( game, mob, rest, NUKE, NUKE_COST, NUKE_COOLDOWN, NUKE_LAG, NUKE_CHANNEL) }
-  add_ability "heal", ->(game, mob, rest ) { use_ability( game, mob, rest, HEAL, HEAL_COST, HEAL_COOLDOWN, HEAL_LAG, HEAL_CHANNEL) }
-  add_ability "stun", ->(game, mob, rest ) { use_ability( game, mob, rest, STUN, STUN_COST, STUN_COOLDOWN, STUN_LAG, STUN_CHANNEL) }
+  add_ability "nuke", ->(game, mob, rest ) { use_ability( game, mob, rest, NUKE, "nuke", NUKE_COST, NUKE_COOLDOWN, NUKE_LAG, NUKE_CHANNEL) }
+  add_ability "heal", ->(game, mob, rest ) { use_ability( game, mob, rest, HEAL, "heal", HEAL_COST, HEAL_COOLDOWN, HEAL_LAG, HEAL_CHANNEL) }
+  add_ability "stun", ->(game, mob, rest ) { use_ability( game, mob, rest, STUN, "stun", STUN_COST, STUN_COOLDOWN, STUN_LAG, STUN_CHANNEL) }
+  add_ability "burst", ->(game, mob, rest ) { use_ability( game, mob, rest, BURST, "burst", BURST_COST, BURST_COOLDOWN, BURST_LAG, BURST_CHANNEL) }
+  add_ability "pitter", ->(game, mob, rest ) { use_ability( game, mob, rest, PITTER, "pitter", PITTER_COST, PITTER_COOLDOWN, PITTER_LAG, PITTER_CHANNEL) }
 end

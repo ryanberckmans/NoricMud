@@ -12,10 +12,10 @@ module PhysicalState
         game.add_lag mob, MEDITATE_LAG
         game.lag_recovery_action mob, ->{
           if mob.state == PhysicalState::Meditating
-            pov_scope do
-              pov(mob) { "{@You complete your meditation.\n" }
-              pov(mob.room.mobs) { "{@#{mob.short_name} completes his meditation.\n" }
-            end
+            #pov_scope do
+            #  pov(mob) { "{@You complete your meditation.\n" }
+            #  pov(mob.room.mobs) { "{@#{mob.short_name} completes his meditation.\n" }
+            #end
             PhysicalState.transition game, mob, PhysicalState::Resting
           end
         }

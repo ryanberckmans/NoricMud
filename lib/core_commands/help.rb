@@ -39,9 +39,13 @@ module CoreCommands
     commands << "cast heal"
     commands << "cast nuke"
     commands << "cast stun"
+    commands << "cast burst"
+    commands << "cast pitter"
     commands << "rest"
     commands << "stand"
     commands << "meditate"
+    commands << "cd - alias for cooldowns"
+    commands << "cooldowns"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
     game.send_msg mob, help

@@ -169,12 +169,16 @@ class Game
     @lag.recovery_action mob, action
   end
 
-  def add_cooldown( mob, ability, cooldown )
-    @cooldown.add_cooldown mob, ability, cooldown
+  def add_cooldown( mob, ability, cooldown, recovery_action=nil )
+    @cooldown.add_cooldown mob, ability, cooldown, recovery_action
   end
 
   def in_cooldown?( mob, ability )
     @cooldown.in_cooldown? mob, ability
+  end
+
+  def cooldowns( mob )
+    @cooldown.cooldowns mob
   end
 
   def channel( mob, ability, channel_duration )

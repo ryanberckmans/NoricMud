@@ -16,8 +16,8 @@ class Channel
       @channel[mob] = 0
       @ability.delete mob
       pov_scope do
-        pov(mob) { "{!{FCYour channeling has been {FRinterrupted{FC!\n" }
-        pov(mob.room.mobs) { "{!{FC#{mob.short_name}'s channeling is {FRinterrupted{FC!\n" }
+        pov(mob) { "{!{FY*{FCYour channeling has been interrupted{FC!{FY*\n" }
+        pov(mob.room.mobs) { "{!{FC#{mob.short_name}'s channeling is interrupted!\n" }
       end
       PhysicalState::transition @game, mob, PhysicalState::Standing
       Log::debug "#{mob.short_name} cancelled channeling", "channel"
@@ -26,6 +26,7 @@ class Channel
   
   def channel( mob, ability, channel_duration ) # channel_duration in pulses
     raise unless channel_duration.kind_of? Fixnum
+    channel_duration += 1 # channels are ticked after most channels start; add 1 so that a channel of 1 means "exec abil next tick"
     default_channel mob
     raise "expected mob not to be channeling" if @channel[mob] > 0
     pov_scope do
