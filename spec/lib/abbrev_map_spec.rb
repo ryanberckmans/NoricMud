@@ -96,33 +96,74 @@ end
 
 describe AbbrevMap do
 
-  it "should rename/change default/catchall callbacks" do
-    pending "two types of 'default' callbacks; epsilon callback, for find ''; catchall callback, if find * returns nil"
-  end
-
-  it "requires that non-nil default_callback be a Proc" do
+  it "requires that non-nil epsilon_callback be a Proc" do
     proc = double("Proc")
     proc.should_receive(:kind_of?).with(Proc).and_return true
     expect { AbbrevMap.new 5 }.to raise_error
     expect { AbbrevMap.new nil }.to_not raise_error
     expect { AbbrevMap.new proc }.to_not raise_error
   end
+  
+  it "requires that non-nil epsilon_callback be a Proc" do
+    proc = double("Proc")
+    proc.should_receive(:kind_of?).with(Proc).and_return true
+    expect { AbbrevMap.new nil, 5 }.to raise_error
+    expect { AbbrevMap.new nil, nil }.to_not raise_error
+    expect { AbbrevMap.new nil, proc }.to_not raise_error
+  end
 
-  context "an instance with a default callback" do
+  context "an instance with an epsilon callback" do
     before :each do
-      @default = ->{}
-      @map = AbbrevMap.new @default
+      @epsilon = ->{}
+      @map = AbbrevMap.new @epsilon
     end
 
-    it "returns the default callback if find is called with epsilon" do
+    it "returns the epsilon callback if find is called with epsilon" do
       res = @map.find("")
-      res[:value].should == @default
+      res[:value].should == @epsilon
       res[:match].should == ""
       res[:rest].should == ""
     end
-  end # instance with default callback
+  end # instance with just epsilon callback
+
+  context "an instance with epsilon and catchall callbacks" do
+    before :each do
+      @epsilon = ->{}
+      @catchall = ->{}
+      @map = AbbrevMap.new @epsilon, @catchall
+    end
+
+    it "returns the catchall if find is called with non-epsilon" do
+      res = @map.find("")
+      res[:value].should == @catchall
+      res[:match].should == ""
+      res[:rest].should == ""
+    end
+
+    it "returns the epsilon callback if find is called with epsilon" do
+      res = @map.find("")
+      res[:value].should == @epsilon
+      res[:match].should == ""
+      res[:rest].should == ""
+    end
+
+    context "and one other key/value pair" do
+      before :each do
+        @key = "fred"
+        @value = 5
+        @map.add @key, @value
+      end
+
+      it "finds the value with the key" do
+        res = @map.find @key
+        res[:value].should == @value
+        res[:match].should == @key
+        res[:rest].should == ""
+      end
+    end
+  end # instance with both epsilon and catchall callbacks
   
-  context "an instance with no default callback" do
+  context "an instance with no epsilon callback" do
     before :each do
       @map = AbbrevMap.new
     end

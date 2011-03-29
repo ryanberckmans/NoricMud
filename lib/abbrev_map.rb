@@ -1,9 +1,11 @@
 require 'strscan'
 
 class AbbrevMap
-  def initialize( default_value = nil )
-    raise "expected default_value to be a Proc or nil" if default_value and not default_value.kind_of? Proc
-    @default_value = default_value
+  def initialize( epsilon_value = nil, catchall_value = nil )
+    raise "expected epsilon_value to be a Proc or nil" if epsilon_value and not epsilon_value.kind_of? Proc
+    raise "expected catchall_value to be a Proc or nil" if catchall_value and not catchall_value.kind_of? Proc
+    @epsilon_value = epsilon_value
+    @catchall_value = catchall_value
     @root = TrieNode.new
   end
 
@@ -16,10 +18,12 @@ class AbbrevMap
   def find( key )
     raise "expected key to be a string" unless key.kind_of? String
     if key.empty?
-      return nil unless @default_value
-      return { value:@default_value, match:"", rest:"" }
+      return nil unless @epsilon_value
+      return { value:@epsilon_value, match:"", rest:"" }
     end
-    @root.find key
+    value = @root.find key
+    value = @catchall_value if @catchall_value and not value
+    value
   end
 end
 
