@@ -1,3 +1,5 @@
+require "abbrev_map.rb"
+
 class Exit < ActiveRecord::Base
   NORTH = 0
   EAST = 1

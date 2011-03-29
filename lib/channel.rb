@@ -19,7 +19,6 @@ class Channel
         pov(mob) { "{!{FY*{FCYour channeling has been interrupted{FC!{FY*\n" }
         pov(mob.room.mobs) { "{!{FC#{mob.short_name}'s channeling is interrupted!\n" }
       end
-      PhysicalState::transition @game, mob, PhysicalState::Standing
       Log::debug "#{mob.short_name} cancelled channeling", "channel"
     end
   end
@@ -29,6 +28,7 @@ class Channel
     channel_duration += 1 # channels are ticked after most channels start; add 1 so that a channel of 1 means "exec abil next tick"
     default_channel mob
     raise "expected mob not to be channeling" if @channel[mob] > 0
+    Log::debug "#{mob.short_name} began channeling #{ability.to_s} for #{channel_duration}", "channel"
     pov_scope do
       pov(mob) { "{!{FCYou begin channeling!\n" }
       pov(mob.room.mobs) { "{!{FCThe air crackles as #{mob.short_name} begins channeling!\n"} if @game.combat.engaged? mob

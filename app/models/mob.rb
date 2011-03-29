@@ -16,7 +16,7 @@ class Mob < ActiveRecord::Base
     self.state = nil
   end
 
-  CONDIITON_DEATH_TEXT = "is dead."
+  CONDITION_DEATH_TEXT = "is dead."
   CONDITION_MAX_HP_TEXT = "is in excellent condition."
   CONDITION_PERCENT_TEXT = {
     0.0 => "barely clings to life.",
@@ -34,6 +34,10 @@ class Mob < ActiveRecord::Base
     83.0 => "has a nasty looking welt on the forehead.",
     90.0 => "has a few scratches.",
   }
+
+  def dead?
+    state == PhysicalState::Dead
+  end
 
   def condition
     if hp == 0

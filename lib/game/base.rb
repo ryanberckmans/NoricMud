@@ -161,7 +161,7 @@ class Game
 
   def add_lag( mob, lag )
     @lag.add_lag mob, lag
-    @channel.cancel_channel mob
+    PhysicalState::transition self, mob, PhysicalState::Standing if mob.state == PhysicalState::Channeling
     nil
   end
 
@@ -179,6 +179,10 @@ class Game
 
   def cooldowns( mob )
     @cooldown.cooldowns mob
+  end
+
+  def cancel_channel( mob )
+    @channel.cancel_channel mob
   end
 
   def channel( mob, ability, channel_duration )

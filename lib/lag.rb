@@ -16,7 +16,8 @@ class Lag
 
   def recovery_action( mob, action )
     default_lag mob
-    raise "expected mob not to have an action" if @actions.key? mob 
+    raise "expected mob not to have an action" if @actions.key? mob
+    Log::debug "set recovery action for #{mob.short_name}", "lag"
     @actions[mob] = action
     nil
   end
@@ -25,6 +26,7 @@ class Lag
     raise "expected lag to be an integer" unless lag.kind_of? Fixnum
     default_lag mob
     @lag[mob] += lag
+    Log::debug "added #{lag} to #{mob.short_name}", "lag"
     @lag[mob]
   end
 

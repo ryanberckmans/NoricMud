@@ -58,6 +58,7 @@ module Combat
       target = target_of(attacker)
       return false unless target
       raise "expected target to be a Mob" unless target.kind_of? Mob
+      return false if target.state == PhysicalState::Dead
       return false unless engaged? target
       return false unless attacker.room == target.room
       true
@@ -108,6 +109,8 @@ module Combat
       return nil unless block_given?
       while val = @round_schedule_depq.delete_min
         next unless valid_attack? val.attacker
+        defender = target_of(val.attacker)
+        Log::debug "attacker #{val.attacker.short_name} getting a combat round against #{defender.short_name}", "combatround"
         yield val.attacker, target_of(val.attacker)
       end
       nil

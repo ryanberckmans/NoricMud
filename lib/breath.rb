@@ -82,9 +82,10 @@ class Breath
   private
   def fail_move_with_collapse( mob )
     pov_scope do
-      pov(mob) { "{!{FGYou collapse, totally out of breath! (no actual collapse yet, just lag)\n" }
-      pov(mob.room.mobs) { "{!{FG#{mob.short_name} collapses, totally out of breath! (no actual collapse yet)\n" }
+      pov(mob) { "{!{FGYou collapse, totally out of breath!\n" }
+      pov(mob.room.mobs) { "{!{FG#{mob.short_name} collapses, totally out of breath!\n" }
     end
+    PhysicalState::transition @game, mob, PhysicalState::Resting
     @game.add_lag mob, Combat::COMBAT_ROUND
   end
 

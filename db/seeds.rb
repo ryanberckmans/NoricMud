@@ -22,7 +22,7 @@ t7 = Room.create({ :name => 'At a Sheer Precipice' })
 t8 = Room.create({ :name => 'Entrace to a Subterranean Forest' })
 
 def exit( from, to, dir )
-  Exit.create({ :room => from, :direction => dir, :destination => to })
+  Exit.create_exit from, to, dir
 end
 
 exit respawn, pit, Exit::SOUTH

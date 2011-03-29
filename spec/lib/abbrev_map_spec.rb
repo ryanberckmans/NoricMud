@@ -134,7 +134,7 @@ describe AbbrevMap do
     end
 
     it "returns the catchall if find is called with non-epsilon" do
-      res = @map.find("")
+      res = @map.find("fred")
       res[:value].should == @catchall
       res[:match].should == ""
       res[:rest].should == ""

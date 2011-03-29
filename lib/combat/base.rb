@@ -96,6 +96,7 @@ module Combat
       @in_combat_cmds.add "up", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "down", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
       @in_combat_cmds.add "rest", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n" }
+      @in_combat_cmds.add "goto", ->(game, mob, rest, match) { game.send_msg mob, "You're busy fighting!!\n"}
       @in_combat_cmds.add "kill", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone!!\n" }
       @in_combat_cmds.add "weapon", ->(game, mob, rest, match) { game.send_msg mob, "You can't change weapons in combat!!\n" }
       @in_combat_cmds.add "kill random", ->(game, mob, rest, match) { game.send_msg mob, "You are already trying to kill someone random!!\n" }
@@ -159,6 +160,10 @@ module Combat
           Log::debug "attacker #{attacker.short_name} had enough cooldown (#{attacker.attack_cooldown}) for another melee attack", "combat"
           attacker.attack_cooldown += 1.0
           @weapon.melee_attack attacker, defender
+          if @combat_round.target_of(attacker) != defender
+            Log::debug "attacker #{attacker.short_name} loses the rest of his combat round because his target switched from #{defender.short_name} to #{@combat_round.target_of attacker}", "combat"
+            break
+          end
           break unless @combat_round.valid_attack? attacker
         end
       else
@@ -196,6 +201,14 @@ module Combat
   def self.damage( game, damager, receiver, amount )
     raise "expected receiver to be a Mob" unless receiver.kind_of? Mob
     raise "expected amount to be an Integer" unless amount.kind_of? Fixnum
+    if receiver.state == PhysicalState::Dead
+      pov_scope do
+        pov(receiver) { "{@You are already a corpse!\n" }
+        pov(receiver.room.mobs) { "{@#{receiver.short_name} is already a corpse.\n" }
+      end
+      Log::debug "abandoning damage from #{damager.to_s} because #{receiver.short_name} is already a corpse", "combat"
+      return
+    end
     if amount > 0 and receiver.state == PhysicalState::Resting
       pov_scope do
         pov(receiver) { "{!{FRYou take increased damage while resting!\n" }
@@ -265,6 +278,10 @@ module Combat
     game.add_lag attacker, KILL_LAG
     attacker.room.mobs.each do |mob_in_room|
       if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE) and attacker != mob_in_room
+        if mob_in_room.dead?
+          game.send_msg attacker, "#{target.short_name} is dead\n."
+          return
+        end
         game.combat.melee_round attacker, mob_in_room
         return
       end
@@ -297,19 +314,7 @@ module Combat
 
   def self.death( game, mob )
     Log::info "#{mob.short_name} died", "combat"
-    game.combat.disengage mob if game.combat.engaged? mob
-    pov_scope do
-      pov(mob) { "{@\nYou're {!{FRDEAD!!{@ It is strangely {!{FCpainless{@.\n" }
-      pov(mob.room.mobs) { "{!{FR#{mob.short_name} is DEAD!!\n{@The lifeless husk that was once {!{FY#{mob.short_name}{@ implodes in a shower of sparks.\n" }
-      pov(mob.room.adjacent_mobs) { "{@You hear a blood-curdling death cry!\n" }
-    end
-    game.move_to( mob, game.respawn_room )
-    restore mob
-    pov_scope do
-      pov(mob) { "{@You wake up with a splitting headache, but your wounds are healed.\n" }
-      pov(mob.room.mobs) { "{@Whoooooosh! {!{FY#{mob.short_name}{@ materializes.\n" }
-    end
-    CoreCommands::look game, mob
+    PhysicalState::transition game, mob, PhysicalState::Dead
   end
 end
 
