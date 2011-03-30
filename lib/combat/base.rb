@@ -279,7 +279,7 @@ module Combat
     attacker.room.mobs.each do |mob_in_room|
       if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE) and attacker != mob_in_room
         if mob_in_room.dead?
-          game.send_msg attacker, "#{target.short_name} is dead\n."
+          game.send_msg attacker, "#{mob_in_room.short_name} is already dead.\n"
           return
         end
         game.combat.melee_round attacker, mob_in_room

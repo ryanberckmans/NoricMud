@@ -16,7 +16,7 @@ class Breath
   LOW_BR = 40
   BR_REGEN = 9
   COLLAPSE_DISTANCE = 2
-  FAIL_MOVE_BREATH = -7
+  FAIL_MOVE_BREATH = -10 # allow people to use slightly more breath than they have
   
   def initialize( game )
     @game = game
@@ -55,7 +55,7 @@ class Breath
     breath_cost = 0
     breath_cost = BREATH_COST[distance] if BREATH_COST.key? distance
     @last_breath[mob] = @time
-    if @breath[mob] - breath_cost < FAIL_MOVE_BREATH # allow people to use slightly more breath than they have
+    if @breath[mob] - breath_cost < FAIL_MOVE_BREATH
       if distance < COLLAPSE_DISTANCE
         # movement too close together, collapse
         fail_move_with_collapse mob
@@ -86,7 +86,7 @@ class Breath
       pov(mob.room.mobs) { "{!{FG#{mob.short_name} collapses, totally out of breath!\n" }
     end
     PhysicalState::transition @game, mob, PhysicalState::Resting
-    @game.add_lag mob, Combat::COMBAT_ROUND
+    @game.add_lag mob, Combat::COMBAT_ROUND * 2 / 3
   end
 
   def fail_move( mob )
