@@ -1,11 +1,12 @@
 module PhysicalState
   class Dead
+    SIGNAL = :dead
+    DEAD_TIME = 15 # seconds
+    CMDS_PRIORITY = 100
+
     @@commands = AbbrevMap.new nil, ->(game, mob, rest, match) { game.send_msg mob, "{@Lie still; you are dead.\n" }
     
     class << self
-      DEAD_TIME = 40 # pulses
-      CMDS_PRIORITY = 100
-      
       def to_s
         "Dead"
       end
@@ -20,6 +21,9 @@ module PhysicalState
         end
         mob.hp = 0
         game.mob_commands.add_cmd_handler mob, @@commands, CMDS_PRIORITY
+        game.signal.fire SIGNAL, mob
+        start_time = Time.now
+        game.signal.connect :after_tick, ->{ PhysicalState::transition game, mob, PhysicalState::Resting if Time.now - start_time > DEAD_TIME }
       end
 
       def on_exit( game, mob )

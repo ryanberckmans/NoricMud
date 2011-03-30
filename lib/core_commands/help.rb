@@ -46,6 +46,7 @@ module CoreCommands
     commands << "meditate"
     commands << "cd - alias for cooldowns"
     commands << "cooldowns"
+    commands << "pit duel"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
     game.send_msg mob, help

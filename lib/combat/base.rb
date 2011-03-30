@@ -288,6 +288,27 @@ module Combat
     end
     game.send_msg attacker, "They aren't here.\n"
   end
+
+  def self.pit_duel( game, attacker, target )
+    raise "expected attacker to be a Mob" unless attacker.kind_of? Mob
+    raise "expected target to be a String" unless target.kind_of? String
+    if target.empty?
+      game.send_msg attacker, "Yes! Sate your bloodlust!! But on who?\n"
+      return
+    end
+      attacker.room.mobs.each do |mob_in_room|
+      if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE) and attacker != mob_in_room
+        if mob_in_room.dead?
+          game.send_msg attacker, "#{mob_in_room.short_name} is already dead.\n"
+          return
+        end
+        duel = PitDuel.new game, attacker, mob_in_room
+        duel.start
+        return
+      end
+    end
+    game.send_msg attacker, "They aren't here.\n"
+  end
   
   def self.green_beam( game, mob )
     game.add_lag mob, KILL_LAG

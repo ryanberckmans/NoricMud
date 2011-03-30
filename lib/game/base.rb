@@ -1,5 +1,6 @@
 require "core_commands/base.rb"
 require "combat/base.rb"
+require "pit_duel.rb"
 require "breath.rb"
 require "lag.rb"
 require "cooldown.rb"
@@ -8,11 +9,14 @@ require "regen.rb"
 require "abilities/base.rb"
 
 class Game
+
+  attr_accessor :signal
   
   def initialize( character_system )
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
+    @signal = Driver::Signal.new
     @breath = Breath.new self
     @channel = Channel.new self
     @cooldown = Cooldown.new
@@ -109,6 +113,7 @@ class Game
   def tick
     @msgs_this_tick.clear
     Log::debug "start tick", "game"
+    @signal.fire :before_tick
     process_new_disconnections
     process_new_reconnections
     process_new_logins
@@ -119,6 +124,7 @@ class Game
     process_character_commands
     @channel.tick
     @combat.tick
+    @signal.fire :after_tick
     while char = @new_logouts.shift do do_logout char end
     send_char_msgs
     send_prompts
@@ -132,6 +138,7 @@ class Game
   end
 
   def move_to( mob, room )
+    combat.disengage mob if combat.engaged? mob
     previous_room = mob.room
     mob.room.mobs.delete mob if mob.room
     mob.room = room

@@ -1,13 +1,17 @@
 
 class PitDuel
 
-  def initialize( game, player_x, player_y ) # a duel between x and y
-    @player_x = x
-    @player_y = y
+  def initialize( game, mob_x, mob_y ) # a duel between x and y
+    @mob_x_orig_location = nil
+    @mob_y_orig_location = nil
+    @mob_x = mob_x
+    @mob_y = mob_y
     @game = game
     @started = false
     @finished = false
+    @winner = nil
     create_pit
+    Log::debug "initialized #{@mob_x.short_name} vs #{@mob_y.short_name}", "pitduel"
   end
 
   def finished?
@@ -18,19 +22,56 @@ class PitDuel
     @started
   end
 
+  def winner
+    @winner
+  end
+
   def start
+    Log::info "starting #{@mob_x.short_name} vs #{@mob_y.short_name}", "pitduel"
     raise "already started" if @started
     @started = true
-    if Random.new.rand(1..2) > 1
-      CoreCommands::poof @player_x, @nw
-      CoreCommands::poof @player_y, @se
-    else
-      CoreCommands::poof @player_x, @se
-      CoreCommands::poof @player_y, @nw
-    end
+    teleport_combatants
+    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob; true }, @mob_x
+    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob; true }, @mob_y
+    CoreCommands::shout @game, @mob_x, "I'm starting a pit duel versus #{@mob_y.short_name}!"
   end
 
   private
+  def loss( mob )
+    raise "raised mob to be @mob_x or @mob_y" unless mob == @mob_x or mob == @mob_y
+    @loser = mob
+    if mob == @mob_x
+      @winner = @mob_y
+    elsif mob == @mob_y
+      @winner = @mob_x
+    else
+      raise "expected mob to be mob_x or mob_y"
+    end
+    Log::debug "mob #{@winner.short_name} won vs #{@loser.short_name}, pit duel #{self.to_s}", "pitduel"
+    @finished = true
+    return_combatants
+    CoreCommands::shout @game, @winner, "I won a pit duel versus #{@loser.short_name}!"
+  end
+
+  def return_combatants
+    Log::debug "returning #{@mob_x.short_name} and #{@mob_y.short_name} to previous location", "pitduel"
+    CoreCommands::poof @game, @mob_x, @mob_x_orig_location
+    CoreCommands::poof @game, @mob_y, @mob_y_orig_location
+  end
+  
+  def teleport_combatants
+    Log::debug "teleporting #{@mob_x.short_name} and #{@mob_y.short_name} to pit", "pitduel"
+    @mob_x_orig_location = @mob_x.room
+    @mob_y_orig_location = @mob_y.room
+    if Random.new.rand(1..2) > 1
+      CoreCommands::poof @game, @mob_x, @nw
+      CoreCommands::poof @game, @mob_y, @se
+    else
+      CoreCommands::poof @game, @mob_x, @se
+      CoreCommands::poof @game, @mob_y, @nw
+    end
+  end
+  
   def create_pit
     @nw = Room.new({ :name => 'NW A Bloody Combat Pit', :description => 'The stone walls of the pit exhibit extensive damage from many glorious battles that have taken place here. Chunks of stone and mortar from the walls are missing or scorched from misguided weapon blows and dodged spells. A rolling fog of blue mist envelopes the loose dirt floor.' })
     @se = Room.new({ :name => 'SE A Bloody Combat Pit', :description => 'The stone walls of the pit exhibit extensive damage from many glorious battles that have taken place here. Chunks of stone and mortar from the walls are missing or scorched from misguided weapon blows and dodged spells. A rolling fog of blue mist envelopes the loose dirt floor.' })
