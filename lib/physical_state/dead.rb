@@ -1,7 +1,7 @@
 module PhysicalState
   class Dead
     SIGNAL = :dead
-    DEAD_TIME = 15 # seconds
+    DEAD_TIME = 8 # seconds
     CMDS_PRIORITY = 100
 
     @@commands = AbbrevMap.new nil, ->(game, mob, rest, match) { game.send_msg mob, "{@Lie still; you are dead.\n" }
@@ -23,7 +23,14 @@ module PhysicalState
         game.mob_commands.add_cmd_handler mob, @@commands, CMDS_PRIORITY
         game.signal.fire SIGNAL, mob
         start_time = Time.now
-        game.signal.connect :after_tick, ->{ PhysicalState::transition game, mob, PhysicalState::Resting if Time.now - start_time > DEAD_TIME }
+        game.signal.connect :after_tick, ->{
+          if Time.now - start_time > DEAD_TIME
+            PhysicalState::transition game, mob, PhysicalState::Resting if mob.dead?
+            true
+          else
+            false
+          end
+        }
       end
 
       def on_exit( game, mob )
@@ -35,7 +42,7 @@ module PhysicalState
         game.move_to( mob, game.respawn_room )
         Combat::restore mob
         pov_scope do
-          pov(mob) { "{@You wake up with a splitting headache, but your wounds are healed.\n" }
+          pov(mob) { "{@You wake up with a splitting headache.\n" }
           pov(mob.room.mobs) { "{@Whoooooosh! {!{FY#{mob.short_name}{@ materializes.\n" }
         end
         CoreCommands::look game, mob

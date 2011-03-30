@@ -296,7 +296,7 @@ module Combat
       game.send_msg attacker, "Yes! Sate your bloodlust!! But on who?\n"
       return
     end
-      attacker.room.mobs.each do |mob_in_room|
+    attacker.room.mobs.each do |mob_in_room|
       if mob_in_room.short_name =~ Regexp.new( "^#{target}", Regexp::IGNORECASE) and attacker != mob_in_room
         if mob_in_room.dead?
           game.send_msg attacker, "#{mob_in_room.short_name} is already dead.\n"
@@ -329,6 +329,10 @@ module Combat
   end
 
   def self.restore( mob )
+    pov_scope do
+      pov(mob) { "{!{FCYou shriek in pain as all of your wounds are suddenly healed.\n" }
+      pov(mob.room.mobs) { "{!{FY#{mob.short_name} shrieks in pain as all of his wounds are suddenly healed.\n" }
+    end
     mob.hp = mob.hp_max
     mob.energy = mob.energy_max
   end

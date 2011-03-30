@@ -7,6 +7,7 @@ require "cooldown.rb"
 require "channel.rb"
 require "regen.rb"
 require "abilities/base.rb"
+require "chaos_quest.rb"
 
 class Game
 
@@ -16,12 +17,14 @@ class Game
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
+
     @signal = Driver::Signal.new
     @breath = Breath.new self
     @channel = Channel.new self
     @cooldown = Cooldown.new
     @lag = Lag.new
     @regen = Regen.new self
+
     
     @rooms = Room.find :all
 
@@ -68,6 +71,7 @@ class Game
     @secret_cmds.add "heal", ->(game,mob,rest,match) { if mob.room.name =~ /Subterranean Forest/ then send_msg mob.char, "A bright {!{FGsubterranean forest aura{@ heals your wounds.\n"; mob.hp = mob.hp_max; mob.energy = mob.energy_max else raise AbandonCallback.new end }
 
     pov_send ->(c,m){ send_msg c, m }
+    @chaos_quest = ChaosQuest.new self
   end
 
   def respawn_room
@@ -200,6 +204,10 @@ class Game
     @channel.channeling? mob
   end
 
+  def chaos_enroll( mob )
+    @chaos_quest.enroll mob
+  end
+
   private
   def do_logout( char )
     raise "expected char to be online" unless @character_system.online? char
@@ -240,6 +248,7 @@ class Game
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
     PhysicalState::transition self, char.mob, PhysicalState::Standing
+    @chaos_quest.enroll char.mob
   end
 
   def character_reconnected( char )

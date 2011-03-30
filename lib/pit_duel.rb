@@ -10,6 +10,7 @@ class PitDuel
     @started = false
     @finished = false
     @winner = nil
+    @loser = nil
     create_pit
     Log::debug "initialized #{@mob_x.short_name} vs #{@mob_y.short_name}", "pitduel"
   end
@@ -26,14 +27,21 @@ class PitDuel
     @winner
   end
 
+  def loser
+    @loser
+  end
+
   def start
     Log::info "starting #{@mob_x.short_name} vs #{@mob_y.short_name}", "pitduel"
     raise "already started" if @started
+    PhysicalState::transition @game, @mob_x, PhysicalState::Standing if @mob_x.dead?
+    PhysicalState::transition @game, @mob_y, PhysicalState::Standing if @mob_y.dead?
     @started = true
     teleport_combatants
+    Combat::restore @mob_x
+    Combat::restore @mob_y
     @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob; true }, @mob_x
     @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob; true }, @mob_y
-    CoreCommands::shout @game, @mob_x, "I'm starting a pit duel versus #{@mob_y.short_name}!"
   end
 
   private
@@ -50,7 +58,6 @@ class PitDuel
     Log::debug "mob #{@winner.short_name} won vs #{@loser.short_name}, pit duel #{self.to_s}", "pitduel"
     @finished = true
     return_combatants
-    CoreCommands::shout @game, @winner, "I won a pit duel versus #{@loser.short_name}!"
   end
 
   def return_combatants
