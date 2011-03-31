@@ -2,7 +2,10 @@ files = Dir.glob Util.here "*.rb"
 files.each do |f| require f end
 
 module CoreCommands
-  @commands = AbbrevMap.new
+  @commands = AbbrevMap.new nil, ->(game,mob,rest,match) do
+    raise AbandonCallback.new unless rest =~ /^'/
+    say game, mob, rest[1,rest.length]
+  end
   CORE_COMMANDS_HANDLER_PRIORITY = 5
   
   def self.new( game )

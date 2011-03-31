@@ -22,7 +22,7 @@ class AbbrevMap
       return { value:@epsilon_value, match:"", rest:"" }
     end
     value = @root.find key
-    value = { value:@catchall_value, match:"", rest:"" } if @catchall_value and not value
+    value = { value:@catchall_value, match:"", rest:key } if @catchall_value and not value
     value
   end
 end

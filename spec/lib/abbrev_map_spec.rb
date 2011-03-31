@@ -137,7 +137,7 @@ describe AbbrevMap do
       res = @map.find("fred")
       res[:value].should == @catchall
       res[:match].should == ""
-      res[:rest].should == ""
+      res[:rest].should == "fred"
     end
 
     it "returns the epsilon callback if find is called with epsilon" do
