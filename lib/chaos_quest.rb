@@ -18,6 +18,19 @@ class ChaosQuest
       end
       false
     }
+    @game.signal.connect :logout, ->char{ remove char.mob; false }
+  end
+
+  def remove( mob )
+    @level.delete mob
+    sanity = 0
+    @waiting_to_fight.each_value do |arr|
+      if arr.delete mob
+        sanity += 1
+      end
+    end
+    raise "expected to find mob at most once" if sanity > 1
+    Log::debug "removed #{mob.short_name}", "chaosquest"
   end
 
   def enroll( mob )

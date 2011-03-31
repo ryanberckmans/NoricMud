@@ -78,6 +78,10 @@ class Game
     @respawn_room
   end
 
+  def login_room
+    @login_room
+  end
+
   def mob_commands
     @mob_commands
   end
@@ -248,7 +252,7 @@ class Game
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
-    PhysicalState::transition self, char.mob, PhysicalState::Standing
+    PhysicalState::transition( self, char.mob, PhysicalState::Standing ) unless char.mob.state
     @chaos_quest.enroll char.mob
   end
 
