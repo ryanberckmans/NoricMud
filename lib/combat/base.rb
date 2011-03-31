@@ -238,9 +238,9 @@ module Combat
       pov_none(attacker)
       pov(attacker.room.mobs) { "{!{FR#{attacker.short_name} becomes panic-stricken and attemps to flee.\n" }
     end
-    if Random.new.rand(0..3) > 0 and attacker.room.exits.size > 0
+    if Random.new.rand(0..2) > 0 and attacker.room.exit.size > 0
       game.combat.disengage attacker if game.combat.engaged? attacker
-      exit = attacker.room.exits.sample
+      exit = attacker.room.exit.each_value.to_a.sample
       game.exit_room attacker, exit, "flies"
       game.send_msg attacker, "{!{FRYou flee in a near-blind panic.\n"
     else

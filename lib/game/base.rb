@@ -212,6 +212,7 @@ class Game
   def do_logout( char )
     raise "expected char to be online" unless @character_system.online? char
     Log::info "#{char.name} logging off", "game"
+    signal.fire :logout, char
     mob = char.mob
     pov_scope do
       pov(mob) do "{@Quitting...\n" end

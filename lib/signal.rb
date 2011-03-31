@@ -10,9 +10,12 @@ module Driver
       default_signal signal
       @signals[signal].delete_if do |receiver|
         Log::debug "calling receiver #{receiver.to_s}", "signal"
-        remove = receiver.call(*args)
-        Log::debug "removing #{receiver.to_s}, returned true, from signal #{signal.to_s}", "signal" if remove
-        remove # remove the receiver if it returns true
+        if receiver.call(*args)
+          Log::debug "removing #{receiver.to_s} from signal #{signal.to_s}; receiver returned true", "signal"
+          true
+        else
+          false
+        end
       end
       Log::debug "done firing #{signal.to_s}", "signal"
       nil

@@ -66,7 +66,7 @@ class ChaosQuest
     @fights.delete_if do |fight|
       finished = fight.finished?
       if fight.finished?
-        quest_msg "{!{FC#{fight.winner.short_name} {FWtriumphs over {FC#{fight.loser.short_name}! {FM[{FCLevel #{@level[fight.winner]}{FM]"
+        quest_msg "{!{FC#{fight.winner.short_name} {FWdefeats {FC#{fight.loser.short_name}! {FM[{FCLevel #{@level[fight.winner]}{FM]"
         promote fight.winner
         enroll fight.winner
         demote fight.loser
@@ -76,11 +76,12 @@ class ChaosQuest
         false
       end
     end
+    Log::debug "done checking for finished fights", "chaosquest"
   end
 
   private
   def quest_msg( msg )
-    Log::debug msg, "chaosquest"
+    Log::debug color(msg+"{@"), "chaosquest"
     msg = "{!{FM[{FYQUEST{FM] {@#{msg}{@\n"
     @game.all_connected_characters.each { |char| @game.send_msg char, msg }
   end

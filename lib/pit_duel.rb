@@ -40,12 +40,14 @@ class PitDuel
     teleport_combatants
     Combat::restore @mob_x
     Combat::restore @mob_y
-    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob; true }, @mob_x
-    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob; true }, @mob_y
+    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob unless finished?; true }, @mob_x
+    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob unless finished?; true }, @mob_y
   end
 
   private
   def loss( mob )
+    raise "expected fight to be started" unless started?
+    raise "expected fight not to be finished" if finished?
     raise "raised mob to be @mob_x or @mob_y" unless mob == @mob_x or mob == @mob_y
     @loser = mob
     if mob == @mob_x
