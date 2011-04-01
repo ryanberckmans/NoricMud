@@ -7,14 +7,13 @@ module Abilities
   HEAL_DOT_COOLDOWN = 15 * Combat::COMBAT_ROUND
 
   HEAL_PER_INTERVAL = 5
-  DOT_INTERVAL = Combat::COMBAT_ROUND
-  INTERVALS = 10
+  HEAL_INTERVALS = 10
 
   class << self
     def heal_dot( game, attacker, defender )
       q = Fiber.new do
         i = 0
-        while i < INTERVALS do
+        while i < HEAL_INTERVALS do
           i += 1
           j = 0
           while j < Combat::COMBAT_ROUND

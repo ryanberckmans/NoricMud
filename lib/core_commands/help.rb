@@ -42,6 +42,7 @@ module CoreCommands
     commands << "cast burst"
     commands << "cast pitter"
     commands << "cast heal dot"
+    commands << "cast poison"
     commands << "rest"
     commands << "stand"
     commands << "meditate"
