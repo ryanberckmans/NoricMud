@@ -95,4 +95,5 @@ module Abilities
   add_ability "stun", ->(game, mob, rest ) { use_ability( game, mob, rest, STUN, "stun", STUN_COST, STUN_COOLDOWN, STUN_LAG, STUN_CHANNEL) }
   add_ability "burst", ->(game, mob, rest ) { use_ability( game, mob, rest, BURST, "burst", BURST_COST, BURST_COOLDOWN, BURST_LAG, BURST_CHANNEL) }
   add_ability "pitter", ->(game, mob, rest ) { use_ability( game, mob, rest, PITTER, "pitter", PITTER_COST, PITTER_COOLDOWN, PITTER_LAG, PITTER_CHANNEL) }
+  add_ability "heal dot", ->(game, mob, rest ) { use_ability( game, mob, rest, HEAL_DOT, "heal dot", HEAL_DOT_COST, HEAL_DOT_COOLDOWN, HEAL_DOT_LAG, HEAL_DOT_CHANNEL) }
 end
