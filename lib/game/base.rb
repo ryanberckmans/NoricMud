@@ -11,20 +11,19 @@ require "chaos_quest.rb"
 
 class Game
 
-  attr_accessor :signal
+  attr_reader :signal, :timer
   
   def initialize( character_system )
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
-
     @signal = Driver::Signal.new
+    @timer = Timer.new @signal
     @breath = Breath.new self
     @channel = Channel.new self
     @cooldown = Cooldown.new
     @lag = Lag.new
     @regen = Regen.new self
-
     
     @rooms = Room.find :all
 
