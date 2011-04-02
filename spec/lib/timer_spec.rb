@@ -20,11 +20,57 @@ describe Timer do
     end
 
     it "allows adding of a periodic timer" do
-      @timer.add_periodic 5, ->{}, 3
+      @timer.add_periodic 5, ->{}
     end
 
-    it "allows adding of a periodic timer, with unspecified (infinite) repetitions" do
-      @timer.add_periodic 5, ->{}
+    it "allows adding of a periodic timer, with specified total periods" do
+      @timer.add_periodic 5, ->{}, { periods:5 }
+    end
+
+    it "calls the stop proc for a non-periodic timer" do
+      @val = 0
+      @f = ->{ @val += 1}
+      @stop = ->{ @val += 3 }
+      @timer.add 4, @f, { stop:@stop }
+      @val.should == 0
+      @timer_proc.call
+      @val.should == 0
+      @timer_proc.call
+      @timer_proc.call
+      @timer_proc.call
+      @val.should == 4
+      @timer_proc.call
+      @val.should == 4
+    end
+
+    it "calls the stop proc when a periodic timer runs out naturally" do
+      @val = 0
+      @f = ->{ @val += 1}
+      @stop = ->{ @val += 3 }
+      @timer.add_periodic 1, @f, { periods:2, stop:@stop }
+      @val.should == 0
+      @timer_proc.call
+      @val.should == 1
+      @timer_proc.call
+      @val.should == 5
+      @timer_proc.call
+      @val.should == 5
+    end
+
+    it "calls the stop_proc when a periodic timer is stopped with Timer::stop" do
+      @val = 0
+      @f = ->{ @val += 1; Timer::stop if @val > 2}
+      @stop = ->{ @val += 3 }
+      @timer.add_periodic 1, @f, { periods:10, stop:@stop }
+      @val.should == 0
+      @timer_proc.call
+      @val.should == 1
+      @timer_proc.call
+      @val.should == 2
+      @timer_proc.call
+      @val.should == 6
+      @timer_proc.call
+      @val.should == 6
     end
 
     it "repeatedly fires a periodic timer" do
@@ -79,7 +125,7 @@ describe Timer do
     it "stops a periodic timer which reached its limit of repetitions" do
       @val = 0
       @f = ->{ @val += 1}
-      @timer.add_periodic 1, @f, 3
+      @timer.add_periodic 1, @f, { periods:3 }
       @val.should == 0
       @timer_proc.call
       @val.should == 1

@@ -6,13 +6,13 @@ class Timer
     signal.connect :after_tick, ->{ tick }
   end
 
-  def add( wait, proc )
-    add_periodic( wait, proc, 1 )
+  def add( length, tick_proc, options = {} )
+    add_periodic( length, tick_proc, options.merge({periods:1}) )
   end
 
-  def add_periodic( wait, proc, cycles=0) # 0 signifies infinite cycles
-    raise "wait should be Natural" unless wait > 0
-    add_timer @tick+wait, OpenStruct.new({wait:wait, proc:proc, cycles:cycles})
+  def add_periodic( length, tick_proc, options = {})
+    raise "length should be Natural" unless length > 0
+    add_timer @tick+length, OpenStruct.new({length:length, tick_proc:tick_proc, periods:0}.merge(options)) # 0 signifies infinite periods
   end
 
   def self.stop
@@ -26,7 +26,7 @@ class Timer
   def add_timer( tick, struct )
     @timers[tick] ||= []
     @timers[tick] << struct
-    Log::debug "added timer, wait #{struct.wait.to_s}, proc #{struct.proc.to_s}, cycles #{struct.cycles.to_s}", "timer"
+    Log::debug "added timer, #{struct.to_s}", "timer"
     nil
   end
   
@@ -35,20 +35,24 @@ class Timer
     Log::debug "tick #{@tick} began", "timer"    
     if @timers.key? @tick
       @timers[@tick].each do |timer|
-        Log::debug "calling timer proc #{timer.proc.to_s}, wait #{timer.wait}, cycles #{timer.cycles}", "timer"
+        Log::debug "calling timer #{timer.to_s}", "timer"
         begin
-        timer.proc.call
+          timer.tick_proc.call
         rescue StopTimer => e
-          timer.cycles = 1
-          Log::debug "timer called Timer::stop, proc #{timer.proc.to_s}, wait #{timer.wait}, cycles #{timer.cycles}", "timer"
+          timer.periods = 1
+          Log::debug "timer called Timer::stop, #{timer.to_s}", "timer"
           e.resume
         end
-        Log::debug "done calling timer proc #{timer.proc.to_s}, wait #{timer.wait}, reptitions #{timer.cycles}", "timer"
-        if timer.cycles == 1 # this cycle is the last cycle
+        Log::debug "done calling timer tick_proc #{timer.to_s}", "timer"
+        if timer.periods == 1 # this period is the last period
+          if timer.stop
+            Log::debug "timer had a stop tick_proc, calling it; #{timer.to_s}", "timer"
+            timer.stop.call
+          end
         else
           Log::debug "scheduling timer repeat", "timer"
-          timer.cycles -= 1 if timer.cycles > 1
-          add_timer @tick+timer.wait, timer
+          timer.periods -= 1 if timer.periods > 1
+          add_timer @tick+timer.length, timer
         end
       end
       @timers.delete @tick

@@ -38,7 +38,19 @@ module Abilities
         pov(defender) { "A collar of tangible despair materializes around your neck!\n" }
         pov(defender.room.mobs) { "A collar of tangible despair materializes around #{defender.short_name}'s neck!\n" }
       end
+
+      game.timer.add_periodic Combat::COMBAT_ROUND, ->{ poison_tick game, attacker, defender }, POISON_INTERVALS
+      
       game.signal.connect :before_tick, ->{ return true if defender.dead?; q.resume; !q.alive? }
-    end
+    end # end poison
+
+    def poison_tick( game, attacker, defender )
+      Log::debug "poison tick #{defender.short_name}, poisoner #{attacker.short_name}", "poison"
+      pov_scope do
+        pov(defender) { "{!{FWA despair collar pulses softly, weakening you.\n" }
+        pov(defender.room.mobs) { "{!{FWA despair collar pulses softly, weakening #{defender.short_name}.\n" }
+      end
+      Combat::damage( game, nil, defender, POISON_PER_INTERVAL )
+    end # end poison_tick
   end
 end
