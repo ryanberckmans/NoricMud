@@ -1,6 +1,13 @@
 
 module Driver
   class Signal
+    # problems:
+    #  removing signals
+    #  true/false return is dumb and error-prone, horrible design
+    #  filter_args is a great facility; clients want to filter signals by targets / various criteria
+    #  but, filter_args needs to be separate from the passed signal data
+    #  just like filter_args, need to build in signal feed-back mechanism; see notes in old mud about permission/chaining/twisted
+    
     def initialize
       @signals = {}
     end

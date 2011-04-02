@@ -209,6 +209,11 @@ module Combat
       Log::debug "abandoning damage from #{damager.to_s} because #{receiver.short_name} is already a corpse", "combat"
       return
     end
+    damage_object = { damager:damager, receiver:receiver, amount:amount }
+    game.signal.fire :damage, damage_object
+    damager = damage_object[:damager]
+    receiver = damage_object[:receiver]
+    amount = damage_object[:amount]
     if amount > 0 and receiver.state == PhysicalState::Resting
       pov_scope do
         pov(receiver) { "{!{FRYou take increased damage while resting!\n" }

@@ -43,6 +43,7 @@ module CoreCommands
     commands << "cast pitter"
     commands << "cast heal dot"
     commands << "cast poison"
+    commands << "cast shield"
     commands << "rest"
     commands << "stand"
     commands << "meditate"
