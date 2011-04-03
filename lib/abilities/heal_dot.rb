@@ -6,13 +6,14 @@ module Abilities
   HEAL_DOT_LAG = 0
   HEAL_DOT_COOLDOWN = 15 * Combat::COMBAT_ROUND
 
-  HEAL_DOT_DAMAGE = -5
-  HEAL_DOT_TICKS = 10
+  HEAL_DOT_DAMAGE = -10
+  HEAL_DOT_TICKS = 5
+  HEAL_DOT_TICK_INTERVAL = 2 * Combat::COMBAT_ROUND
 
   class << self
     def heal_dot( game, attacker, defender )
       heal_dot_start game, attacker, defender
-      game.timer.add_periodic Combat::COMBAT_ROUND, ->{ heal_dot_tick game, attacker, defender }, { periods:HEAL_DOT_TICKS, stop:->{ heal_dot_stop game, attacker, defender } }
+      game.timer.add_periodic HEAL_DOT_TICK_INTERVAL, ->{ heal_dot_tick game, attacker, defender }, { periods:HEAL_DOT_TICKS, stop:->{ heal_dot_stop game, attacker, defender } }
     end
 
     def heal_dot_start( game, attacker, defender )

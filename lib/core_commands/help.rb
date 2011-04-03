@@ -41,7 +41,7 @@ module CoreCommands
     commands << "cast stun"
     commands << "cast burst"
     commands << "cast pitter"
-    commands << "cast heal dot"
+    commands << "cast regenerate"
     commands << "cast poison"
     commands << "cast shield"
     commands << "rest"

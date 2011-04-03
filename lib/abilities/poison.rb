@@ -6,13 +6,14 @@ module Abilities
   POISON_LAG = 0
   POISON_COOLDOWN = 20 * Combat::COMBAT_ROUND
 
-  POISON_DAMAGE = 3
-  POISON_TICKS = 20
+  POISON_DAMAGE = 6
+  POISON_TICKS = 10
+  POISON_TICK_INTERVAL = 2 * Combat::COMBAT_ROUND
 
   class << self
     def poison( game, attacker, defender )
       poison_start game, attacker, defender
-      game.timer.add_periodic Combat::COMBAT_ROUND, ->{ poison_tick game, attacker, defender }, { periods:POISON_TICKS, stop:->{ poison_stop game, attacker, defender } }
+      game.timer.add_periodic POISON_TICK_INTERVAL, ->{ poison_tick game, attacker, defender }, { periods:POISON_TICKS, stop:->{ poison_stop game, attacker, defender } }
     end
 
     def poison_start( game, attacker, defender )

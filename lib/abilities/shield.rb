@@ -47,8 +47,8 @@ module Abilities
 
     def shield_hit( game, defender )
       pov_scope do
-        pov(defender) { "{!{FCYour magical shield flares brightly as it absorbs damage!\n" }
-        pov(defender.room.mobs) { "{!{FC#{defender.short_name}'s magical shield flares brightly as it absorbs damage!\n" }
+        pov(defender) { "{!{FCYour magical shield flares brightly as it absorbs the damage!\n" }
+        pov(defender.room.mobs) { "{!{FC#{defender.short_name}'s magical shield flares brightly as it absorbs the damage!\n" }
       end
     end
 
