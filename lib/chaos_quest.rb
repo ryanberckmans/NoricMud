@@ -65,11 +65,11 @@ class ChaosQuest
         mob = arr.pop
         Log::debug "normalizing #{mob.short_name} level due to level inactivity", "chaosquest"
         if @level[mob] < 5
-          promote mob
           quest_private_msg mob, "Rising up a level due to inactivity"
+          promote mob
         elsif @level[mob] > 5
-          demote mob
           quest_private_msg mob, "Sinking down a level due to inactivity"
+          demote mob
         else
         end
         wait_to_fight mob

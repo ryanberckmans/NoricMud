@@ -16,7 +16,7 @@ class Cooldown
     if @cooldown[mob].size > 0
       cd = "{!{FWAbility Cooldowns:\n"
       cds = @cooldown[mob].each_pair.sort_by do |ability,cooldown| cooldown end
-      cds.reverse.each do |i|
+      cds.each do |i|
         ability = i[0]
         cooldown = i[1]
         line = ability
