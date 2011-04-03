@@ -8,17 +8,12 @@ class ChaosQuest
     @fights = []
     @level = {}
     @waiting_to_fight = {}
-    start_time = Time.now
-    @game.signal.connect :after_tick, ->{ end_fights; false }
-    @game.signal.connect :after_tick, ->{
-      if Time.now > start_time + 15
-        start_time = Time.now
-        start_fights
-      else
-      end
-      false
-    }
+    @starts_pending = []
+    @game.timer.add_periodic 1, ->{ end_fights }
+    @game.timer.add_periodic 4, ->{ start_next_fight }
+    @game.timer.add_periodic 80, ->{ start_fights }
     @game.signal.connect :logout, ->char{ remove char.mob; false }
+    @game.signal.connect :login, ->char{ enroll char.mob; false }
   end
 
   def remove( mob )
@@ -35,14 +30,9 @@ class ChaosQuest
 
   def enroll( mob )
     @level[mob] ||= START_LEVEL
-    @waiting_to_fight[@level[mob]] ||= []
-    if @waiting_to_fight[@level[mob]].index mob
-      Log::warn "mob #{mob.short_name} was already enrolled, enroll aborted", "chaosquest"
-      return
-    end
-    @waiting_to_fight[@level[mob]] << mob
-    # quest_msg "{!{FC#{mob.short_name} {FWis prepared for a fight! {FM[{FCLevel #{@level[mob]}{FM]"
-    Log::info "mob #{mob.short_name} enrolled and is waiting to fight", "chaosquest"
+    wait_to_fight mob
+    quest_private_msg mob, "{!{FCYou are now enrolled in the {FYe{FRt{FYe{FGr{FRn{FGa{FYl{FC quest! Prepare to face your opponent"
+    Log::info "mob #{mob.short_name} enrolled", "chaosquest"
   end
 
   def start_fights
@@ -54,22 +44,35 @@ class ChaosQuest
         x = arr.pop
         y = arr.pop
         Log::debug "creating duel between #{x.short_name} and #{y.short_name}", "chaosquest"
-        delay = 10
+        delay = 30
         duel = PitDuel.new(@game, x,y )
         @fights << duel
-        msg = "{!{FM[{FYQUEST{FM] {FWprivate {@- In #{delay} seconds you will fight {!{FC"
-        @game.send_msg x, msg + y.short_name + " {FM[{FCLevel #{@level[x]}{FM]\n"
-        @game.send_msg y, msg + x.short_name + " {FM[{FCLevel #{@level[x]}{FM]\n"
-        proc = ->time,v,w,d{
-          Proc.new {
-            next unless Time.now > time + delay
-            Log::debug "starting duel between #{v.short_name} and #{w.short_name}", "chaosquest"
-            d.start
-            quest_msg "{!{FC#{v.short_name} {FWvs {FC#{w.short_name}{FW, {FM[{FCLevel #{level}{FM]"
-            true
+        proc = ->d{
+          ->{ @starts_pending << d }
+        }
+        @game.timer.add delay*4, proc.call(duel)
+        delay_msg = ->original_delay,remain,w,v{
+          @game.timer.add (original_delay-remain)*4, ->{
+            quest_private_msg v, "In #{remain} seconds you will fight {!{FC#{w.short_name}"
+            quest_private_msg w, "In #{remain} seconds you will fight {!{FC#{v.short_name}"
           }
         }
-        @game.signal.connect :after_tick, proc.call(Time.now,x,y,duel)
+        quest_private_msg x, "In #{delay} seconds you will fight {!{FC#{y.short_name}"
+        quest_private_msg y, "In #{delay} seconds you will fight {!{FC#{x.short_name}"
+        delay_msg.call(delay,10,x,y)
+      end # end while
+      if arr.size > 0
+        mob = arr.pop
+        Log::debug "normalizing #{mob.short_name} level due to level inactivity", "chaosquest"
+        if @level[mob] < 5
+          promote mob
+          quest_private_msg mob, "Rising up a level due to inactivity"
+        elsif @level[mob] > 5
+          demote mob
+          quest_private_msg mob, "Sinking down a level due to inactivity"
+        else
+        end
+        wait_to_fight mob
       end
     end
   end
@@ -81,9 +84,9 @@ class ChaosQuest
       if fight.finished?
         quest_msg "{!{FC#{fight.winner.short_name} {FWdefeats {FC#{fight.loser.short_name}! {FM[{FCLevel #{@level[fight.winner]}{FM]"
         promote fight.winner
-        enroll fight.winner
+        wait_to_fight fight.winner
         demote fight.loser
-        enroll fight.loser
+        wait_to_fight fight.loser
         true
       else
         false
@@ -93,10 +96,36 @@ class ChaosQuest
   end
 
   private
+  def start_next_fight
+    duel = @starts_pending.shift
+    return unless duel
+    x = duel.mob_x
+    y = duel.mob_y
+    Log::debug "starting duel between #{x.short_name} and #{y.short_name}", "chaosquest"
+    duel.start
+    quest_msg "{!{FC#{x.short_name} {FWvs {FC#{y.short_name}{FW, {FM[{FCLevel #{@level[x]}{FM]"
+  end
+  
   def quest_msg( msg )
     Log::debug color(msg+"{@"), "chaosquest"
     msg = "{!{FM[{FYQUEST{FM] {@#{msg}{@\n"
     @game.all_connected_characters.each { |char| @game.send_msg char, msg }
+  end
+
+  def quest_private_msg( mob, msg )
+    prefix = "{!{FM[{FYQUEST{FM] {FWprivate {@- "
+    suffix = " {!{FM[{FCLevel #{@level[mob]}{FM]\n"
+    @game.send_msg mob, prefix + msg + suffix
+  end
+
+  def wait_to_fight( mob )
+    @waiting_to_fight[@level[mob]] ||= []
+    if @waiting_to_fight[@level[mob]].index mob
+      Log::warn "mob #{mob.short_name} was already waiting to fight, aborted", "chaosquest"
+      return
+    end
+    @waiting_to_fight[@level[mob]] << mob
+    Log::info "mob #{mob.short_name} is waiting to fight", "chaosquest"
   end
   
   def promote( mob )

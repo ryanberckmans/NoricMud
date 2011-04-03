@@ -1,6 +1,8 @@
 
 class PitDuel
 
+  attr_reader :mob_x, :mob_y
+  
   def initialize( game, mob_x, mob_y ) # a duel between x and y
     @mob_x_orig_location = nil
     @mob_y_orig_location = nil

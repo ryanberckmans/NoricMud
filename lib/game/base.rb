@@ -256,7 +256,7 @@ class Game
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
     PhysicalState::transition( self, char.mob, PhysicalState::Standing ) unless char.mob.state
-    @chaos_quest.enroll char.mob
+    @signal.fire :login, char
   end
 
   def character_reconnected( char )
