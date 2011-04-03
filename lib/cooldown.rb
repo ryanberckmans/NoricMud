@@ -10,21 +10,27 @@ class Cooldown
     @cooldown.delete mob
     @actions.delete mob
   end
-
+  
   def cooldowns( mob )
     default_cooldown mob
     if @cooldown[mob].size > 0
       cd = "{!{FWAbility Cooldowns:\n"
-      @cooldown[mob].each_pair do |ability,cooldown|
-        line = ability
-        line += " " while line.length < 8
-        line = "{FY" + line + "{FG - {FC" + (cooldown * TICK_DURATION).to_i.to_s + "s\n"
-        cd += line
+      cds = @cooldown[mob].each_pair.sort_by do |ability,cooldown| cooldown end
+      cds.reverse.each do |i|
+        ability = i[0]
+        cooldown = i[1]
+        cd += render ability, cooldown
       end
     else
       cd = "{!{FWNo abilities cooling down.\n"
     end
     cd
+  end
+
+  def ability_cooldown( mob, ability )
+    raise "expected ability to be cooling down" unless in_cooldown? mob, ability
+    cooldown = @cooldown[mob][ability]
+    render ability, cooldown
   end
 
   def in_cooldown?( mob, ability )
@@ -75,5 +81,13 @@ class Cooldown
     default_cooldown mob
     @cooldown[mob][ability] ||= 0
     @actions[mob] ||= {}
+  end
+
+  def render( ability, cooldown )
+    line = ability
+    line += " " while line.length < 10
+    label_color = "{!{FY"
+    cooldown_color = "{FC"
+    line = label_color + line + "{FG - " + cooldown_color + (cooldown * TICK_DURATION).to_i.to_s + "s\n"
   end
 end # class Cooldown

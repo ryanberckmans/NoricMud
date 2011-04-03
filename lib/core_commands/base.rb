@@ -61,7 +61,7 @@ module CoreCommands
   add_cmd "weapon", ->game,mob,rest,match { game.combat.weapon.weapon_cycle mob }
   add_cmd "god", ->game,mob,rest,match { mob.god = true }
   add_cmd "cooldowns", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
-  add_cmd "cd", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
+  add_cmd "cds", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
   add_cmd "meditate", ->game,mob,rest,match {
     if mob.state == PhysicalState::Resting
       PhysicalState.transition game, mob, PhysicalState::Meditating

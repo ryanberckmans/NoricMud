@@ -191,6 +191,10 @@ class Game
     @cooldown.in_cooldown? mob, ability
   end
 
+  def ability_cooldown( mob, ability )
+    @cooldown.ability_cooldown mob, ability
+  end
+  
   def cooldowns( mob )
     @cooldown.cooldowns mob
   end

@@ -48,7 +48,7 @@ module Abilities
     raise "expected ability to be a Proc" unless ability.kind_of? Proc
     raise "expected ability_name to be a String" unless ability_name.kind_of? String
     if game.in_cooldown? attacker, ability_name
-      game.send_msg attacker, "{@That ability is currently cooling down!\n"
+      game.send_msg attacker, "{@That ability is currently cooling down! " + game.ability_cooldown(attacker, ability_name)
       return nil
     end
 

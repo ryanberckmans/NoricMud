@@ -50,6 +50,7 @@ module CoreCommands
     commands << "cd - alias for cooldowns"
     commands << "cooldowns"
     commands << "pit duel"
+    commands << "-- , sending -- causes all previously sent commands to be cancelled"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
     game.send_msg mob, help
