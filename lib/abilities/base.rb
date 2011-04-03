@@ -2,6 +2,8 @@ files = Dir.glob Util.here "*.rb"
 files.each do |f| require f end
 
 module Abilities
+  MIN_LAG = 3
+  
   @abilities = AbbrevMap.new
   
   def self.add_ability( cmd, callback )
@@ -47,6 +49,7 @@ module Abilities
     raise "expected target to be a String" unless target.kind_of? String
     raise "expected ability to be a Proc" unless ability.kind_of? Proc
     raise "expected ability_name to be a String" unless ability_name.kind_of? String
+    lag = MIN_LAG if lag < MIN_LAG
     if game.in_cooldown? attacker, ability_name
       game.send_msg attacker, "{@That ability is currently cooling down! " + game.ability_cooldown(attacker, ability_name)
       return nil

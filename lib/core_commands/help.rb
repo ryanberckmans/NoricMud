@@ -47,7 +47,7 @@ module CoreCommands
     commands << "rest"
     commands << "stand"
     commands << "meditate"
-    commands << "cd - alias for cooldowns"
+    commands << "cds - alias for cooldowns"
     commands << "cooldowns"
     commands << "pit duel"
     commands << "-- , sending -- causes all previously sent commands to be cancelled"
