@@ -84,6 +84,9 @@ module Abilities
     return nil unless attempt_energy_use game, attacker, energy_cost
 
     if target_mob
+      spell = { caster:attacker, target:target_mob }
+      game.signal.fire :spell, spell
+      target_mob = spell[:target]
       ability.call game, attacker, target_mob
     else
       game.send_msg attacker, "Nobody here by that name.\n"
@@ -101,4 +104,5 @@ module Abilities
   add_ability "regenerate", ->(game, mob, rest ) { use_ability( game, mob, rest, HEAL_DOT, "regenerate", HEAL_DOT_COST, HEAL_DOT_COOLDOWN, HEAL_DOT_LAG, HEAL_DOT_CHANNEL) }
   add_ability "poison", ->(game, mob, rest ) { use_ability( game, mob, rest, POISON, "poison", POISON_COST, POISON_COOLDOWN, POISON_LAG, POISON_CHANNEL) }
   add_ability "shield", ->(game, mob, rest ) { use_ability( game, mob, rest, SHIELD, "shield", SHIELD_COST, SHIELD_COOLDOWN, SHIELD_LAG, SHIELD_CHANNEL) }
+  add_ability "reflect", ->(game, mob, rest ) { use_ability( game, mob, rest, REFLECT, "reflect", REFLECT_COST, REFLECT_COOLDOWN, REFLECT_LAG, REFLECT_CHANNEL) }
 end

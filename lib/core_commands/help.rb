@@ -44,6 +44,7 @@ module CoreCommands
     commands << "cast regenerate"
     commands << "cast poison"
     commands << "cast shield"
+    commands << "cast reflect"
     commands << "rest"
     commands << "stand"
     commands << "meditate"
