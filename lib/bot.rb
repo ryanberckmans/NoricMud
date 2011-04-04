@@ -8,6 +8,7 @@ def login_char( account, char )
   s = TCPSocket.new SERVER, PORT
   s.send account + "\n", 0
   s.send "pw\n", 0
+  s.send "2\n", 0
   s.send "1\n", 0
   s.send char + "\n", 0
   sleep 3
@@ -43,6 +44,7 @@ $cmds << "where"
 $cmds << "who"
 $cmds << "weapon"
 $cmds << "cast nuke"
+$cmds << "cast nuke"
 $cmds << "cast stun"
 $cmds << "cast heal me"
 $cmds << "cast pitter"
@@ -56,6 +58,7 @@ $cmds << "cast burst"
 $cmds << "cast poison"
 $cmds << "cast heal dot me"
 $cmds << "cast shield me"
+$cmds << "cast reflect me"
 $cmds << "rest"
 $cmds << "stand"
 $cmds << "stand"
@@ -67,16 +70,17 @@ def random_command
   $cmds.sample
 end
 
+$names = File.read("names.txt").each_line.to_a.map {|i| i.gsub /[\t\n]/, "" }
+$names.shuffle!
+
 def async_char( bot_num )
   thread = Thread.new do
     sleep bot_num * 1.0 / 4
-    random_char = ""
-    10.times { random_char += (Random.new.rand(1..26) + 96).chr }
-    random_account = Random.new.rand(10000..40000).to_s
-    s = login_char random_account, random_char
+    name = $names.pop
+    s = login_char name, name
     i = 0
     $bots += 1
-    puts "bot #{bot_num} connected"
+    puts "bot #{bot_num} connected #{name}"
     begin
       while true
         data = s.recv_nonblock(1024) rescue nil
