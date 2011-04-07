@@ -26,7 +26,7 @@ module Abilities
         Log::debug "defender #{defender.short_name} reflecting spell", "reflect"
         caster = spell[:caster]
         pov_scope do
-          t =  "{!{FRThe spell rebounds off the whirling ruby energy surrounding "
+          t =  "{!{FCThe spell rebounds off the whirling ruby energy surrounding "
           pov(defender) { t + "you!\n" }
           pov(defender.room.mobs) { t + "#{defender.short_name}!\n" }
         end

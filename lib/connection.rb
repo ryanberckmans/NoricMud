@@ -68,6 +68,7 @@ class Connection
       @client_disconnected = true
       disconnect
     else
+      Log::debug "connection #{id} recieved new data (#{Util.strip_newlines data}), already has raw (#{Util.strip_newlines @raw})", "connections"
       @raw += data
     end
   end
