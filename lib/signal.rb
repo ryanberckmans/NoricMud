@@ -1,13 +1,36 @@
 
 module Driver
   class Signal
-    # problems:
-    #  removing signals
-    #  true/false return is dumb and error-prone, horrible design
-    #  filter_args is a great facility; clients want to filter signals by targets / various criteria
-    #  but, filter_args needs to be separate from the passed signal data
-    #  just like filter_args, need to build in signal feed-back mechanism; see notes in old mud about permission/chaining/twisted
-    
+    class Connector
+      def initialize( proc, condition_block=nil )
+        @proc = proc
+        @condition_block = condition_block
+        @disconnect_proc = nil
+      end
+
+      def fire(*args)
+        if @condition_block
+          @proc.call(*args) if @condition_block.call(*args)
+        else
+          @proc.call(*args)
+        end
+      end
+
+      def connected?
+        @disconnect_proc != nil
+      end
+
+      def disconnect=( disconnect_proc )
+        @disconnect_proc = disconnect_proc
+      end
+      
+      def disconnect
+        raise "Connector not connected" unless connected?
+        @disconnect_proc.call
+        @disconnect_proc = nil
+      end
+    end
+
     def initialize
       @signals = {}
     end
