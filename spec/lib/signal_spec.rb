@@ -38,12 +38,49 @@ describe "Signal" do
       it "connected? returns false for a newly created Connector" do
         @connector.connected?.should be_false
       end
-      
-      it "connected? returns true when a disconnect proc is assigned" do
-        @connector.disconnect = ->{ "disconnect!" }
-        @connector.connected?.should be_true
+
+      it "disconnect raises if not connected" do
+        expect { @connector.disconnect }.to raise_error
       end
-    end
+
+      # add_connector( signal, connector) -> Nil
+      context "with an instance of Signal, adding the connector" do
+        before :each do
+          @signal = Driver::Signal.new
+          @sig = :boomboom
+          @signal.add_connector @sig, @connector
+        end
+
+        pending "before add, fire signal doesn't callback"
+        pending "after add, fire signal callsback"
+        pending "firing the connector multiple times works"
+        pending "adding a connector that's already bound to a signal raises"
+        pending "add_connector returns nil"
+        pending "two connectors added to same signal both fire"
+      end
+
+      
+      context "with a disconnect proc assigned" do
+        before :each do
+          @disconnect = 0
+          @connector.disconnect = ->{ @disconnect += 1 }
+        end
+        
+        it "connected? returns true when a disconnect proc is assigned" do
+          @connector.connected?.should be_true
+        end
+
+        it "disconnect() calls disconnect_proc after its assigned" do
+          @connector.disconnect
+          @disconnect.should == 1
+        end
+
+        it "is not connected after a disconnect" do
+          @connector.disconnect
+          @connector.connected?.should be_false
+        end
+      end # context disconnect proc assigned
+    end # context /w proc and condition block
 
     context "with a multi-arg proc and condition_block" do
       before :each do
@@ -57,34 +94,19 @@ describe "Signal" do
         @proc_i.should == 12
       end
     end
-    
-
-    pending "disconnect() calls disconnect_proc after its assigned"
-    pending "is not connected after a disconnect"
-    pending "disconnect raises if not connected"
-  end
+  end # context Signal::Connector
 
   context "instance" do
     before :each do
       @signal = Driver::Signal.new
     end
     
-    # Connector.new( proc, condition_block )
-    
-    # add_connector( signal, connector) -> Nil
-    context "add connector" do
-      pending "before add, fire signal doesn't callback"
-      pending "after add, fire signal callsback"
-      pending "firing the connector multiple times works"
-      pending "adding a connector that's already bound to a signal raises"
-      pending "add_connector returns nil"
-      pending "two connectors added to same signal both fire"
-    end
 
     # connect( signal, proc, &condition_block=nil ) -> Connector
     context "connect" do
       pending "returns a Connector"
-      pending "firing the returned Connector callsback"
+      pending "the returned Connector is connected"
+      pending "firing the returned Connector callsback if cond_block is nil"
       pending "firing the returned Connector callsback iff condition_block passes"
       pending "adding a callback to two diff signals works"
       pending "adding a callback to the same signal twice works"
