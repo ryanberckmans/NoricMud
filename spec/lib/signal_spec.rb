@@ -144,6 +144,12 @@ describe "Signal" do
     # Context.new( hash )
     # Context.apply( proc, priority=0 )
     context "Signal::Context" do
+      pending "change(priority,proc)"
+      
+      pending "fire(Signal::Context) passes the Context obj on to the callback"
+      pending "a Context obj received in callback can schedule changes with obj.change { ... }"
+      pending "change with priority obj.change(5) { ... }"
+      pending "fire( Signal::Context ) applies three changes in priority order"
       pending "fire( Signal::Context ) applies the procs added with Context.apply after the callback"
       pending "applies are done in priority order"
       pending "applies with same priority are done in FIFO order"
