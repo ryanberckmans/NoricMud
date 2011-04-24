@@ -29,7 +29,7 @@ module Driver
         @disconnect_proc.call
         @disconnect_proc = nil
       end
-    end
+    end # Connector
 
     def initialize
       @signals = {}
@@ -38,17 +38,23 @@ module Driver
     def fire( signal, *args )
       Log::debug "firing #{signal.to_s}", "signal"
       default_signal signal
-      @signals[signal].delete_if do |receiver|
-        Log::debug "calling receiver #{receiver.to_s}", "signal"
-        if receiver.call(*args)
-          Log::debug "removing #{receiver.to_s} from signal #{signal.to_s}; receiver returned true", "signal"
-          true
-        else
-          false
-        end
+      @signals[signal].each do |connector|
+        Log::debug "calling connector #{connector.to_s}", "signal"
+        connector.fire(*args)
       end
       Log::debug "done firing #{signal.to_s}", "signal"
       nil
+    end
+
+    def add_connector( signal, connector )
+      Log::debug "adding connector #{connector.to_s} to signal #{signal.to_s}", "signal"
+      raise "expected connector to be disconnected" if connector.connected?
+      default_signal signal
+      connector.disconnect = ->{
+        @signals.remove connector
+        Log::debug "signal disconnect proc, removed #{connector.to_s} from signal #{signal.to_s}", "signal"
+      }
+      @signals[signal] << connector
     end
 
     def connect( signal, proc, *filter_args )

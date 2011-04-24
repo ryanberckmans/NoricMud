@@ -44,21 +44,43 @@ describe "Signal" do
       end
 
       # add_connector( signal, connector) -> Nil
-      context "with an instance of Signal, adding the connector" do
+      context "with an instance of Signal, added the connector" do
         before :each do
           @signal = Driver::Signal.new
           @sig = :boomboom
           @signal.add_connector @sig, @connector
         end
 
-        pending "before add, fire signal doesn't callback"
-        pending "after add, fire signal callsback"
-        pending "firing the connector multiple times works"
-        pending "adding a connector that's already bound to a signal raises"
-        pending "add_connector returns nil"
-        pending "two connectors added to same signal both fire"
-      end
+        it "fires the callback" do
+          @signal.fire @sig
+          @proc_i.should == 1
+        end
 
+        it "fires multiple times" do
+          @signal.fire @sig
+          @proc_i.should == 1
+          @signal.fire @sig
+          @proc_i.should == 2
+          @cond = false
+          @signal.fire @sig
+          @proc_i.should == 2
+          @cond = true
+          @signal.fire @sig
+          @proc_i.should == 3
+        end
+
+        it "raises if a connected connector is added" do
+          expect { @signal.add_connector @sig, @connector }.to raise_error
+        end
+
+        it "fires two connectors on the same signal" do
+          c2 = Driver::Signal::Connector.new ->{ @proc_i += 1 }
+          @signal.add_connector @sig, c2
+          @proc_i.should == 0
+          @signal.fire @sig
+          @proc_i.should == 2
+        end
+      end
       
       context "with a disconnect proc assigned" do
         before :each do
@@ -100,7 +122,6 @@ describe "Signal" do
     before :each do
       @signal = Driver::Signal.new
     end
-    
 
     # connect( signal, proc, &condition_block=nil ) -> Connector
     context "connect" do
@@ -111,6 +132,7 @@ describe "Signal" do
       pending "adding a callback to two diff signals works"
       pending "adding a callback to the same signal twice works"
       pending "firing the signal multiple times works"
+      pending "calling disconnect on the returned Connector works"
     end
 
     context "signal.disconnect" do
