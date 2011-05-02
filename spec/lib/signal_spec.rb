@@ -43,7 +43,6 @@ describe "Signal" do
         expect { @connector.disconnect }.to raise_error
       end
 
-      # add_connector( signal, connector) -> Nil
       context "with an instance of Signal, added the connector" do
         before :each do
           @signal = Driver::Signal.new
@@ -92,15 +91,25 @@ describe "Signal" do
           @connector.connected?.should be_true
         end
 
-        it "disconnect() calls disconnect_proc after its assigned" do
-          @connector.disconnect
-          @disconnect.should == 1
-        end
+        context "after connector is disconnected" do
+          before :each do
+            @connector.disconnect
+          end
+          
+          it "disconnect() calls disconnect_proc after its assigned" do
+            @disconnect.should == 1
+          end
 
-        it "is not connected after a disconnect" do
-          @connector.disconnect
-          @connector.connected?.should be_false
-        end
+          it "is not connected after a disconnect" do
+            @connector.connected?.should be_false
+          end
+
+          it "connector.fire still fires the proc after a disconnect" do
+            @proc_i.should == 0
+            @connector.fire
+            @proc_i.should == 1
+          end
+        end # context connector disconnected
       end # context disconnect proc assigned
     end # context /w proc and condition block
 
@@ -121,31 +130,119 @@ describe "Signal" do
   context "instance" do
     before :each do
       @signal = Driver::Signal.new
+      @sig = :batcave
+      @proc_i = 0
+      @proc = ->{ @proc_i += 1 }
     end
 
-    # connect( signal, proc, &condition_block=nil ) -> Connector
-    context "connect" do
-      pending "returns a Connector"
-      pending "the returned Connector is connected"
-      pending "firing the returned Connector callsback if cond_block is nil"
-      pending "firing the returned Connector callsback iff condition_block passes"
-      pending "adding a callback to two diff signals works"
-      pending "adding a callback to the same signal twice works"
-      pending "firing the signal multiple times works"
-      pending "calling disconnect on the returned Connector works"
+    it "firing the returned Connector callsback iff condition_block passes" do
+      @cond = false
+      conn = @signal.connect(@sig, @proc) { @cond }
+      conn.fire
+      @proc_i.should == 0
+      @cond = true
+      conn.fire
+      @proc_i.should == 1
+      conn.fire
+      @proc_i.should == 2
+      @cond = false
+      @proc_i.should == 2
     end
 
-    context "signal.disconnect" do
-      pending "calling Signal.disconnect during a Signal.fire works"
-      pending "calling Signal.disconnect during a Connector.fire works"
-      pending "calling Signal.disconnect outside a fire() raises"
+    context "with proc connected" do
+      before :each do
+        @connector = @signal.connect(@sig, @proc)
+      end
+      
+      it "firing the signal callsback" do
+        @signal.fire @sig
+        @proc_i.should == 1
+        @signal.fire @sig
+        @proc_i.should == 2
+        @signal.fire @sig
+        @proc_i.should == 3
+      end
+
+      it "connect returns a Connector" do
+        @connector.kind_of?(Driver::Signal::Connector).should == true
+      end
+
+      it "returns a connected Connector" do
+        @connector.connected?.should == true
+      end
+
+      it "firing the returned Connector callsback if cond_block is nil" do
+        @connector.fire
+        @proc_i.should == 1
+      end
+
+      it "works with the same proc on same signal twice" do
+        @signal.connect @sig, @proc
+        @proc_i.should == 0
+        @signal.fire @sig
+        @proc_i.should == 2
+        @signal.fire @sig
+        @proc_i.should == 4
+      end
+      
+      it "works with the same proc on two diff signals" do
+        @signal.connect :other, @proc
+        @proc_i.should == 0
+        @signal.fire @sig
+        @proc_i.should == 1
+        @signal.fire :other
+        @proc_i.should == 2
+        @signal.fire :other
+        @proc_i.should == 3
+        @signal.fire @sig
+        @proc_i.should == 4
+      end
+
+      it "calling disconnect on the returned connector works" do
+        @proc_i.should == 0
+        @connector.disconnect
+        @connector.connected?.should == false
+        @signal.fire @sig
+        @proc_i.should == 0
+      end
+    end # context proc connected
+
+    it "passing data through signal.fire works" do
+      proc = ->a,b{ @proc_i += a + b }
+      @signal.connect @sig, proc
+      @signal.fire @sig, 5, 7
+      @proc_i.should == 12
+      @signal.fire @sig, 0, 2
+      @proc_i.should == 14
     end
+
+    context "with a proc added that calls Signal::disconnect" do
+      before :each do
+        @proc = ->{ Driver::Signal::disconnect }
+        @connector = @signal.connect @sig, @proc
+      end
+
+      it "calling Signal.disconnect during a Signal.fire works" do
+        @connector.connected?.should be_true
+        @signal.fire @sig
+        @connector.connected?.should be_false
+      end
+      
+      it "calling Signal.disconnect during a Connector.fire works" do
+        @connector.connected?.should be_true
+        @connector.fire
+        @connector.connected?.should be_false
+      end
+
+      it "calling Signal.disconnect outside a fire() raises" do
+        expect { @signal.disconnect }.to raise_error
+      end
+    end # context with a proc that calls Signal::disconnect
 
     # Context.new( hash )
     # Context.apply( proc, priority=0 )
     context "Signal::Context" do
       pending "change(priority,proc)"
-      
       pending "fire(Signal::Context) passes the Context obj on to the callback"
       pending "a Context obj received in callback can schedule changes with obj.change { ... }"
       pending "change with priority obj.change(5) { ... }"

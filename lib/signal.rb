@@ -9,10 +9,16 @@ module Driver
       end
 
       def fire(*args)
-        if @condition_block
-          @proc.call(*args) if @condition_block.call(*args)
-        else
-          @proc.call(*args)
+        begin
+          if @condition_block
+            @proc.call(*args) if @condition_block.call(*args)
+          else
+            @proc.call(*args)
+          end
+        rescue Disconnect => e
+          Log::debug "callback called disconnect", "signal"
+          self.disconnect
+          e.resume
         end
       end
 
@@ -51,37 +57,28 @@ module Driver
       raise "expected connector to be disconnected" if connector.connected?
       default_signal signal
       connector.disconnect = ->{
-        @signals.remove connector
+        @signals[signal].delete connector
         Log::debug "signal disconnect proc, removed #{connector.to_s} from signal #{signal.to_s}", "signal"
       }
       @signals[signal] << connector
+      nil
     end
 
-    def connect( signal, proc, *filter_args )
+    def connect( signal, proc, &condition_block )
       Log::debug "connecting #{signal.to_s} to #{proc.to_s}", "signal"
-      default_signal signal
-      if filter_args.size > 0
-        @signals[signal] << ->*args{ return unless args == filter_args; proc.call *args }
-      else
-        @signals[signal] << proc
-      end
-      nil
+      connector = Connector.new proc, condition_block
+      add_connector signal, connector
+      connector
     end
 
-    def disconnect( signal, proc )
-      raise "temporarily disabled; filter_args breaks delete"
-      Log::debug "disconnecting #{signal.to_s} from #{proc.to_s}", "signal"
-      default_signal signal
-      if @signals[signal].delete proc
-        Log::debug "#{signal.to_s} was found and deleted from #{proc.to_s}", "signal"
-      else
-        Log::error "#{signal.to_s} was not found and not deleted from #{proc.to_s}", "signal"
-        raise "#{signal.to_s} was not found and not deleted from #{proc.to_s}"
-      end
-      nil
+    def self.disconnect
+      Util.resumption_exception Disconnect.new
     end
 
     private
+    class Disconnect < Exception
+    end
+    
     def default_signal( signal )
       @signals[signal] ||= []
     end
