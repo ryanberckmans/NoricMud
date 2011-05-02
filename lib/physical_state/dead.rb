@@ -26,7 +26,7 @@ module PhysicalState
         game.signal.connect :after_tick, ->{
           if Time.now - start_time > DEAD_TIME
             PhysicalState::transition game, mob, PhysicalState::Resting if mob.dead?
-            true
+            Driver::Signal::disconnect
           else
             false
           end

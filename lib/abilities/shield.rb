@@ -19,9 +19,10 @@ module Abilities
       cap = [SHIELD_CAPACITY]
       duration_over = false
       shield_callback = ->dmg{
-        return true if duration_over
-        return false unless dmg[:receiver] == defender
-        return false if dmg[:amount] < 1
+        if duration_over
+          Driver::Signal::disconnect
+          return
+        end
         raise "expected shield to have capacity left" unless cap[0] > 0
         Log::debug "defender #{defender.short_name} shield #{cap[0]} attempting to absorb #{dmg.to_s}", "shield"
         if cap[0] > dmg[:amount]
@@ -29,15 +30,15 @@ module Abilities
           Log::debug "shield has #{cap[0]} remaining after absorbing #{dmg[:amount]}", "shield"
           dmg[:amount] = 0
           shield_hit game, defender
-          return false
+          return
         end
         dmg[:amount] -= cap[0]
         cap[0] = 0
         Log::debug "damage reduced to #{dmg[:amount]} after breaking shield", "shield"
         shield_broken game, defender
-        return true
+        Driver::Signal::disconnect
       }
-      game.signal.connect :damage, shield_callback
+      game.signal.connect :damage, shield_callback, ->dmg{ dmg[:receiver] == defender && dmg[:amount] > 0 }
       game.timer.add SHIELD_DURATION, ->{ return if cap[0] < 1; duration_over = true; shield_over game, defender }
       pov_scope do
         pov(defender) { "{@A magical shield appears around you.\n" }

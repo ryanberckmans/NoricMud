@@ -3,7 +3,7 @@ class Timer
   def initialize( signal )
     @tick = 0
     @timers = {}
-    signal.connect :after_tick, ->{ tick; false }
+    signal.connect :after_tick, ->{ tick }
   end
 
   def add( length, tick_proc, options = {} )

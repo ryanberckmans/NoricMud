@@ -7,7 +7,7 @@ describe "Signal" do
       @proc = ->{ @proc_i += 1 }
     end
 
-    context "with a proc and nil condition_block" do
+    context "with a proc and nil condition_proc" do
       before :each do
         @connector = Driver::Signal::Connector.new @proc
       end
@@ -18,14 +18,14 @@ describe "Signal" do
       end
     end
 
-    context "with a proc and condition_block" do
+    context "with a proc and condition_proc" do
       before :each do
         @cond = true
-        @condition_block = ->{ @cond }
-        @connector = Driver::Signal::Connector.new @proc, @condition_block
+        @condition_proc = ->{ @cond }
+        @connector = Driver::Signal::Connector.new @proc, @condition_proc
       end
 
-      it "fire calls the proc iff condition_block passes" do
+      it "fire calls the proc iff condition_proc passes" do
         @connector.fire
         @proc_i.should == 1
         @connector.fire
@@ -113,11 +113,11 @@ describe "Signal" do
       end # context disconnect proc assigned
     end # context /w proc and condition block
 
-    context "with a multi-arg proc and condition_block" do
+    context "with a multi-arg proc and condition_proc" do
       before :each do
         @proc = ->a,b,c{ @proc_i += a + b + c }
-        @condition_block = ->a,b,c{ @proc_i += a + b + c; true }
-        @connector = Driver::Signal::Connector.new @proc, @condition_block
+        @condition_proc = ->a,b,c{ @proc_i += a + b + c; true }
+        @connector = Driver::Signal::Connector.new @proc, @condition_proc
       end
 
       it "passes multiple args to the proc and condition block" do
@@ -135,9 +135,9 @@ describe "Signal" do
       @proc = ->{ @proc_i += 1 }
     end
 
-    it "firing the returned Connector callsback iff condition_block passes" do
+    it "firing the returned Connector callsback iff condition_proc passes" do
       @cond = false
-      conn = @signal.connect(@sig, @proc) { @cond }
+      conn = @signal.connect @sig, @proc, ->{ @cond }
       conn.fire
       @proc_i.should == 0
       @cond = true

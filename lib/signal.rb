@@ -2,16 +2,16 @@
 module Driver
   class Signal
     class Connector
-      def initialize( proc, condition_block=nil )
+      def initialize( proc, condition_proc=nil )
         @proc = proc
-        @condition_block = condition_block
+        @condition_proc = condition_proc
         @disconnect_proc = nil
       end
 
       def fire(*args)
         begin
-          if @condition_block
-            @proc.call(*args) if @condition_block.call(*args)
+          if @condition_proc
+            @proc.call(*args) if @condition_proc.call(*args)
           else
             @proc.call(*args)
           end
@@ -64,9 +64,9 @@ module Driver
       nil
     end
 
-    def connect( signal, proc, &condition_block )
+    def connect( signal, proc, condition_proc=nil)
       Log::debug "connecting #{signal.to_s} to #{proc.to_s}", "signal"
-      connector = Connector.new proc, condition_block
+      connector = Connector.new proc, condition_proc
       add_connector signal, connector
       connector
     end

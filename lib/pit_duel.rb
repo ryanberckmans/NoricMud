@@ -42,8 +42,9 @@ class PitDuel
     teleport_combatants
     Combat::restore @mob_x
     Combat::restore @mob_y
-    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob unless finished?; true }, @mob_x
-    @game.signal.connect PhysicalState::Dead::SIGNAL, ->mob{ loss mob unless finished?; true }, @mob_y
+    loss_f = ->mob{ loss mob }
+    @mob_x_dead_signal = @game.signal.connect PhysicalState::Dead::SIGNAL, loss_f, ->mob{ mob == @mob_x }
+    @mob_y_dead_signal = @game.signal.connect PhysicalState::Dead::SIGNAL, loss_f, ->mob{ mob == @mob_y }
   end
 
   private
@@ -61,6 +62,8 @@ class PitDuel
     end
     Log::debug "mob #{@winner.short_name} won vs #{@loser.short_name}, pit duel #{self.to_s}", "pitduel"
     @finished = true
+    @mob_x_dead_signal.disconnect
+    @mob_y_dead_signal.disconnect
     return_combatants
   end
 
