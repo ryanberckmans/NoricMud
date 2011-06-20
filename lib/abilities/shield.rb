@@ -18,27 +18,29 @@ module Abilities
       Log::debug "creating shield for #{defender.short_name}", "shield"
       cap = [SHIELD_CAPACITY]
       duration_over = false
-      shield_callback = ->dmg{
-        if duration_over
-          Driver::Signal::disconnect
-          return
-        end
-        raise "expected shield to have capacity left" unless cap[0] > 0
-        Log::debug "defender #{defender.short_name} shield #{cap[0]} attempting to absorb #{dmg.to_s}", "shield"
-        if cap[0] > dmg[:amount]
-          cap[0] -= dmg[:amount]
-          Log::debug "shield has #{cap[0]} remaining after absorbing #{dmg[:amount]}", "shield"
-          dmg[:amount] = 0
-          shield_hit game, defender
-          return
-        end
-        dmg[:amount] -= cap[0]
-        cap[0] = 0
-        Log::debug "damage reduced to #{dmg[:amount]} after breaking shield", "shield"
-        shield_broken game, defender
-        Driver::Signal::disconnect
-      }
-      game.signal.connect :damage, shield_callback, ->dmg{ dmg[:receiver] == defender && dmg[:amount] > 0 }
+      disconnector = defender.bind(:damage) do |event|
+        event.before_success do
+          if duration_over
+            disconnector.call
+            next
+          end
+          next unless event.damage > 0
+          raise "expected shield to have capacity left" unless cap[0] > 0
+          Log::debug "defender #{defender.short_name} shield #{cap[0]} attempting to absorb #{event.damage}", "shield"
+          if cap[0] > event.damage
+            cap[0] -= event.damage
+            Log::debug "shield has #{cap[0]} remaining after absorbing #{event.damage}", "shield"
+            event.damage = 0
+            shield_hit game, defender
+            next
+          end
+          event.damage -= cap[0]
+          cap[0] = 0
+          Log::debug "damage reduced to #{event.damage} after breaking shield", "shield"
+          shield_broken game, defender
+          disconnector.call
+        end # event.before
+      end # defender.bind :damage
       game.timer.add SHIELD_DURATION, ->{ return if cap[0] < 1; duration_over = true; shield_over game, defender }
       pov_scope do
         pov(defender) { "{@A magical shield appears around you.\n" }

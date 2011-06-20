@@ -201,39 +201,46 @@ module Combat
   def self.damage( game, damager, receiver, amount )
     raise "expected receiver to be a Mob" unless receiver.kind_of? Mob
     raise "expected amount to be an Integer" unless amount.kind_of? Fixnum
-    if receiver.state == PhysicalState::Dead
-      pov_scope do
-        pov(receiver) { "{@You are already a corpse!\n" }
-        pov(receiver.room.mobs) { "{@#{receiver.short_name} is already a corpse.\n" }
-      end
-      Log::debug "abandoning damage from #{damager.to_s} because #{receiver.short_name} is already a corpse", "combat"
-      return
-    end
-    damage_object = { damager:damager, receiver:receiver, amount:amount }
-    game.signal.fire :damage, damage_object
-    damager = damage_object[:damager]
-    receiver = damage_object[:receiver]
-    amount = damage_object[:amount]
-    if amount > 0 and receiver.state == PhysicalState::Resting
-      pov_scope do
-        pov(receiver) { "{!{FRYou take increased damage while resting!\n" }
-        pov(receiver.room.mobs) { "{!{FR#{receiver.short_name} takes increased damage while resting!\n"}
-      end
-    elsif amount > 0 and receiver.state == PhysicalState::Meditating
-      pov_scope do
-        pov(receiver) { "{!{FRYou take {@{FR*massively*{! increased damage while meditating!\n" }
-        pov(receiver.room.mobs) { "{!{FR#{receiver.short_name} takes {@{FR*massively*{! increased damage while meditating!\n"}
+    event = Seh::Event.new receiver
+    event.type :damage
+    event.damager = damager
+    event.damage = amount
+
+    event.start do
+      if event.target.state == PhysicalState::Dead
+        pov_scope do
+          pov(event.target) { "{@You are already a corpse!\n" }
+          pov(event.target.room.mobs) { "{@#{event.target.short_name} is already a corpse.\n" }
+        end
+        Log::debug "failing damage event #{event.to_s} because #{event.target.short_name} is already dead", "combat"
+        event.fail
       end
     end
-    if amount > receiver.hp_max / 3
-      pov_scope do
-        pov(receiver) { "{!{FRYou reel in shock from sudden blood loss!\n" }
+
+    event.success do
+      if event.damage > 0 and event.target.state == PhysicalState::Resting
+        pov_scope do
+          pov(event.target) { "{!{FRYou take increased damage while resting!\n" }
+          pov(event.target.room.mobs) { "{!{FR#{event.target.short_name} takes increased damage while resting!\n"}
+        end
+      elsif event.damage > 0 and event.target.state == PhysicalState::Meditating
+        pov_scope do
+          pov(event.target) { "{!{FRYou take {@{FR*massively*{! increased damage while meditating!\n" }
+          pov(event.target.room.mobs) { "{!{FR#{event.target.short_name} takes {@{FR*massively*{! increased damage while meditating!\n"}
+        end
       end
-    end
-    game.combat.aggress damager, receiver if damager and damager.kind_of? Mob
-    receiver.hp -= amount
-    receiver.hp = receiver.hp_max if receiver.hp > receiver.hp_max
-    death game, receiver if receiver.hp < 1
+      if event.damage > event.target.hp_max / 3
+        pov_scope do
+          pov(event.target) { "{!{FRYou reel in shock from sudden blood loss!\n" }
+        end
+      end
+      game.combat.aggress event.damager, event.target if event.damager and event.damager.kind_of? Mob
+      event.target.hp -= event.damage
+      event.target.hp = event.target.hp_max if event.target.hp > event.target.hp_max
+      death game, event.target if event.target.hp < 1
+    end # damage event.success
+
+    event.dispatch
   end
 
   def self.flee( game, attacker )
