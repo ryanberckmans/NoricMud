@@ -76,4 +76,5 @@ class Mob < ActiveRecord::Base
   end
 
   include Seh::EventTarget
+  attr_accessor :parents
 end
