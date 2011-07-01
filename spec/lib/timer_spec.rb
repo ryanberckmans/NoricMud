@@ -1,11 +1,11 @@
 
 describe Timer do
-  context "instance with a signal" do
+  context "instance with a game" do
     before :each do
-      @signal = double("Signal")
+      @game = double("Game")
       @timer_proc = nil
-      @signal.stub(:connect) { |sig,proc,*args| @timer_proc = proc }
-      @timer = Timer.new @signal
+      @game.stub(:bind) { |sig,proc| @timer_proc = proc }
+      @timer = Timer.new @game
     end
 
     pending "it can specify when to fire the timer (e.g. before, after tick, etc.; right now all timers fired after tick)"

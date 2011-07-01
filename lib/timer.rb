@@ -1,9 +1,9 @@
 
 class Timer
-  def initialize( signal )
+  def initialize( game )
     @tick = 0
     @timers = {}
-    signal.connect :after_tick, ->{ tick }
+    game.bind(:after_tick) { tick }
   end
 
   def add( length, tick_proc, options = {} )

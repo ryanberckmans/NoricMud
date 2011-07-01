@@ -18,7 +18,7 @@ class Game
     @character_system = character_system
 
     @signal = Driver::Signal.new
-    @timer = Timer.new @signal
+    @timer = Timer.new self
     @breath = Breath.new self
     @channel = Channel.new self
     @cooldown = Cooldown.new
@@ -131,7 +131,7 @@ class Game
     process_character_commands
     @channel.tick
     @combat.tick
-    @signal.fire :after_tick
+    Seh::Event.new(self) { |e| e.type :after_tick ; e.dispatch }
     while char = @new_logouts.shift do do_logout char end
     send_char_msgs
     send_prompts

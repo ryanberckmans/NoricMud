@@ -23,12 +23,10 @@ module PhysicalState
         game.mob_commands.add_cmd_handler mob, @@commands, CMDS_PRIORITY
         game.signal.fire SIGNAL, mob
         start_time = Time.now
-        game.signal.connect :after_tick, ->{
+        disconnect_bind = game.bind(:after_tick) {
           if Time.now - start_time > DEAD_TIME
             PhysicalState::transition game, mob, PhysicalState::Resting if mob.dead?
-            Driver::Signal::disconnect
-          else
-            false
+            disconnect_bind.call
           end
         }
       end
