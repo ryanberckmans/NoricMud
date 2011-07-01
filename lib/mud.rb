@@ -8,6 +8,7 @@ require "yaml"
 
 ActiveRecord::Base.establish_connection YAML.load_file('config/database.yml')[ ENV['RAILS_ENV'] ]
 
+require "seh"
 require "abbrev_map.rb"
 
 require "models/account.rb"

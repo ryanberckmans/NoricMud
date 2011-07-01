@@ -10,7 +10,7 @@ require "abilities/base.rb"
 require "chaos_quest.rb"
 
 class Game
-
+  include Seh::EventTarget
   attr_reader :signal, :timer
   
   def initialize( character_system )
@@ -120,7 +120,7 @@ class Game
   def tick
     @msgs_this_tick.clear
     Log::debug "start tick", "game"
-    @signal.fire :before_tick
+    Seh::Event.new(self) { |e| e.type :before_tick ; e.dispatch }
     process_new_disconnections
     process_new_reconnections
     process_new_logins
