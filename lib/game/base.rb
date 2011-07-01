@@ -219,7 +219,7 @@ class Game
   def do_logout( char )
     raise "expected char to be online" unless @character_system.online? char
     Log::info "#{char.name} logging off", "game"
-    signal.fire :logout, char
+    Seh::Event.new(char) { |e| e.type :logout ; e.dispatch }
     mob = char.mob
     pov_scope do
       pov(mob) do "{@Quitting...\n" end
@@ -250,13 +250,14 @@ class Game
   end
   
   def login( char )
+    char.parents = [self]
     char.mob.char = char
     @mob_commands.add char.mob
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
     PhysicalState::transition( self, char.mob, PhysicalState::Standing ) unless char.mob.state
-    @signal.fire :login, char
+    Seh::Event.new(char) { |e| e.type :login; e.dispatch }
   end
 
   def character_reconnected( char )

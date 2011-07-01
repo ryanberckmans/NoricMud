@@ -12,8 +12,8 @@ class ChaosQuest
     @game.timer.add_periodic 1, ->{ end_fights }
     @game.timer.add_periodic 4, ->{ start_next_fight }
     @game.timer.add_periodic 80, ->{ start_fights }
-    @game.signal.connect :logout, ->char{ remove char.mob }
-    @game.signal.connect :login, ->char{ enroll char.mob }
+    @game.bind(:logout) { |e| remove e.target.mob }
+    @game.bind(:login) { |e| enroll e.target.mob }
   end
 
   def remove( mob )
