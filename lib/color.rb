@@ -1,7 +1,7 @@
 
 
 COLORS = {
-  "{@"    =>     "\033[m", #reset
+  "{@"    =>     "\033[0m", #reset
   # styles
   "{!"       =>     "\033[1m", #bold
   "underlineZZ"  =>     "\033[4m",
