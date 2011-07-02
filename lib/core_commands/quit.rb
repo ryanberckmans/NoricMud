@@ -5,8 +5,8 @@ module CoreCommands
       game.send_msg mob, "You must type out {!{FGquit{@ to quit.\n"
       return
     end
-    if mob.room != game.login_room
-      game.send_msg mob, "You must be in the login room to quit.\n"
+    if not mob.room.quit
+      game.send_msg mob, "You may not quit here.\n"
       return
     end
     game.logout mob.char
