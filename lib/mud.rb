@@ -34,7 +34,6 @@ require "network.rb"
 require "account_system.rb"
 require "character_system.rb"
 require "mob_commands.rb"
-require "signal.rb"
 require "timer.rb"
 require "game/base.rb"
 
