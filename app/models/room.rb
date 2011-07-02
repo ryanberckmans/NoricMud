@@ -34,7 +34,7 @@ class Room < ActiveRecord::Base
       if self.safe
         e.fail
         pov_scope do
-          pov(e.atttacker) { "Violence is prevented by the serene white aura that springs into existence.\n" }
+          pov(e.attacker) { "Violence is prevented by the serene white aura that springs into existence.\n" }
         end
       end
     }

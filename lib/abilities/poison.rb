@@ -14,12 +14,12 @@ module Abilities
     def poison( game, attacker, defender )
       poison_start game, attacker, defender
       poisoned = true
-      bind = defender.bind_once(:dead) {
+      bind_disconnect = defender.bind_once(:dead) {
         return unless poisoned
         poisoned = false
         poison_stop game, attacker, defender
       }
-      game.timer.add_periodic POISON_TICK_INTERVAL, ->{ poison_tick game, attacker, defender if poisoned }, { periods:POISON_TICKS, stop:->{ poisoned = false; bind.disconnect; poison_stop game, attacker, defender } }
+      game.timer.add_periodic POISON_TICK_INTERVAL, ->{ poison_tick game, attacker, defender if poisoned }, { periods:POISON_TICKS, stop:->{ poisoned = false; bind_disconnect.call; poison_stop game, attacker, defender } }
     end
 
     def poison_start( game, attacker, defender )

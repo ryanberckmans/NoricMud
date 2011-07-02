@@ -13,7 +13,13 @@ module Abilities
   class << self
     def heal_dot( game, attacker, defender )
       heal_dot_start game, attacker, defender
-      game.timer.add_periodic HEAL_DOT_TICK_INTERVAL, ->{ heal_dot_tick game, attacker, defender }, { periods:HEAL_DOT_TICKS, stop:->{ heal_dot_stop game, attacker, defender } }
+      healing = true
+      bind_disconnect = defender.bind_once(:dead) {
+        return unless healing
+        healing = false
+        heal_dot_stop game, attacker, defender
+      }
+      game.timer.add_periodic HEAL_DOT_TICK_INTERVAL, ->{ heal_dot_tick game, attacker, defender if healing }, { periods:HEAL_DOT_TICKS, stop:->{ healing = false; bind_disconnect.call; heal_dot_stop game, attacker, defender } }
     end
 
     def heal_dot_start( game, attacker, defender )
