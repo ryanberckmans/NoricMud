@@ -250,7 +250,7 @@ class Game
   
   def login( char )
     char.parents = [self]
-    char.mob.parents = [self,char]
+    char.mob.parents_proc = ->{ a = [self,char]; a << char.mob.room if char.mob.room; a }
     char.mob.char = char
     @mob_commands.add char.mob
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10

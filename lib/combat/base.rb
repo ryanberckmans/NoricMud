@@ -202,9 +202,14 @@ module Combat
     raise "expected receiver to be a Mob" unless receiver.kind_of? Mob
     raise "expected amount to be an Integer" unless amount.kind_of? Fixnum
     event = Seh::Event.new receiver
-    event.type :damage
     event.damager = damager
     event.damage = amount
+    event.type :damage
+    if event.damage > 0
+      event.type :hostile
+      event.attacker = damager
+      event.defender = receiver
+    end
 
     event.start do
       if event.target.state == PhysicalState::Dead
@@ -294,7 +299,12 @@ module Combat
           game.send_msg attacker, "#{mob_in_room.short_name} is already dead.\n"
           return
         end
-        game.combat.melee_round attacker, mob_in_room
+        e = Seh::Event.new attacker
+        e.type :hostile
+        e.attacker = attacker
+        e.defender = mob_in_room
+        e.success { game.combat.melee_round attacker, mob_in_room }
+        e.dispatch
         return
       end
     end

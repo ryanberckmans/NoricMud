@@ -189,6 +189,20 @@ module CoreCommands
       game.send_msg mob, list
     end
 
+    def room_safe( game, mob )
+      raise "expected mob to be a Mob" unless mob.kind_of? Mob
+      mob.room.safe = !mob.room.safe
+      raise "failed to save room" unless mob.room.save
+      msg = "Room is now "
+      if mob.room.safe
+        msg += "{!{FGsafe"
+      else
+        msg += "{!{FRunsafe"
+      end
+      msg += "{@.\n"
+      game.send_msg mob, msg
+    end
+
     def target_room( id )
       Room.find id.to_i rescue nil
     end

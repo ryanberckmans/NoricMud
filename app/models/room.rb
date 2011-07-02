@@ -30,7 +30,17 @@ class Room < ActiveRecord::Base
     self.mobs = []
     self.exit = {}
     self.exits.each { |xit| self.exit[xit.direction] = xit }
+    self.bind(:hostile) { |e|
+      if self.safe
+        e.fail
+        pov_scope do
+          pov(e.atttacker) { "Violence is prevented by the serene white aura that springs into existence.\n" }
+        end
+      end
+    }
   end
+
+  include Seh::EventTarget
 end
 
 

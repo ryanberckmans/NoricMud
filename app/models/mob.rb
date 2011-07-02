@@ -76,5 +76,8 @@ class Mob < ActiveRecord::Base
   end
 
   include Seh::EventTarget
-  attr_accessor :parents
+  attr_accessor :parents_proc
+  def parents
+    self.parents_proc.call
+  end
 end
