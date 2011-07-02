@@ -34,6 +34,8 @@ module CoreCommands
     commands << "room exit"
     commands << "room unexit"
     commands << "room list"
+    commands << "room safe"
+    commands << "room quit"
     commands << "where"
     commands << "weapon"
     commands << "cast heal"

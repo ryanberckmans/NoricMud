@@ -58,6 +58,7 @@ module CoreCommands
   add_cmd "room unexit", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_unexit game, mob, rest }
   add_cmd "room list", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_list game, mob }
   add_cmd "room safe", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_safe game, mob }
+  add_cmd "room quit", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_quit game, mob }
   add_cmd "where", ->game,mob,rest,match { where game, mob }
   add_cmd "weapon", ->game,mob,rest,match { game.combat.weapon.weapon_cycle mob }
   add_cmd "god", ->game,mob,rest,match { mob.god = true }

@@ -203,6 +203,20 @@ module CoreCommands
       game.send_msg mob, msg
     end
 
+    def room_quit( game, mob )
+      raise "expected mob to be a Mob" unless mob.kind_of? Mob
+      mob.room.quit = !mob.room.quit
+      raise "failed to save room" unless mob.room.save
+      msg = "Room is now "
+      if mob.room.quit
+        msg += "{!{FGquittable"
+      else
+        msg += "{!{FRunquittable"
+      end
+      msg += "{@.\n"
+      game.send_msg mob, msg
+    end
+
     def target_room( id )
       Room.find id.to_i rescue nil
     end
