@@ -225,6 +225,7 @@ class Game
       pov(mob.room.mobs) do "{@#{mob.char.name} quit.\n" end
     end
     move_to( mob, nil )
+    PhysicalState::transition self, mob, nil
     @character_system.send_msg char, @msgs_this_tick[char]
     @msgs_this_tick.delete char
     @mob_commands.remove mob
@@ -256,7 +257,7 @@ class Game
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
-    PhysicalState::transition( self, char.mob, PhysicalState::Standing ) unless char.mob.state
+    PhysicalState::transition( self, char.mob, PhysicalState::Standing )
     Seh::Event.new(char) { |e| e.type :login; e.dispatch }
   end
 
