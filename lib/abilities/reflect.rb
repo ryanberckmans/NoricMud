@@ -17,20 +17,19 @@ module Abilities
     def reflect_start( game, defender )
       Log::debug "creating reflect for #{defender.short_name}", "reflect"
       reflected = false
-      reflect_callback = ->spell{
+      disconnect = game.bind(:spell) { |e|
+        next unless e.spell_target == defender && e.spell_caster != defender
         Log::debug "defender #{defender.short_name} reflecting spell", "reflect"
-        caster = spell[:caster]
         reflected = true
         pov_scope do
           t =  "{!{FCThe spell rebounds off the whirling ruby energy surrounding "
           pov(defender) { t + "you!\n" }
           pov(defender.room.mobs) { t + "#{defender.short_name}!\n" }
         end
-        spell[:target] = spell[:caster]
-        Driver::Signal::disconnect
+        e.spell_target = e.spell_caster
+        disconnect.call
       }
-      connector = game.signal.connect :spell, reflect_callback, ->spell{ spell[:target] == defender && spell[:caster] != defender }
-      game.timer.add REFLECT_DURATION, ->{ return if reflected; connector.disconnect; reflect_over game, defender }
+      game.timer.add REFLECT_DURATION, ->{ return if reflected; disconnect.call; reflect_over game, defender }
       pov_scope do
         pov(defender) { "{@A trellis of reflective ruby energy winks into existence around you.\n" }
         pov(defender.room.mobs) { "{@A trellis of reflective ruby energy winks into existence around #{defender.short_name}.\n" }

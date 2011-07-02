@@ -84,10 +84,13 @@ module Abilities
     return nil unless attempt_energy_use game, attacker, energy_cost
 
     if target_mob
-      spell = { caster:attacker, target:target_mob }
-      game.signal.fire :spell, spell
-      target_mob = spell[:target]
-      ability.call game, attacker, target_mob
+      e = Seh::Event.new(game) { |e|
+        e.type :spell;
+        e.spell_caster = attacker;
+        e.spell_target = target_mob
+        e.dispatch
+      }
+      ability.call game, e.spell_caster, e.spell_target
     else
       game.send_msg attacker, "Nobody here by that name.\n"
     end
