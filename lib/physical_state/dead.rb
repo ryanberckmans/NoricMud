@@ -1,6 +1,5 @@
 module PhysicalState
   class Dead
-    SIGNAL = :dead
     DEAD_TIME = 8 # seconds
     CMDS_PRIORITY = 100
 
@@ -21,7 +20,7 @@ module PhysicalState
         end
         mob.hp = 0
         game.mob_commands.add_cmd_handler mob, @@commands, CMDS_PRIORITY
-        game.signal.fire SIGNAL, mob
+        Seh::Event.new(mob) { |e| e.type :dead; e.dispatch }
         start_time = Time.now
         disconnect_bind = game.bind(:after_tick) {
           if Time.now - start_time > DEAD_TIME
