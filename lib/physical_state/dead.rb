@@ -37,11 +37,11 @@ module PhysicalState
           pov(mob.room.mobs) { "{@The lifeless husk that was once #{mob.short_name} implodes in a shower of sparks.\n" }
         end
         game.move_to( mob, game.respawn_room )
-        Combat::restore mob
         pov_scope do
           pov(mob) { "{@You wake up with a splitting headache.\n" }
           pov(mob.room.mobs) { "{@Whoooooosh! {!{FY#{mob.short_name}{@ materializes.\n" }
         end
+        Combat::restore mob
         CoreCommands::look game, mob
         game.mob_commands.remove_cmd_handler mob, @@commands
       end
