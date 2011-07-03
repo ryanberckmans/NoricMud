@@ -215,14 +215,14 @@ module Combat
       if event.target.state == PhysicalState::Dead
         pov_scope do
           pov(event.target) { "{@You are already a corpse!\n" }
-          pov(event.target.room.mobs) { "{@#{event.target.short_name} is already a corpse.\n" }
+          pov(event.damager) { "{@#{event.target.short_name} is already a corpse.\n" } if event.damager
         end
         Log::debug "failing damage event #{event.to_s} because #{event.target.short_name} is already dead", "combat"
         event.fail
       end
     end
 
-    event.success do
+    event.after_success do
       if event.damage > event.target.hp_max / 3
         pov_scope do
           pov(event.target) { "{!{FRYou reel in shock from sudden blood loss!\n" }
@@ -232,8 +232,9 @@ module Combat
       event.target.hp -= event.damage
       event.target.hp = event.target.hp_max if event.target.hp > event.target.hp_max
       death game, event.target if event.target.hp < 1
-    end # damage event.success
+    end
 
+    yield event if block_given?
     event.dispatch
   end
 

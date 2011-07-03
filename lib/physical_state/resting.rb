@@ -10,7 +10,12 @@ module PhysicalState
       def damage_handler( game, mob )
         mob.resting_damage_handler ||= mob.bind(:damage) do |e|
           e.before_success do
-            next unless mob.state == PhysicalState::Resting
+            next unless mob.state == Resting
+            e.damage = (e.damage * 1.5).to_i if e.damage > 0
+            Log::debug "amplified damage to #{e.damage} (target #{mob.short_name}, damager #{e.damager ? e.damager : ""}", "rest"
+          end
+          e.after_success do
+            next unless mob.state == Resting
             if e.damage > 0
               pov_scope do
                 pov(mob) { "{!{FRYou take increased damage while resting!\n" }
@@ -24,7 +29,7 @@ module PhysicalState
               end
               PhysicalState::transition game, mob, Standing
             end
-          end # before success
+          end
         end # bind damage
       end
 
@@ -68,7 +73,7 @@ module PhysicalState
         pov(mob) { "{!{FGYou stop resting, and stand up.\n" }
         pov(mob.room.mobs) { "{!{FG#{mob.short_name} stops resting and stands up.\n" }
       end
-      PhysicalState::transition game, mob, PhysicalState::Standing
+      PhysicalState::transition game, mob, Standing
     }
 
   end

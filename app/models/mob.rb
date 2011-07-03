@@ -80,5 +80,5 @@ class Mob < ActiveRecord::Base
   def parents
     self.parents_proc.call
   end
-  attr_accessor :resting_damage_handler # one of ugliest hacks in mud; physicalstate handlers have no place in Mob; to get rid: i) Seh named handlers; ii) instanced physicalstates, or lambda transitions
+  attr_accessor :resting_damage_handler, :meditating_damage_handler # one of ugliest hacks in mud; physicalstate handlers have no place in Mob; to get rid: i) Seh named handlers; ii) instanced physicalstates, or lambda transitions
 end

@@ -110,30 +110,31 @@ module Combat
       crit_mult = nil
       crit_mult = CRITICAL[crit] if crit
       damage = roll_damage attacker, crit_mult
-      damage = (damage * 1.5).to_i if defender.state == PhysicalState::Resting
-      damage = (damage * 3).to_i if defender.state == PhysicalState::Meditating
-      damage_text = Combat.damage_text damage
-      damage_color = Combat.damage_color damage
-      damage_percent_text = Combat.damage_percent_text(damage * 100.0 /  defender.hp)
-      if damage_percent_text
-        damage_text = damage_percent_text 
-        damage_color = "{!{FR"
-      end
-      if crit
-        pov_scope do
-          pov(attacker) do "{!{FRYou #{CRITICAL_TEXT[crit]} hit #{defender.short_name}!\n" end
-          pov(defender) do "{!{FR#{attacker.short_name} #{CRITICAL_TEXT[crit]} hits you!\n" end
-          pov(attacker.room.mobs) do "{!{FR#{attacker.short_name} #{CRITICAL_TEXT[crit]} hits #{defender.short_name}!\n" end
-        end
-      end
-      pov_scope do
-        pov(attacker) { "{!{FGYour #{type} #{damage_color}#{damage_text}{FG #{defender.short_name}!\n" }
-        pov(defender) { "{!{FY#{attacker.short_name}'s #{type} #{damage_text} you!\n" }
-        pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s #{type} #{damage_text} #{defender.short_name}!\n" }
-      end
-      damage += proc( attacker, defender )
-      Log::debug "#{attacker.short_name} did #{damage} total damage from melee hit", "weapons"
-      Combat::damage @game, attacker, defender, damage
+      Combat::damage @game, attacker, defender, damage do |e|
+        e.success {
+          damage_text = Combat.damage_text e.damage
+          damage_color = Combat.damage_color e.damage
+          damage_percent_text = Combat.damage_percent_text(e.damage * 100.0 /  defender.hp)
+          if damage_percent_text
+            damage_text = damage_percent_text
+            damage_color = "{!{FR"
+          end
+          if crit
+            pov_scope do
+              pov(attacker) do "{!{FRYou #{CRITICAL_TEXT[crit]} hit #{defender.short_name}!\n" end
+              pov(defender) do "{!{FR#{attacker.short_name} #{CRITICAL_TEXT[crit]} hits you!\n" end
+              pov(attacker.room.mobs) do "{!{FR#{attacker.short_name} #{CRITICAL_TEXT[crit]} hits #{defender.short_name}!\n" end
+            end
+          end
+          pov_scope do
+            pov(attacker) { "{!{FGYour #{type} #{damage_color}#{damage_text}{FG #{defender.short_name}!\n" }
+            pov(defender) { "{!{FY#{attacker.short_name}'s #{type} #{damage_text} you!\n" }
+            pov(attacker.room.mobs) { "{!{FG#{attacker.short_name}'s #{type} #{damage_text} #{defender.short_name}!\n" }
+          end
+          Log::debug "#{attacker.short_name} did #{e.damage} total damage from melee hit", "weapons"
+        } # e.success
+      end # Combat.damage block
+      Combat::damage @game, attacker, defender, proc( attacker, defender ) unless defender.state == PhysicalState::Dead
     end
 
     def attack_speed( mob )
@@ -164,8 +165,6 @@ module Combat
       default_weapon attacker
       damage = 0
       damage = PROC[@weapons[attacker]].(@game, attacker, defender) if Random.new.rand(1..10) > 8
-      damage = (damage * 1.5).to_i if defender.state == PhysicalState::Resting
-      damage = (damage * 3).to_i if defender.state == PhysicalState::Meditating
       damage
     end
 
