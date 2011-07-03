@@ -228,11 +228,6 @@ module Combat
           pov(event.target) { "{!{FRYou take increased damage while resting!\n" }
           pov(event.target.room.mobs) { "{!{FR#{event.target.short_name} takes increased damage while resting!\n"}
         end
-      elsif event.damage > 0 and event.target.state == PhysicalState::Meditating
-        pov_scope do
-          pov(event.target) { "{!{FRYou take {@{FR*massively*{! increased damage while meditating!\n" }
-          pov(event.target.room.mobs) { "{!{FR#{event.target.short_name} takes {@{FR*massively*{! increased damage while meditating!\n"}
-        end
       end
       if event.damage > event.target.hp_max / 3
         pov_scope do
