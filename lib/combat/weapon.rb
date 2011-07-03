@@ -134,7 +134,7 @@ module Combat
           Log::debug "#{attacker.short_name} did #{e.damage} total damage from melee hit", "weapons"
         } # e.success
       end # Combat.damage block
-      Combat::damage @game, attacker, defender, proc( attacker, defender ) unless defender.state == PhysicalState::Dead
+      Combat::damage @game, attacker, defender, proc( attacker, defender ) unless defender.dead?
     end
 
     def attack_speed( mob )

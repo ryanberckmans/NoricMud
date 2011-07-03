@@ -14,7 +14,7 @@ class Regen
     @game.all_characters.each do |char|
       mob = char.mob
       Log::debug "regenerating #{char.name}", "regen"
-      if mob.state == PhysicalState::Dead
+      if mob.dead?
         Log::debug "skipping regen for dead char #{char.name}", "regen"
         next
       end

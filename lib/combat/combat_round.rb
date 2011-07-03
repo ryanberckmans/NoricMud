@@ -58,7 +58,7 @@ module Combat
       target = target_of(attacker)
       return false unless target
       raise "expected target to be a Mob" unless target.kind_of? Mob
-      return false if target.state == PhysicalState::Dead
+      return false if target.dead?
       return false unless engaged? target
       return false unless attacker.room == target.room
       true

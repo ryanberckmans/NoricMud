@@ -214,7 +214,7 @@ module Combat
     end
 
     event.start do
-      if event.target.state == PhysicalState::Dead
+      if event.target.dead?
         pov_scope do
           pov(event.target) { "{@You are already a corpse!\n" }
           pov(event.damager) { "{@#{event.target.short_name} is already a corpse.\n" } if event.damager
