@@ -223,12 +223,6 @@ module Combat
     end
 
     event.success do
-      if event.damage > 0 and event.target.state == PhysicalState::Resting
-        pov_scope do
-          pov(event.target) { "{!{FRYou take increased damage while resting!\n" }
-          pov(event.target.room.mobs) { "{!{FR#{event.target.short_name} takes increased damage while resting!\n"}
-        end
-      end
       if event.damage > event.target.hp_max / 3
         pov_scope do
           pov(event.target) { "{!{FRYou reel in shock from sudden blood loss!\n" }

@@ -6,20 +6,36 @@ module PhysicalState
       def to_s
         "Resting"
       end
-      
+
+      def damage_handler( game, mob )
+        mob.resting_damage_handler ||= mob.bind(:damage) do |e|
+          e.before_success do
+            next unless mob.state == PhysicalState::Resting
+            if e.damage > 0
+              pov_scope do
+                pov(mob) { "{!{FRYou take increased damage while resting!\n" }
+                pov(mob.room.mobs) { "{!{FR#{mob.short_name} takes increased damage while resting!\n"}
+              end
+            end
+            if e.damage > -1 and game.combat.engaged? mob
+              pov_scope do
+                pov(mob) { "{@You jump to your feet as you're attacked!\n" }
+                pov(mob.room.mobs) { "{@#{mob.short_name} jumps to his feet as he's attacked!\n" }
+              end
+              PhysicalState::transition game, mob, Standing
+            end
+          end # before success
+        end # bind damage
+      end
+
       def on_enter( game, mob )
         game.mob_commands.add_cmd_handler mob, @@rest_cmds, REST_CMDS_PRIORITY
+        damage_handler game, mob
         Log::debug "mob #{mob.short_name} entered #{to_s}", "state"
       end
 
       def on_exit( game, mob )
         game.mob_commands.remove_cmd_handler mob, @@rest_cmds
-        if game.combat.engaged? mob
-          pov_scope do
-            pov(mob) { "{@You jump to your feet as you're attacked!\n" }
-            pov(mob.room.mobs) { "{@#{mob.short_name} jumps to his feet as he's attacked!\n" }
-          end
-        end
         Log::debug "mob #{mob.short_name} exited #{to_s}", "state"
       end
 
