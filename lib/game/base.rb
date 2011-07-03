@@ -27,7 +27,7 @@ class Game
     @rooms = Room.find :all
 
     @login_room = @rooms.each do |room|
-      break room if room.name == "A Bloody Combat Pit"
+      break room if room.name == "An Alpine Canopy Dwelling"
     end
     raise "expected login_room to be a Room" unless @login_room.kind_of? Room
     @respawn_room = @rooms.each do |room|
@@ -45,9 +45,9 @@ class Game
 
     @secret_cmds = AbbrevMap.new
     @secret_cmds.add "east", ->(game,mob,rest,match) do
-      raise AbandonCallback.new if mob.room.name != "A Bloody Combat Pit" or game.combat.engaged? mob
+      raise AbandonCallback.new if mob.room.name != "An Alpine Canopy Dwelling" or game.combat.engaged? mob
       
-      if (Random.new.rand(1..4) > 1) then
+      if (Random.new.rand(1..3) > 1) then
         pov_scope {
           pov(mob) { "You fail to focus your concentration and the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal remains {!{FRclosed{@.\n" }
           pov(mob.room.mobs) { "#{mob.short_name} takes a run at it, but the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal remains {!{FRclosed{@.\n" }

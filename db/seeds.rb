@@ -1,65 +1,90 @@
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the rake db:seed (or created alongside the db with db:setup).
-#
-# Examples:
-#
-#   cities = City.create([{ :name => 'Chicago' }, { :name => 'Copenhagen' }])
-#   Mayor.create(:name => 'Daley', :city => cities.first)
+require "mud"
 
-pit = Room.create({ :name => 'A Bloody Combat Pit', :description => 'The stone walls of the pit exhibit extensive damage from many glorious battles that have taken place here. Chunks of stone and mortar from the walls are missing or scorched from misguided weapon blows and dodged spells. A rolling fog of blue mist envelopes the loose dirt floor.' })
-
-wild = Room.create({ :name => 'A Dense, Forested Wilderness', :description => 'You are in the forest. Surrounding you are the trunks of deciduous trees; high above you their broad leaves filter the sunlight to a trickle by day, and allow only brief glimpses of the moon at night. A cacophony of birdsong and chittering insects fills the air, forming a strangely haunting melody. The smell of vegetation in various stages of decomposition is a pungent reminder of your own mortality. Dry twigs and leaves snap beneath your feet as you walk, and legends of forest demons and spirits fill your thoughts.' })
-
-respawn = Room.create({ :name => 'Within Illuminated Mists', :description => "If you're here, you died!" })
-
-t1 = Room.create({ :name => 'A Darkened Entrance' })
-t2 = Room.create({ :name => 'In a Windy Tunnel' })
-t3 = Room.create({ :name => 'In a Windy Tunnel' })
-t4 = Room.create({ :name => 'A Tight Spot in the Tunnel' })
-t5 = Room.create({ :name => 'In a Windy Tunnel' })
-t6 = Room.create({ :name => 'In a Windy Tunnel' })
-t7 = Room.create({ :name => 'At a Sheer Precipice' })
-t8 = Room.create({ :name => 'Entrace to a Subterranean Forest' })
+def room( name, desc="" )
+  Room.create({name:name, description:desc})
+end
 
 def exit( from, to, dir )
   Exit.create_exit from, to, dir
 end
 
-exit respawn, pit, Exit::SOUTH
-exit respawn, pit, Exit::WEST
-exit respawn, pit, Exit::EAST
-exit respawn, pit, Exit::NORTH
-exit respawn, pit, Exit::UP
-exit respawn, pit, Exit::DOWN
+def bi_exit( from, to, dir )
+  exit from, to, dir
+  exit to, from, Exit.reverse(dir)
+end
 
-exit pit, wild, Exit::WEST
-exit wild, pit, Exit::EAST
+def safe( room )
+  room.safe = true
+  raise "save failed" unless room.save
+end
 
-exit wild, t1, Exit::DOWN
-exit t1, wild, Exit::UP
+############################################
+# Login area
 
-exit t1, t2, Exit::EAST
-exit t2, t1, Exit::WEST
+treehouse = room "An Alpine Canopy Dwelling", ""
+safe treehouse
 
-exit t1, t4, Exit::SOUTH
-exit t4, t1, Exit::NORTH
+l1 = room "Within a Grove of Massive Redwoods", ""
+safe l1
 
-exit t4, t3, Exit::EAST
-exit t3, t4, Exit::WEST
+l2 = room "A Clearing Before the Mountain", ""
+safe l2
 
-exit t2, t3, Exit::SOUTH
-exit t3, t2, Exit::NORTH
+l3 = room "The Edge of an Ancient Glacier", ""
+safe l3
 
-exit t3, t5, Exit::EAST
-exit t5, t3, Exit::WEST
+l4 = room "Within a Grove of Massive Redwoods", ""
+safe l4
 
-exit t5, t6, Exit::EAST
-exit t6, t5, Exit::WEST
+l5 = room "A Forgotten Shrine", ""
+safe l5
 
-exit t6, t7, Exit::EAST
-exit t7, t6, Exit::WEST
+bi_exit treehouse, l1, Exit::DOWN
+bi_exit l1, l2, Exit::EAST
+bi_exit l2, l3, Exit::SOUTH
+bi_exit l3, l4, Exit::WEST
+bi_exit l1, l4, Exit::SOUTH
+bi_exit l4, l5, Exit::SOUTH
 
-exit t7, t8, Exit::DOWN
-exit t8, t7, Exit::UP
+############################################
+# Dueling area
 
-exit t8, pit, Exit::DOWN
+staging = room "Entrance to the Arena"
+safe staging
+bi_exit staging, l3, Exit::UP
+
+pit_nw = Room.create({ :name => 'A Bloody Combat Pit', :description => 'The stone walls of the pit exhibit extensive damage from many glorious battles that have taken place here. Chunks of stone and mortar from the walls are missing or scorched from misguided weapon blows and dodged spells. A rolling fog of blue mist envelopes the loose dirt floor.' })
+
+pit_se = Room.create({ :name => 'A Bloody Combat Pit', :description => 'The stone walls of the pit exhibit extensive damage from many glorious battles that have taken place here. Chunks of stone and mortar from the walls are missing or scorched from misguided weapon blows and dodged spells. A rolling fog of blue mist envelopes the loose dirt floor.' })
+
+pit_ne = Room.create({ :name => 'A Bloody Combat Pit', :description => 'The stone walls of the pit exhibit extensive damage from many glorious battles that have taken place here. Chunks of stone and mortar from the walls are missing or scorched from misguided weapon blows and dodged spells. A rolling fog of blue mist envelopes the loose dirt floor.' })
+
+pit_sw = Room.create({ :name => 'A Bloody Combat Pit', :description => 'The stone walls of the pit exhibit extensive damage from many glorious battles that have taken place here. Chunks of stone and mortar from the walls are missing or scorched from misguided weapon blows and dodged spells. A rolling fog of blue mist envelopes the loose dirt floor.' })
+
+bi_exit pit_sw, pit_nw, Exit::NORTH
+bi_exit pit_nw, pit_ne, Exit::EAST
+bi_exit pit_ne, pit_se, Exit::SOUTH
+bi_exit pit_se, pit_sw, Exit::WEST
+bi_exit pit_sw, staging, Exit::UP
+
+# wild = Room.create({ :name => 'A Dense, Forested Wilderness', :description => 'You are in the forest. Surrounding you are the trunks of deciduous trees; high above you their broad leaves filter the sunlight to a trickle by day, and allow only brief glimpses of the moon at night. A cacophony of birdsong and chittering insects fills the air, forming a strangely haunting melody. The smell of vegetation in various stages of decomposition is a pungent reminder of your own mortality. Dry twigs and leaves snap beneath your feet as you walk, and legends of forest demons and spirits fill your thoughts.' })
+
+############################################
+# Respawn area
+
+respawn = Room.create({ :name => 'Within Illuminated Mists', :description => "If you're here, you died!" })
+safe respawn
+
+exit respawn, l5, Exit::SOUTH
+exit respawn, l5, Exit::WEST
+exit respawn, l5, Exit::EAST
+exit respawn, l5, Exit::NORTH
+exit respawn, l5, Exit::UP
+exit respawn, l5, Exit::DOWN
+
+############################################
+# FFA area
+
+
+t8 = Room.create({ :name => 'Entrance to a Subterranean Forest' })
+bi_exit l2, t8, Exit::EAST
