@@ -31,13 +31,13 @@ module Abilities
             cap[0] -= event.damage
             Log::debug "shield has #{cap[0]} remaining after absorbing #{event.damage}", "shield"
             event.damage = 0
-            shield_hit game, defender
+            event.after_success { shield_hit game, defender }
             next
           end
           event.damage -= cap[0]
           cap[0] = 0
           Log::debug "damage reduced to #{event.damage} after breaking shield", "shield"
-          shield_broken game, defender
+          event.after_success { shield_broken game, defender }
           disconnector.call
         end # event.before
       end # defender.bind :damage
