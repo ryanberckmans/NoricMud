@@ -8,6 +8,7 @@ module Combat
   COMBAT_COMMANDS_HANDLER_PRIORITY = 50
 
   DAMAGE_TIER = {
+    does_not_affect:-1,
     barely_touch:0,
     scratch:2,
     bruise:3,
@@ -31,7 +32,7 @@ module Combat
   }
 
   DAMAGE_COLOR_TIER = {
-    DAMAGE_TIER[:barely_touch] => "{!{FW",
+    DAMAGE_TIER[:does_not_affect] => "{!{FW",
     DAMAGE_TIER[:draw_blood]  => "{!{FC",
     DAMAGE_TIER[:maim] => "{!{FM",
     DAMAGE_TIER[:annihilate] => "{!{FR"
@@ -46,6 +47,7 @@ module Combat
   }
   
   DAMAGE_TEXT = {
+    does_not_affect:"doesn't harm",
     barely_touch:"barely touches",
     scratch:"scratches",
     bruise:"bruises",
