@@ -342,13 +342,15 @@ module Combat
     damage( game, mob, dies, dies.hp )
   end
 
-  def self.restore( mob )
+  def self.restore( game, mob )
     pov_scope do
       pov(mob) { "{!{FCYou shriek in pain as all of your wounds are suddenly healed.\n" }
       pov(mob.room.mobs) { "{!{FY#{mob.short_name} shrieks in pain as all of his wounds are suddenly healed.\n" }
     end
     mob.hp = mob.hp_max
     mob.energy = mob.energy_max
+    game.restore_cooldowns mob
+    game.restore_breath mob
   end
 
   def self.death( game, mob )

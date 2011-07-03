@@ -41,7 +41,7 @@ module PhysicalState
           pov(mob) { "{@You wake up with a splitting headache.\n" }
           pov(mob.room.mobs) { "{@Whoooooosh! {!{FY#{mob.short_name}{@ materializes.\n" }
         end
-        Combat::restore mob
+        Combat::restore game, mob
         CoreCommands::look game, mob
         game.mob_commands.remove_cmd_handler mob, @@commands
       end

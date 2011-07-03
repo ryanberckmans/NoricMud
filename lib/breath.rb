@@ -34,6 +34,9 @@ class Breath
       Log::debug "regen br", "breath"
       @regen_timer = BR_REGEN_INTERVAL
       @breath.each_key do |mob|
+        if mob.dead?
+          next
+        end
         @breath[mob] += BR_REGEN
         @breath[mob] = BR_MAX if @breath[mob] > BR_MAX
         low_breath mob if @breath[mob] < LOW_BR
@@ -79,6 +82,13 @@ class Breath
     quartile_color(quartile) + br.to_s
   end
 
+  def delete(mob)
+    Log::debug "deleting #{mob.short_name}", "breath"
+    @last_breath.delete mob
+    @breath.delete mob
+    nil
+  end
+
   private
   def fail_move_with_collapse( mob )
     pov_scope do
@@ -112,6 +122,7 @@ class Breath
   
   def default_breath( mob )
     raise unless mob.kind_of? Mob
+    mob.breath_dead_handler = mob.bind(:dead) { @breath[mob] = 0 }
     @last_breath[mob] ||= @time
     @breath[mob] ||= BR_MAX
   end

@@ -40,8 +40,8 @@ class PitDuel
     PhysicalState::transition @game, @mob_y, PhysicalState::Standing if @mob_y.dead?
     @started = true
     teleport_combatants
-    Combat::restore @mob_x
-    Combat::restore @mob_y
+    Combat::restore @game, @mob_x
+    Combat::restore @game, @mob_y
     @mob_x_dead_event_disconnect = @mob_x.bind(:dead) { loss @mob_x }
     @mob_y_dead_event_disconnect = @mob_y.bind(:dead) { loss @mob_y }
   end

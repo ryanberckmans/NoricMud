@@ -198,6 +198,14 @@ class Game
     @cooldown.cooldowns mob
   end
 
+  def restore_cooldowns(mob)
+    @cooldown.delete mob
+  end
+
+  def restore_breath(mob)
+    @breath.delete mob
+  end
+
   def cancel_channel( mob )
     @channel.cancel_channel mob
   end
