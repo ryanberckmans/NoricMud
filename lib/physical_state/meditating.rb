@@ -21,6 +21,14 @@ module PhysicalState
                 pov(mob) { "{!{FRYou take {@{FR*massively*{! increased damage while meditating!\n" }
                 pov(mob.room.mobs) { "{!{FR#{mob.short_name} takes {@{FR*massively*{! increased damage while meditating!\n"}
               end
+            end
+            if e.damage > -1 and game.combat.engaged? mob
+              pov_scope do
+                pov(mob) { "{@You jump to your feet as you're attacked!\n" }
+                pov(mob.room.mobs) { "{@#{mob.short_name} jumps to his feet as he's attacked!\n" }
+              end
+              PhysicalState::transition game, mob, Standing
+            elsif e.damage > 0
               pov_scope do
                 pov(mob) { "{@You cease meditating as your concentration fails.\n" }
               end
