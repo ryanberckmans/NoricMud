@@ -30,6 +30,7 @@ class Room < ActiveRecord::Base
     self.mobs = []
     self.exit = {}
     self.exits.each { |xit| self.exit[xit.direction] = xit }
+    self.description = Util::justify self.description if self.description
     self.bind(:hostile) { |e|
       if self.safe
         e.fail

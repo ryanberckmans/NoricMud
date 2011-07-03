@@ -1,26 +1,39 @@
+require 'strscan'
+
 module Util
-  def self.md5( o )
-    Digest::MD5.hexdigest(o)
-  end
-
-  def self.here( string )
-    File.expand_path(File.join(File.dirname(caller[0].split(":")[0]), string))
-  end
-
-  def self.strip_newlines( string )
-    string.gsub /\r?\n/, ", "
-  end
-
-  def self.resumption_exception(*args)
-    # from internet
-    raise *args
-  rescue Exception => e
-    callcc do |cc|
-      scls = class << e; self; end
-      scls.send(:define_method, :resume, lambda { cc.call })
-      raise
+  class << self
+    def md5( o )
+      Digest::MD5.hexdigest(o)
     end
-  end
+
+    def here( string )
+      File.expand_path(File.join(File.dirname(caller[0].split(":")[0]), string))
+    end
+
+    LINE_WRAP = 79
+    def justify( string, line_length=LINE_WRAP )
+      return string if string.length < line_length
+      string.gsub! "\n", " "
+      s = StringScanner.new string
+      s.scan /.{1,#{line_length}}\s/
+      return s.matched + "\n" + justify(s.rest, line_length)
+    end
+
+    def strip_newlines( string )
+      string.gsub /\r?\n/, ", "
+    end
+
+    def resumption_exception(*args)
+      # from internet
+      raise *args
+    rescue Exception => e
+      callcc do |cc|
+        scls = class << e; self; end
+        scls.send(:define_method, :resume, lambda { cc.call })
+        raise
+      end
+    end
+  end # class << self
 
   module InFiber
     def self.wait_for_next_command( next_command_function )
@@ -63,6 +76,5 @@ module Util
         menu_options[selection]
       end #  self.activate
     end # module ValueMenu
-
-  end
+  end # module Infiber
 end
