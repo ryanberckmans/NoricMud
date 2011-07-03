@@ -205,7 +205,7 @@ module Combat
     event.damager = damager
     event.damage = amount
     event.type :damage
-    if event.damage > 0
+    if event.damage > -1
       event.type :hostile
       event.attacker = damager
       event.defender = receiver
