@@ -42,13 +42,12 @@ module CoreCommands
   add_cmd "glance", ->game,mob,rest,match { Combat.glance game, mob, rest }
   add_cmd "kill", ->game,mob,rest,match { Combat.kill game, mob, rest }
   add_cmd "cast", ->game,mob,rest,match { Abilities::cast game, mob, rest }
-  add_cmd "slay random", ->game,mob,rest,match { Combat.green_beam game, mob }
-  add_cmd "kill random", ->game,mob,rest,match { Combat.kill game, mob, mob.room.mobs.sample.short_name }
+  add_cmd "killrandom", ->game,mob,rest,match { Combat.kill game, mob, mob.room.mobs.sample.short_name }
   add_cmd "who", ->game,mob,rest,match { who game, mob }
   add_cmd "help", ->game,mob,rest,match { help game, mob }
   add_cmd "commands", ->game,mob,rest,match { help game, mob }
   add_cmd "?", ->game,mob,rest,match { help game, mob }
-  add_cmd "goto", ->game,mob,rest,match { goto game, mob, rest }
+#  add_cmd "goto", ->game,mob,rest,match { goto game, mob, rest }
   add_cmd "room create", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_create game, mob, rest }
   add_cmd "room toggle id", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_toggle_show_id game, mob }
   add_cmd "room name", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_name game, mob, rest }
@@ -61,7 +60,6 @@ module CoreCommands
   add_cmd "room quit", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_quit game, mob }
   add_cmd "where", ->game,mob,rest,match { where game, mob }
   add_cmd "weapon", ->game,mob,rest,match { game.combat.weapon.weapon_cycle mob }
-  add_cmd "god", ->game,mob,rest,match { mob.god = true }
   add_cmd "cooldowns", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
   add_cmd "cds", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
   add_cmd "meditate", ->game,mob,rest,match {

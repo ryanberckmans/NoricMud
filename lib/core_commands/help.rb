@@ -19,13 +19,10 @@ module CoreCommands
     commands << "flee"
     commands << "glance"
     commands << "kill"
-    commands << "slay random"
-    commands << "kill random"
     commands << "who"
     commands << "help"
     commands << "?"
     commands << "commands"
-    commands << "goto"
     commands << "room create"
     commands << "room default name"
     commands << "room toggle id"
@@ -52,7 +49,6 @@ module CoreCommands
     commands << "meditate"
     commands << "cds - alias for cooldowns"
     commands << "cooldowns"
-    commands << "pit duel"
     commands << "-- , sending -- causes all previously sent commands to be cancelled"
 
     commands.sort.each do |cmd| help += "#{cmd}\n" end
