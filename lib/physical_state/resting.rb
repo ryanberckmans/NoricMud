@@ -65,6 +65,7 @@ module PhysicalState
     add_disabled_cmd "up"
     add_disabled_cmd "down"
     add_disabled_cmd "kill"
+    add_disabled_cmd "killrandom"
     add_disabled_cmd "flee"
     add_disabled_cmd "cast"
 
