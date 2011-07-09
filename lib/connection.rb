@@ -69,7 +69,7 @@ class Connection
       disconnect
     else
       Log::debug "connection #{id} recieved new data (#{Util.strip_newlines data}), already has raw (#{Util.strip_newlines @raw})", "connections"
-      data.gsub! /_hack_newline/, ""
+      data.gsub! "_hack_newline", ""
       @raw += data
     end
   end
