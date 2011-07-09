@@ -21,5 +21,10 @@ namespace :mud do
   end
 
   desc "stop then start"
-  task bounce:[:stop, :start]
+  task restart:[:stop, :start]
+
+  desc "show log"
+  task :log do
+    exec "ssh mud@noric.org 'cd mud/log ; tail -f development.log'"
+  end
 end
