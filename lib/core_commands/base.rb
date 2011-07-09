@@ -47,7 +47,7 @@ module CoreCommands
   add_cmd "help", ->game,mob,rest,match { help game, mob, rest }
   add_cmd "commands", ->game,mob,rest,match { help game, mob, rest }
   add_cmd "?", ->game,mob,rest,match { help game, mob, rest }
-#  add_cmd "goto", ->game,mob,rest,match { goto game, mob, rest }
+  #  add_cmd "goto", ->game,mob,rest,match { goto game, mob, rest }
   add_cmd "room create", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_create game, mob, rest }
   add_cmd "room toggle id", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_toggle_show_id game, mob }
   add_cmd "room name", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_name game, mob, rest }
@@ -63,10 +63,12 @@ module CoreCommands
   add_cmd "cooldowns", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
   add_cmd "cds", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
   add_cmd "meditate", ->game,mob,rest,match {
-    if mob.state == PhysicalState::Resting
-      PhysicalState.transition game, mob, PhysicalState::Meditating
-    else
+    if mob.state != PhysicalState::Resting
       game.send_msg mob, "{@You must be resting to meditate.\n"
+    elsif mob.room.mobs.size > 1
+      game.send_msg mob, "{@Too many people around to meditate.\n"
+    else
+      PhysicalState.transition game, mob, PhysicalState::Meditating
     end
   }
 end
