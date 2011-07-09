@@ -44,9 +44,9 @@ module CoreCommands
   add_cmd "cast", ->game,mob,rest,match { Abilities::cast game, mob, rest }
   add_cmd "killrandom", ->game,mob,rest,match { Combat.kill game, mob, mob.room.mobs.sample.short_name }
   add_cmd "who", ->game,mob,rest,match { who game, mob }
-  add_cmd "help", ->game,mob,rest,match { help game, mob }
-  add_cmd "commands", ->game,mob,rest,match { help game, mob }
-  add_cmd "?", ->game,mob,rest,match { help game, mob }
+  add_cmd "help", ->game,mob,rest,match { help game, mob, rest }
+  add_cmd "commands", ->game,mob,rest,match { help game, mob, rest }
+  add_cmd "?", ->game,mob,rest,match { help game, mob, rest }
 #  add_cmd "goto", ->game,mob,rest,match { goto game, mob, rest }
   add_cmd "room create", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_create game, mob, rest }
   add_cmd "room toggle id", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_toggle_show_id game, mob }
