@@ -2,8 +2,6 @@ require 'strscan'
 
 class AbbrevMap
   def initialize( epsilon_value = nil, catchall_value = nil )
-    raise "expected epsilon_value to be a Proc or nil" if epsilon_value and not epsilon_value.kind_of? Proc
-    raise "expected catchall_value to be a Proc or nil" if catchall_value and not catchall_value.kind_of? Proc
     @epsilon_value = epsilon_value
     @catchall_value = catchall_value
     @root = TrieNode.new

@@ -95,23 +95,6 @@ end
 #### new examples
 
 describe AbbrevMap do
-
-  it "requires that non-nil epsilon_callback be a Proc" do
-    proc = double("Proc")
-    proc.should_receive(:kind_of?).with(Proc).and_return true
-    expect { AbbrevMap.new 5 }.to raise_error
-    expect { AbbrevMap.new nil }.to_not raise_error
-    expect { AbbrevMap.new proc }.to_not raise_error
-  end
-  
-  it "requires that non-nil epsilon_callback be a Proc" do
-    proc = double("Proc")
-    proc.should_receive(:kind_of?).with(Proc).and_return true
-    expect { AbbrevMap.new nil, 5 }.to raise_error
-    expect { AbbrevMap.new nil, nil }.to_not raise_error
-    expect { AbbrevMap.new nil, proc }.to_not raise_error
-  end
-
   context "an instance with an epsilon callback" do
     before :each do
       @epsilon = ->{}
