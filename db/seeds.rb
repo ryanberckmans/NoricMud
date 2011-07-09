@@ -1,5 +1,15 @@
 require "mud"
 
+acc = Account.create({name:"spiritic", password:"pw"})
+noric = Character.new({name:"Noric"})
+noric.account = acc
+noric.mob = Mob.new({:short_name => noric.name, :long_name => "{FGLegionnaire {FY#{noric.name}{FG the legendary hero"})
+noric.save
+spiritic = Character.new({name:"Spiritic"})
+spiritic.account = acc
+spiritic.mob = Mob.new({:short_name => spiritic.name, :long_name => "{FGLegionnaire {FY#{spiritic.name}{FG the legendary hero"})
+spiritic.save
+
 def room( name, desc="" )
   Room.create({name:name, description:desc})
 end
@@ -18,13 +28,20 @@ def safe( room )
   raise "save failed" unless room.save
 end
 
+def quit( room )
+  room.quit = true
+  raise "save failed" unless room.save
+end
+
+
 ############################################
 # Login area
 
-treehouse = room "An Alpine Canopy Dwelling", ""
+treehouse = room "An Alpine Canopy Dwelling", "Several hundred feet above the ground, silk hammocks dot the massive redwoods where the ancient trunks give way to a lazy canopy. A rope ladder, swaying in the high-altitude winds, winds its way down to the distant floor. The dwelling is framed by snow-capped peaks dominating the horizon in all directions."
 safe treehouse
+quit treehouse
 
-l1 = room "Within a Grove of Massive Redwoods", ""
+l1 = room "Within a Grove of Massive Redwoods", "Dozens of ancient, commanding, redwood trees have starved the forest floor of other vegetation. The resulting grove, empty save the towering boles, possess conflicting attributes of emptiness and incubation. A rope ladder, anchored to a redwood, sways upward into the distant, hazy, canopy."
 safe l1
 
 l2 = room "A Clearing Before the Mountain", ""
@@ -74,6 +91,7 @@ bi_exit pit_sw, staging, Exit::UP
 
 respawn = Room.create({ :name => 'Within Illuminated Mists', :description => "If you're here, you died!" })
 safe respawn
+quit respawn
 
 exit respawn, l5, Exit::SOUTH
 exit respawn, l5, Exit::WEST
