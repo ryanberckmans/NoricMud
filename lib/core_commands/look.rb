@@ -11,7 +11,11 @@ module CoreCommands
       next if mob_in_room == mob
       state = mob_in_room.state.to_s.downcase
       state += " " unless state.empty?
-      look += "{!{FG#{mob_in_room.long_name} is #{state}here"
+      if mob_in_room.dead?
+        look += "{!{FG#{mob_in_room.long_name} is lying here, dead"
+      else
+        look += "{!{FG#{mob_in_room.long_name} is #{state}here"
+      end
       if game.combat.engaged? mob_in_room
         look += ", fighting "
         target = game.combat.target_of mob_in_room
