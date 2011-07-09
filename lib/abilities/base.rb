@@ -10,15 +10,15 @@ module Abilities
     @abilities.add cmd, callback
   end
 
-  def self.attempt_energy_use( game, mob, energy )
+  def self.attempt_energy_use( game, mob, energy, ability_name )
     if mob.energy < energy
       game.send_msg mob, "{@You can't summon enough energy.\n"
       false
     else
       mob.energy -= energy
       pov_scope do
-        pov(mob) { "{!{FWYou invoke the magic and are drained of #{energy} energy.\n" }
-        pov(mob.room.mobs) { "{!{FW#{mob.short_name} invokes magic and is drained of energy.\n" }
+        pov(mob) { "{!{FWYou invoke #{ability_name} and are drained of #{energy} energy.\n" }
+        pov(mob.room.mobs) { "{!{FW#{mob.short_name} invokes #{ability_name} and is drained of energy.\n" }
       end
       true
     end
@@ -81,7 +81,7 @@ module Abilities
 
     energy_cost = (energy_cost * 0.5).to_i unless target_mob # half mana for missed target
 
-    return nil unless attempt_energy_use game, attacker, energy_cost
+    return nil unless attempt_energy_use game, attacker, energy_cost, ability_name
 
     if target_mob
       e = Seh::Event.new(game) { |e|
