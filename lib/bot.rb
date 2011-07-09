@@ -69,7 +69,6 @@ $cmds << "stand"
 $cmds << "meditate"
 $cmds << "cooldowns"
 def random_command
-  return "quit" if Random.new.rand(1..10000) > 9999
   $cmds.sample
 end
 
