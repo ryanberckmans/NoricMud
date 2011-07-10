@@ -1,6 +1,6 @@
 module PhysicalState
   class Dead
-    DEAD_TIME = 12 # seconds
+    DEAD_TIME = 5 # seconds
     CMDS_PRIORITY = 100
 
     @@commands = AbbrevMap.new nil, ->(game, mob, rest, match) { game.send_msg mob, "{@Lie still; you are dead.\n" }
