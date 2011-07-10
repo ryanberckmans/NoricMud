@@ -1,7 +1,8 @@
 require "color.rb"
 
 class Connection
-  MAX_RECV = 1024
+  RECV_MAX = 512
+  RAW_MAX = 1024
   
   def initialize( socket )
     raise "socket wasn't a TCPSocket" unless socket.kind_of? TCPSocket
@@ -61,7 +62,7 @@ class Connection
   
   private
   def receive_data
-    data = @socket.recv_nonblock MAX_RECV rescue nil
+    data = @socket.recv_nonblock RECV_MAX rescue nil
     return unless data
     if data.length < 1
       Log::info "connection #{id} received eof", "connections"
@@ -70,7 +71,7 @@ class Connection
     else
       Log::debug "connection #{id} recieved new data (#{Util.strip_newlines data}), already has raw (#{Util.strip_newlines @raw})", "connections"
       data.gsub! "_hack_newline", ""
-      @raw += data
+      @raw += data unless @raw.length + data.length > RAW_MAX
     end
   end
 end
