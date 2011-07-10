@@ -267,6 +267,7 @@ class Game
     CoreCommands::poof self, char.mob, @login_room
     PhysicalState::transition( self, char.mob, PhysicalState::Standing )
     Seh::Event.new(char) { |e| e.type :login; e.dispatch }
+    send_msg char, "\n{!{FY** Hi {FG:-){FY, try typing {FChelp {FY**\n"
   end
 
   def character_reconnected( char )

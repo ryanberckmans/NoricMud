@@ -65,10 +65,6 @@ eos
   cast burst {FG->{FC cast burst [your combat target]
 {@don't get caught meditating :-D
 eos
-#      tips += ""
-#      tips += "{!"
-#      tips += "{!\n"
-#      tips += "{!\n"
       tips
     end
     
@@ -80,10 +76,10 @@ eos
 
     def help_options
       commands = []
-      commands << "{!{FChelp, ?  {FG-{@ show basic help"
-      commands << "{!{FC? combat {FG-{@ show combat help"
-      commands << "{!{FC? spells {FG-{@ show spells help"
-      commands << "{!{FC? tips   {FG-{@ show combat help"
+      commands << "{!{FChelp, ?     {FG-{@ show basic help"
+      commands << "{!{FChelp combat {FG-{@ show combat help"
+      commands << "{!{FChelp spells {FG-{@ show spells help"
+      commands << "{!{FChelp tips   {FG-{@ show l33t tips"
       "{!{FYMore Help:\n" + format(commands)
     end
     
