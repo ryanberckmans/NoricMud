@@ -1,6 +1,8 @@
 
 require 'socket'
 
+BOT_CMD_RATE = 0.33 # seconds
+DEFAULT_BOTS = 5
 SERVER = "localhost"
 PORT = 4000
 
@@ -87,7 +89,7 @@ def async_char( bot_num )
       while true
         data = s.recv_nonblock(1024) rescue nil
         #puts data if data
-        sleep 0.25
+        sleep BOT_CMD_RATE
         if i > 2
           cmd = random_command
           #puts cmd
@@ -110,7 +112,7 @@ end
 threads = []
 $bots = 0
 num = ARGV[0].to_i
-num = 5 if num < 1
+num = DEFAULT_BOTS if num < 1
 num.times { |i| threads << async_char(i) }
 old_bots = nil
 while true
