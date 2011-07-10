@@ -13,7 +13,7 @@ namespace :mud do
   desc "start"
   task :start do
     system "ssh -f mud@noric.org 'source ~/.bash_profile; cd mud/bin; export RAILS_ENV=development; ./mud'"
-    system "ssh -f mud@noric.org 'cd mud-client/wm_server ; php5 server.php > /dev/null 2>&1'"
+    system "ssh -f mud@noric.org 'cd mud-client/wm_server ; env HOST=`resolveip -s noric.org` php5 server.php > /dev/null 2>&1'"
   end
 
   desc "stop"
@@ -32,7 +32,6 @@ namespace :mud do
 
   desc "spawn bots"
   task :bot, :bots do |t, args|
-    args.bot(:bots => 5)
     system "ssh -f mud@noric.org 'source ~/.bash_profile ; cd mud/lib ; ruby bot.rb #{args[:bots]}'"
   end
 end

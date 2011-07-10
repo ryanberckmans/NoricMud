@@ -109,7 +109,9 @@ end
 
 threads = []
 $bots = 0
-ARGV[0].to_i.times { |i| threads << async_char(i) }
+num = ARGV[0].to_i
+num = 5 if num < 1
+num.times { |i| threads << async_char(i) }
 old_bots = nil
 while true
   puts "#{$bots} total connected" if $bots != old_bots
