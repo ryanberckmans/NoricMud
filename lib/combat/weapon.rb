@@ -164,7 +164,7 @@ module Combat
     def proc( attacker, defender )
       default_weapon attacker
       damage = 0
-      damage = PROC[@weapons[attacker]].(@game, attacker, defender) if Random.new.rand(1..10) > 8
+      damage = PROC[@weapons[attacker]].(@game, attacker, defender) if Random.new.rand(1..20) > 19
       damage
     end
 
