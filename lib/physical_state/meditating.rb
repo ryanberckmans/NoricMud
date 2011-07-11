@@ -10,8 +10,8 @@ module PhysicalState
       def damage_handler( game, mob )
         mob.meditating_damage_handler ||= mob.bind(:damage) do |e|
           e.before_success do
-            next unless mob.state == Meditating
-            e.damage = (e.damage * 3).to_i if e.damage > 0
+            next unless mob.state == Meditating && e.damage > 0
+            e.damage = (e.damage * 3).to_i
             Log::debug "amplified damage to #{e.damage} (target #{mob.short_name}, damager #{e.damager ? e.damager : ""}", "meditate"
           end
           e.after_success do
