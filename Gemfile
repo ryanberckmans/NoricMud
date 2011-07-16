@@ -8,6 +8,8 @@ gem 'seh'
 
 gem 'depq'
 
+gem 'ruby-prof'
+
 group :development, :test do
   gem 'rspec'
 end
