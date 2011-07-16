@@ -71,4 +71,3 @@ def start_mud
     Util::log_exception Logger::FATAL, e, "mud"
   end
 end
-
