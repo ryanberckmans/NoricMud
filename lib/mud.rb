@@ -21,11 +21,13 @@ require "util.rb"
 require "log.rb"
 require "physical_state/base.rb"
 
-Log::get ENV['RAILS_ENV'], { :default => true, :level => Logger::DEBUG }
-Log::info "============================== booting ==============================", "mud"
-
+LOG_LEVEL = Logger::DEBUG
 TICK_DURATION = 0.25 # in seconds
 
+Log::get ENV['RAILS_ENV'], { :default => true, :level => LOG_LEVEL }
+Log::info "============================== booting ==============================", "mud"
+
+Log::fatal LOG_LEVEL, "log level"
 Log::info RUBY_VERSION, "ruby version"
 Log::info "#{TICK_DURATION.to_s}s", "tick duration"
 
