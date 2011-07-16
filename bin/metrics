@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+LOG = `cat ../log/#{ENV['RAILS_ENV']}.log | grep "metrics" | cut -f7 | cut -d"," -f1,3,5`
+
+abort unless LOG.size > 0
+
+class TickMetric
+  attr :tick, :duration, :capacity
+
+  def initialize(tick,duration,capacity)
+    @tick = tick
+    @duration = duration # in seconds
+    @capacity = capacity # % of allotted tick time used
+  end
+
+  def to_s
+    "#{tick},#{duration},#{capacity}"
+  end
+end
+
+metrics = []
+LOG.scan /(.*?),(.*?),(.*?)$/ do |tick,duration,capacity|
+  metrics << TickMetric.new(tick.to_i, duration.to_f, capacity.to_f)
+end
+METRICS = metrics
+
+def average_capacity
+  (METRICS.inject(0) { |t,m| t + m.capacity }) / METRICS.size
+end
+
+def max_capacity
+  (METRICS.map { |m| m.capacity }).max
+end
+
+def percent_over_capacity
+  100.0 * (METRICS.map.to_a.keep_if { |m| m.capacity > 99.9 }).size / METRICS.size
+end
+
+# average capacity of ticks over capacity
+def average_over_capacity
+  over_cap = METRICS.map.to_a.keep_if { |m| m.capacity > 99.9 }
+  (over_cap.inject(0) { |t,m| t + m.capacity }) / over_cap.size
+end
+
+def median_over_capacity
+  over_cap = METRICS.map.to_a.keep_if { |m| m.capacity > 99.9 }
+  s = (over_cap.map { |m| m.capacity }).sort
+  median = (s[s.size/2] + s[(s.size+1)/2]) / 2
+end
+
+info = {
+  average_capacity:average_capacity,
+  percent_over_capacity:percent_over_capacity,
+  average_over_capacity:average_over_capacity,
+  median_over_capacity:median_over_capacity,
+  max_capacity:max_capacity,
+}
+
+info.each_pair do |s,i|
+  puts "#{s.to_s}:\t#{i}"
+end
