@@ -63,9 +63,7 @@ def start_mud
       sleep time_remaining
     end
   rescue Exception => e
-    Log::fatal "uncaught exception #{e.class}", "mud"
-    Log::fatal e.backtrace.join "\t"
-    Log::fatal e.message if e.message.length > 0 
+    Util::log_exception Logger::FATAL, e, "mud"
   end
 end
 

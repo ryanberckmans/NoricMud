@@ -66,7 +66,11 @@ class Cooldown
           @cooldown[mob][ability] -= 1
           if @cooldown[mob][ability] < 1
             Log::debug "mob #{mob.short_name} finished cooling down ability #{ability.to_s}", "cooldown"
-            @actions[mob][ability].call if @actions[mob][ability]
+            begin
+              @actions[mob][ability].call if @actions[mob][ability]
+            rescue Exception => e
+              Util::log_exception Logger::ERROR, e, "cooldown"
+            end
             @actions[mob].delete ability
             @cooldown[mob].delete ability
           else

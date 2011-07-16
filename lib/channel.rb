@@ -52,7 +52,11 @@ class Channel
             pov(mob.room.mobs) { "{!{FC#{mob.short_name} finishes channeling!\n"} if @game.combat.engaged? mob
           end
           PhysicalState::transition @game, mob, PhysicalState::Standing
-          @ability[mob].call
+          begin
+            @ability[mob].call
+          rescue Exception => e
+            Util::log_exception Logger::ERROR, e, "channel"
+          end
           @ability.delete mob
         elsif @channel[mob] % 8 == 0
           pov_scope do
@@ -61,6 +65,7 @@ class Channel
           end
         end
       end # if channel[mob] > 0
+
     end # @channel.each_key
     Log::debug "end tick", "channel"
   end

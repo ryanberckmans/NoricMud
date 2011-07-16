@@ -42,12 +42,18 @@ class Timer
           timer.periods = 1
           Log::debug "timer called Timer::stop, #{timer.to_s}", "timer"
           e.resume
+        rescue Exception => e
+          Util::log_exception Logger::ERROR, e, "timer"
         end
         Log::debug "done calling timer tick_proc #{timer.to_s}", "timer"
         if timer.periods == 1 # this period is the last period
           if timer.stop
             Log::debug "timer had a stop tick_proc, calling it; #{timer.to_s}", "timer"
-            timer.stop.call
+            begin
+              timer.stop.call
+            rescue Exception => e
+              Util::log_exception Logger::ERROR, e, "timer"
+            end
           end
         else
           Log::debug "scheduling timer repeat", "timer"
