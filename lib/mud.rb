@@ -52,17 +52,20 @@ def start_mud
   Log::info "starting tick loop", "mud"
   
   begin
+    tick_number = 0
     while true
       tick_start = Time.now
-      Log::info "start tick", "mud"
+      Log::info "start tick #{tick_number}", "mud"
       network.tick
       account_system.tick
       character_system.tick
       game.tick
       tick_duration = Time.now - tick_start
       time_remaining = [0,TICK_DURATION - tick_duration].max
-      Log::info "end tick, duration #{"%4.6f" % tick_duration}s, #{"%4.6f" % (tick_duration / TICK_DURATION * 100)}% capacity, sleeping #{"%4.6f" % time_remaining}s", "mud"
+      Log::info "#{tick_number},duration,#{"%4.6f" % tick_duration},capacity%,#{"%4.6f" % (tick_duration / TICK_DURATION * 100)},sleeping,#{"%4.6f" % time_remaining}", "metrics.tick"
+      Log::info "end tick #{tick_number}", "mud"
       sleep time_remaining
+      tick_number += 1
     end
   rescue Exception => e
     Util::log_exception Logger::FATAL, e, "mud"

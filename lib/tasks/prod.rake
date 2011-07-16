@@ -28,7 +28,7 @@ namespace :mud do
 
   desc "git pull"
   task :gitpull do
-    puts `ssh mud@noric.org 'cd mud; git pull origin ; cd ../mud-client ; git pull origin'`
+    puts `ssh mud@noric.org 'source ~/.bash_profile; cd mud; git pull origin ; bundle install --local ; cd ../mud-client ; git pull origin'`
   end
 
   namespace :start do
