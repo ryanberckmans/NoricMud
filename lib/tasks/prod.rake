@@ -2,6 +2,10 @@
 
 namespace :mud do
 
+  task :metrics do
+    puts `ssh mud@noric.org 'source ~/.bash_profile; cd mud/bin; env RAILS_ENV=development ./metrics'`
+  end
+
   namespace :branch do
     namespace :mud do
       def switch( branch="master")
