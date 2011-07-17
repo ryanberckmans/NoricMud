@@ -45,7 +45,7 @@ end
 def median_over_capacity
   over_cap = METRICS.map.to_a.keep_if { |m| m.capacity > 99.9 }
   s = (over_cap.map { |m| m.capacity }).sort
-  median = (s[s.size/2] + s[(s.size+1)/2]) / 2
+  median = (s[s.size/2] + s[(s.size+1)/2]) / 2 rescue 0.0
 end
 
 info = {
