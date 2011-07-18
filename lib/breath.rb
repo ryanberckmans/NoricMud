@@ -34,13 +34,17 @@ class Breath
       Log::debug "regen br", "breath"
       @regen_timer = BR_REGEN_INTERVAL
       @breath.each_key do |mob|
-        if mob.dead?
-          next
+        begin
+          if mob.dead?
+            next
+          end
+          @breath[mob] += BR_REGEN
+          @breath[mob] = BR_MAX if @breath[mob] > BR_MAX
+          low_breath mob if @breath[mob] < LOW_BR
+          Log::debug "#{mob.short_name} had #{@breath[mob]}br", "breath"
+        rescue Exception => e
+          Util::log_exception Logger::ERROR, e, "breath"
         end
-        @breath[mob] += BR_REGEN
-        @breath[mob] = BR_MAX if @breath[mob] > BR_MAX
-        low_breath mob if @breath[mob] < LOW_BR
-        Log::debug "#{mob.short_name} had #{@breath[mob]}br", "breath"
       end
     end
     Log::debug "end tick", "breath"
