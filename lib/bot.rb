@@ -1,7 +1,7 @@
 
 require 'socket'
 
-BOT_CMD_RATE = 0.33 # seconds
+BOT_CMD_RATE = 0.45 # seconds
 DEFAULT_BOTS = 5
 SERVER = "localhost"
 PORT = 4000
