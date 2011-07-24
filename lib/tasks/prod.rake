@@ -73,6 +73,6 @@ namespace :mud do
 
   desc "spawn bots"
   task :bot, :bots do |t, args|
-    system "ssh -f mud@noric.org 'source ~/.bash_profile ; cd mud/lib ; ruby bot.rb #{args[:bots]}'"
+    system "ssh -f mud@noric.org 'source ~/.bash_profile ; cd mud/lib ; sleep 10; ruby bot.rb #{args[:bots]}'"
   end
 end
