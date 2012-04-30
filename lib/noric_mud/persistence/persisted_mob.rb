@@ -5,7 +5,6 @@ module NoricMud
       
       validates_presence_of :short_name, :long_name
 
-
       # populate a transient Mob equivalent of this PersistedMob
       #
       # @param mob - the transient object to populate, defaults to Mob.new
