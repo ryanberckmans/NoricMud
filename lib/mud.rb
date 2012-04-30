@@ -38,6 +38,7 @@ require "character_system.rb"
 require "mob_commands.rb"
 require "timer.rb"
 require "game/base.rb"
+require "noric_mud"
 
 def start_mud
   Signal.trap :INT do # default JRuby behavior is for the JVM to halt on a SIG_INT; do this instead
