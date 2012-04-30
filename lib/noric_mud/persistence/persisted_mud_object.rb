@@ -5,6 +5,7 @@ module NoricMud
         @mutex = mutex
       end
 
+      # save this as the persisted equivalent of mud_object
       def async_save mud_object
         @mutex.synchronize { copy_from_transient mud_object }
         Persistence::async { @mutex.synchronize { self.save } }
