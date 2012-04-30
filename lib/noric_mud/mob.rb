@@ -1,6 +1,6 @@
 module NoricMud
   class Mob < MudObject
-    attr_accessor :room, :char, :hp_max, :hp, :energy_max, :energy, :attack_cooldown, :god, :state
+    attr_accessor :room, :char, :hp_max, :hp, :energy_max, :energy, :attack_cooldown, :god, :state, :short_name, :long_name
 
     CONDITION_DEATH_TEXT = "is dead."
     CONDITION_MAX_HP_TEXT = "is in excellent condition."
