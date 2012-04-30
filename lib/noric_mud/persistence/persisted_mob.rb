@@ -1,15 +1,10 @@
 module NoricMud
   module Persistence
-    class PersistedMob < PersistedMudObject
-      # #initialize inherited
+    class PersistedMob < ActiveRecord::Base
+      include PersistedMudObject
       
       validates_presence_of :short_name, :long_name
 
-      # @overridden
-      def copy_from_transient mob
-        short_name = mob.short_name
-        long_name = mob.long_name
-      end
 
       # populate a transient Mob equivalent of this PersistedMob
       #
@@ -26,6 +21,13 @@ module NoricMud
         mob.god = false
         mob.state = nil
         mob
+      end
+
+      # called by PersistedMudObject#async_save
+      private
+      def copy_from_transient mob
+        self.short_name = mob.short_name
+        self.long_name = mob.long_name
       end
     end
   end

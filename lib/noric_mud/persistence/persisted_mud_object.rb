@@ -2,6 +2,7 @@ module NoricMud
   module Persistence
     module PersistedMudObject
       def initialize mutex=Mutex.new
+        super()
         @mutex = mutex
       end
 

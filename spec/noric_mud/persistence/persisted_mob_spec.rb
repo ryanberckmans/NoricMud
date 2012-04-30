@@ -8,15 +8,12 @@ module NoricMud
         @persisted_mob = PersistedMob.new @mutex
       end
 
-      it "#async_save calls overridden copy_from_transient" do
+      it "copy_from_transient copies mob attributes into persisted_mob" do
         @short_name = "shorty"
         @long_name = "longy longy"
-        @mob = double :short_name => @short_name , :long_name => @long_name
+        @mob = double :short_name => @short_name, :long_name => @long_name
 
-        @mutex.should_receive(:synchronize).once { |&block| block.call }
-        Persistence.stub :async
-
-        @persisted_mob.async_save @mob
+        @persisted_mob.send :copy_from_transient, @mob
         
         @persisted_mob.short_name.should eq(@short_name)
         @persisted_mob.long_name.should eq(@long_name)
