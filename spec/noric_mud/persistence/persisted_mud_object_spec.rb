@@ -3,9 +3,17 @@ require "spec_helper"
 module NoricMud
   module Persistence
     describe PersistedMudObject do
+
+      # a dummy class including PersistedMudObject
+      class PersistedFoo
+        include PersistedMudObject
+        def copy_from_transient mud_object
+        end
+      end
+      
       before :each do
         @mutex = double Mutex
-        @persisted_mud_object = PersistedMudObject.new @mutex
+        @persisted_mud_object = PersistedFoo.new @mutex
       end
 
       it "does #async_save" do
