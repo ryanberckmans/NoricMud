@@ -38,11 +38,6 @@ module CoreCommands
   add_cmd "shout", ->(game, mob, rest, match) { shout(game, mob, rest) }
   add_cmd "look", ->(game, mob, rest, match) { look( game, mob ) }
   add_cmd "exits", ->(game, mob, rest, match) { exits( game, mob ) }
-  add_cmd "flee", ->game,mob,rest,match { Combat.flee game, mob }
-  add_cmd "glance", ->game,mob,rest,match { Combat.glance game, mob, rest }
-  add_cmd "kill", ->game,mob,rest,match { Combat.kill game, mob, rest }
-  add_cmd "cast", ->game,mob,rest,match { Abilities::cast game, mob, rest }
-  add_cmd "killrandom", ->game,mob,rest,match { Combat.kill game, mob, mob.room.mobs.sample.short_name }
   add_cmd "who", ->game,mob,rest,match { who game, mob }
   add_cmd "help", ->game,mob,rest,match { help game, mob, rest }
   add_cmd "commands", ->game,mob,rest,match { help game, mob, rest }
@@ -59,16 +54,4 @@ module CoreCommands
   add_cmd "room safe", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_safe game, mob }
   add_cmd "room quit", ->game,mob,rest,match { raise AbandonCallback.new unless match.length > 1; room_quit game, mob }
   add_cmd "where", ->game,mob,rest,match { where game, mob }
-  add_cmd "weapon", ->game,mob,rest,match { game.combat.weapon.weapon_cycle mob }
-  add_cmd "cooldowns", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
-  add_cmd "cds", -> game,mob,rest,match { game.send_msg mob, game.cooldowns(mob) }
-  add_cmd "meditate", ->game,mob,rest,match {
-    if mob.state != PhysicalState::Resting
-      game.send_msg mob, "{@You must be resting to meditate.\n"
-    elsif mob.room.mobs.size > 1
-      game.send_msg mob, "{@Too many people around to meditate.\n"
-    else
-      PhysicalState.transition game, mob, PhysicalState::Meditating
-    end
-  }
 end

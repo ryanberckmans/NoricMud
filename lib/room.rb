@@ -31,14 +31,6 @@ class Room < ActiveRecord::Base
     self.exit = {}
     self.exits.each { |xit| self.exit[xit.direction] = xit }
     self.description = Util::justify self.description if self.description
-    self.bind(:hostile) { |e|
-      if self.safe
-        e.fail
-        pov_scope do
-          pov(e.attacker) { "Violence is prevented by the serene white aura that springs into existence.\n" }
-        end
-      end
-    }
   end
 end
 

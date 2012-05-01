@@ -13,9 +13,9 @@ require "abbrev_map.rb"
 require "account.rb"
 require "character.rb"
 require "exit.rb"
+require "mob.rb"
 require "room.rb"
 require "noric_mud"
-Mob = NoricMud::Mob
 
 require "util.rb"
 require "log.rb"

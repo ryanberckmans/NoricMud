@@ -9,24 +9,10 @@ module CoreCommands
     look += "{FM#{mob.room.description}\n" unless not mob.room.description or mob.room.description.empty?
     mob.room.mobs.each do |mob_in_room|
       next if mob_in_room == mob
-      state = mob_in_room.state.to_s.downcase
+      state = ""
       state += " " unless state.empty?
-      if mob_in_room.dead?
-        look += "{!{FG#{mob_in_room.long_name} is lying here, dead"
-      else
-        look += "{!{FG#{mob_in_room.long_name} is #{state}here"
-      end
-      if game.combat.engaged? mob_in_room
-        look += ", fighting "
-        target = game.combat.target_of mob_in_room
-        if target == mob
-          look += "You!"
-        else
-          look += "#{target.short_name}."
-        end
-      else
-        look += "."
-      end
+      look += "{!{FG#{mob_in_room.long_name} is #{state}here"
+      look += "."
       look += " {@{FW[Lost Link]" if not game.connected? mob_in_room.char
       look += "\n"
     end

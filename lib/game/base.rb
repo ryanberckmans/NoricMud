@@ -148,10 +148,8 @@ class Game
   def login( char )
     char.mob.char = char
     @mob_commands.add char.mob
-    @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
-    PhysicalState::transition( self, char.mob, PhysicalState::Standing )
     send_msg char, "\n{!{FY** Hi {FG:-){FY, try typing {FChelp {FY** This is a temporary sandbox to test code; our game is under construction elsewhere **\n"
   end
 
