@@ -40,6 +40,7 @@ require "timer.rb"
 require "game/base.rb"
 
 def start_mud
+  Log::log_thread_start
   Log::info "instantiating core components", "mud"
   
   network = Network.new

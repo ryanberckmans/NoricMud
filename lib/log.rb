@@ -1,3 +1,4 @@
+require 'thread'
 require 'logger'
 
 class Logger
@@ -20,6 +21,18 @@ class Log
   PATH = "log/"
   EXTENSION = ".log"
   ROTATION = "daily"
+  @@log_statement_queue = Queue.new
+
+  def self.log_thread_start
+    raise "call log_thread_start only once" if defined? @@log_threads
+    @@log_threads = []
+    10.times do
+      log_thread = Thread.new { @@log_statement_queue.pop.call while true }
+      log_thread.priority = -2
+      @@log_threads << log_thread
+    end
+    nil
+  end
 
   def self.fatal( msg, progname = nil )
     log Logger::FATAL, msg, progname
@@ -43,7 +56,8 @@ class Log
   
   def self.log( sev, msg, progname = nil )
     raise "tried to log a msg to the default logger, but the default logger has not yet been set" unless defined? @@default
-    @@default.log sev, msg, progname
+    @@log_statement_queue.push lambda { @@default.log sev, msg, progname }
+    nil
   end
   
   def self.get( logdev = nil, params = {} )
