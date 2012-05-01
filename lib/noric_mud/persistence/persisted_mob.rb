@@ -1,8 +1,6 @@
 module NoricMud
   module Persistence
-    class PersistedMob < ActiveRecord::Base
-      include PersistedMudObject
-      
+    class PersistedMob < PersistedMudObject
       validates_presence_of :short_name, :long_name
 
       # populate a transient Mob equivalent of this PersistedMob

@@ -1,6 +1,8 @@
 module NoricMud
   module Persistence
-    module PersistedMudObject
+    class PersistedMudObject < ActiveRecord::Base
+      self.abstract_class = true
+
       def initialize mutex=Mutex.new
         super()
         @mutex = mutex
@@ -11,6 +13,10 @@ module NoricMud
         @mutex.synchronize { copy_from_transient mud_object }
         Persistence::async { @mutex.synchronize { self.save } }
         nil
+      end
+
+      def copy_from_transient mud_object
+        # override in subclass
       end
     end
   end

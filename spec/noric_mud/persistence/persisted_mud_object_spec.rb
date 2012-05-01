@@ -4,11 +4,9 @@ module NoricMud
   module Persistence
     describe PersistedMudObject do
 
-      # a dummy class including PersistedMudObject
-      class PersistedFoo
-        include PersistedMudObject
-        def copy_from_transient mud_object
-        end
+      # subclass to test abstract class functionality
+      class PersistedFoo < PersistedMudObject
+        self.table_name = "mobs" # a valid table_name is required to instantiate PersistedFoo; piggy-back on mobs table although we don't use it
       end
       
       before :each do
