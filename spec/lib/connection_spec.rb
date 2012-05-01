@@ -127,7 +127,7 @@ describe Connection do
 
     it "does not process extremely large socket receipts all at once" do
       large = "heybadgerbadgerbadgermushroommushroom"
-      6.times { large += large }
+      4.times { large += large }
       @client_socket.send large + "\n", 0
       @connection.tick
       @connection.next_command.should be_nil
