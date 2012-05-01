@@ -16,9 +16,6 @@ module NoricMud
         mob.energy_max = 100
         mob.hp = 250
         mob.energy = 100
-        mob.attack_cooldown = 0.0
-        mob.god = false
-        mob.state = nil
         mob
       end
 
