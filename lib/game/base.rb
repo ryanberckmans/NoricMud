@@ -1,29 +1,10 @@
 require "core_commands/base.rb"
-require "combat/base.rb"
-require "pit_duel.rb"
-require "breath.rb"
-require "lag.rb"
-require "cooldown.rb"
-require "channel.rb"
-require "regen.rb"
-require "abilities/base.rb"
-require "chaos_quest.rb"
 
 class Game
-  include Seh::EventTarget
-  attr_reader :timer
-  
-  def initialize( character_system )
+  def initialize character_system
     raise "expected a CharacterSystem" unless character_system.kind_of? CharacterSystem
     @character_system = character_system
 
-    @timer = Timer.new self
-    @breath = Breath.new self
-    @channel = Channel.new self
-    @cooldown = Cooldown.new
-    @lag = Lag.new
-    @regen = Regen.new self
-    
     @rooms = Room.find :all
 
     @login_room = @rooms.each do |room|
@@ -38,38 +19,11 @@ class Game
     @mob_commands = MobCommands.new self
 
     @core_commands = CoreCommands.new self
-    @combat = Combat.new self
 
     @msgs_this_tick = {}
     @new_logouts = []
 
-    @secret_cmds = AbbrevMap.new
-    @secret_cmds.add "east", ->(game,mob,rest,match) do
-      raise AbandonCallback.new if mob.room.name != "An Alpine Canopy Dwelling" or game.combat.engaged? mob
-      
-      if (Random.new.rand(1..3) > 1) then
-        pov_scope {
-          pov(mob) { "You fail to focus your concentration and the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal remains {!{FRclosed{@.\n" }
-          pov(mob.room.mobs) { "#{mob.short_name} takes a run at it, but the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal remains {!{FRclosed{@.\n" }
-        }
-        return
-      end
-      
-      pov_scope do
-        pov(mob) { "You crash into the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal and tear it {!{FGopen{@. You fall through the light and find yourself elsewhere.\n" }
-        pov(mob.room.mobs) { "#{mob.short_name} crashes through the {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@portal, tearing it {!{FGopen{@. The portal flares rainbow and weaves itself shut.\n" }
-      end
-      move_to mob, Room.find(:all).sample
-      pov_scope do
-        pov_none(mob)
-        pov(mob.room.mobs) { "#{mob.short_name} appears in a blinding flash of {!{FMP{FYs{FGy{FCch{FGe{FYd{FMe{FYl{FGi{FCc {@light.\n" }
-      end
-      CoreCommands.look self, mob
-    end
-    @secret_cmds.add "heal", ->(game,mob,rest,match) { if mob.room.name =~ /Subterranean Forest/ then send_msg mob.char, "A bright {!{FGsubterranean forest aura{@ heals your wounds.\n"; mob.hp = mob.hp_max; mob.energy = mob.energy_max else raise AbandonCallback.new end }
-
     pov_send ->(c,m){ send_msg c, m }
-    @chaos_quest = ChaosQuest.new self
   end
 
   def respawn_room
@@ -84,10 +38,6 @@ class Game
     @mob_commands
   end
 
-  def combat
-    @combat
-  end
-
   def all_connected_characters
     chars = []
     @character_system.each_connected_char do |char| chars << char end
@@ -100,11 +50,11 @@ class Game
     chars
   end
 
-  def connected?( char )
+  def connected? char
     @character_system.connected? char
   end
 
-  def send_msg( entity, msg )
+  def send_msg entity, msg
     char = nil
     if entity.kind_of? Mob
       char = entity.char
@@ -119,18 +69,10 @@ class Game
   def tick
     @msgs_this_tick.clear
     Log::debug "start tick", "game"
-    Seh::Event.new(self) { |e| e.type :before_tick ; e.dispatch }
     process_new_disconnections
     process_new_reconnections
     process_new_logins
-    @breath.tick
-    @lag.tick
-    @cooldown.tick
-    @regen.tick
     process_character_commands
-    @channel.tick
-    @combat.tick
-    Seh::Event.new(self) { |e| e.type :after_tick ; e.dispatch }
     while char = @new_logouts.shift do do_logout char end
     send_char_msgs
     send_prompts
@@ -144,7 +86,6 @@ class Game
   end
 
   def move_to( mob, room )
-    combat.disengage mob if combat.engaged? mob
     previous_room = mob.room
     mob.room.mobs.delete mob if mob.room
     mob.room = room
@@ -156,12 +97,11 @@ class Game
     raise "expected mob to be a Mob" unless mob.kind_of? Mob
     if exit
       raise "expected exit to be an Exit" unless exit.kind_of? Exit
-      return unless @breath.try_move mob
       pov_scope do
         pov_none(mob)
         pov(mob.room.mobs) do "{!{FW#{mob.short_name} #{verb} #{Exit.i_to_s exit.direction}.\n" end
       end
-      move_to( mob, exit.destination )
+      move_to mob, exit.destination
       pov_scope do
         pov_none(mob)
         pov(mob.room.mobs) do "{!{FW#{mob.short_name} has arrived.\n" end
@@ -172,68 +112,16 @@ class Game
     end
   end
 
-  def add_lag( mob, lag )
-    @lag.add_lag mob, lag
-    PhysicalState::transition self, mob, PhysicalState::Standing if mob.state == PhysicalState::Channeling
-    nil
-  end
-
-  def lag_recovery_action( mob, action )
-    @lag.recovery_action mob, action
-  end
-
-  def add_cooldown( mob, ability, cooldown, recovery_action=nil )
-    @cooldown.add_cooldown mob, ability, cooldown, recovery_action
-  end
-
-  def in_cooldown?( mob, ability )
-    @cooldown.in_cooldown? mob, ability
-  end
-
-  def ability_cooldown( mob, ability )
-    @cooldown.ability_cooldown mob, ability
-  end
-  
-  def cooldowns( mob )
-    @cooldown.cooldowns mob
-  end
-
-  def restore_cooldowns(mob)
-    @cooldown.delete mob
-  end
-
-  def restore_breath(mob)
-    @breath.delete mob
-  end
-
-  def cancel_channel( mob )
-    @channel.cancel_channel mob
-  end
-
-  def channel( mob, ability, channel_duration )
-    @channel.channel mob, ability, channel_duration
-  end
-
-  def channeling?( mob )
-    @channel.channeling? mob
-  end
-
-  def chaos_enroll( mob )
-    @chaos_quest.enroll mob
-  end
-
   private
-  def do_logout( char )
+  def do_logout char
     raise "expected char to be online" unless @character_system.online? char
     Log::info "#{char.name} logging off", "game"
-    Seh::Event.new(char) { |e| e.type :logout ; e.dispatch }
     mob = char.mob
     pov_scope do
       pov(mob) do "{@Quitting...\n" end
       pov(mob.room.mobs) do "{@#{mob.char.name} quit.\n" end
     end
     move_to( mob, nil )
-    PhysicalState::transition self, mob, nil
     @character_system.send_msg char, @msgs_this_tick[char]
     @msgs_this_tick.delete char
     @mob_commands.remove mob
@@ -248,7 +136,7 @@ class Game
   end
 
   def prompt( char )
-    "\n{@{!{FU<#{char.mob.hp_color}{FUhp #{char.mob.energy_color}{FUe #{@breath.breath_color char.mob}{FUbr> "
+    "\n{@{!{FU<#{char.mob.hp_color}{FUhp #{char.mob.energy_color}{FUe> "
   end
   
   def send_prompts
@@ -258,15 +146,12 @@ class Game
   end
   
   def login( char )
-    char.parents = [self]
-    char.mob.parents_proc = ->{ a = [self,char]; a << char.mob.room if char.mob.room; a }
     char.mob.char = char
     @mob_commands.add char.mob
     @mob_commands.add_cmd_handler char.mob, @secret_cmds, 10
     Log::info "#{char.name} logging on", "game"
     CoreCommands::poof self, char.mob, @login_room
     PhysicalState::transition( self, char.mob, PhysicalState::Standing )
-    Seh::Event.new(char) { |e| e.type :login; e.dispatch }
     send_msg char, "\n{!{FY** Hi {FG:-){FY, try typing {FChelp {FY** This is a temporary sandbox to test code; our game is under construction elsewhere **\n"
   end
 
@@ -318,14 +203,6 @@ class Game
 
   def process_character_commands
     @character_system.each_connected_char do |char|
-      if @lag.lagged? char.mob
-        Log::debug "#{char.name} was lagged and didn't get a cmd this tick", "game"
-        next
-      end
-      if @channel.channeling? char.mob
-        Log::debug "#{char.name} was channeling and didn't get a cmd this tick", "game"
-        next
-      end
       cmd = @character_system.next_command char
       next unless cmd
       @msgs_this_tick[char] ||= ""
