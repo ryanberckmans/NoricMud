@@ -40,8 +40,6 @@ class Room < ActiveRecord::Base
       end
     }
   end
-
-  include Seh::EventTarget
 end
 
 

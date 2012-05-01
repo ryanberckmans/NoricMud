@@ -8,18 +8,15 @@ require "yaml"
 
 ActiveRecord::Base.establish_connection YAML.load_file('config/database.yml')[ ENV['RAILS_ENV'] ]
 
-require "seh"
 require "abbrev_map.rb"
 
 require "models/account.rb"
 require "models/character.rb"
-require "models/mob.rb"
 require "models/exit.rb"
 require "models/room.rb"
 
 require "util.rb"
 require "log.rb"
-require "physical_state/base.rb"
 
 LOG_LEVEL = Logger::DEBUG
 TICK_DURATION = 0.25 # in seconds
@@ -36,9 +33,9 @@ require "network.rb"
 require "account_system.rb"
 require "character_system.rb"
 require "mob_commands.rb"
-require "timer.rb"
 require "game/base.rb"
 require "noric_mud"
+Mob = NoricMud::Mob
 
 def start_mud
   Signal.trap :INT do # default JRuby behavior is for the JVM to halt on a SIG_INT; do this instead
