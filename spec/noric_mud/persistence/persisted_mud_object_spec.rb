@@ -30,12 +30,21 @@ module NoricMud
       end
 
       it "does #transient" do
-        require 'ostruct'
         @persisted_mud_object.should_receive(:transient_class).once.and_return(Object)
         @mutex.should_receive(:synchronize).once { |&block| block.call }
         @persisted_mud_object.should_receive(:copy_persisted_attributes).with(@persisted_mud_object,an_instance_of(Object)).once
 
         @persisted_mud_object.transient.should_not be_nil
+      end
+
+      it "returns the same transient instance for subsequent invocations of #transient" do
+        @persisted_mud_object.should_receive(:transient_class).once.and_return(Object)
+        @mutex.should_receive(:synchronize).once { |&block| block.call }
+        @persisted_mud_object.should_receive(:copy_persisted_attributes).with(@persisted_mud_object,an_instance_of(Object)).once
+
+        transient = @persisted_mud_object.transient
+        transient2 = @persisted_mud_object.transient
+        transient.object_id.should eq(transient2.object_id)
       end
     end
   end
