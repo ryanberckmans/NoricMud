@@ -5,9 +5,7 @@ module NoricMud
 
       def initialize mutex=Mutex.new
         super()
-
-        # mutex must be synchronized for any CRUD to persisted properties
-        @mutex = mutex
+        @mutex = mutex # mutex must be synchronized for any CRUD to persisted properties
         @transient = nil
       end
 
@@ -29,18 +27,17 @@ module NoricMud
 
       protected
 
-      # subclasses of PersistedMudObject override #copy_from_transient
-      # to copy the subclasses' persisted properties from the
-      # transient mud_object associated with the subclass
-      #  e.g. PersistedMob overrides #copy_from_transient
-      #       to copy persisted properties from Mob
-      def copy_from_transient mud_object
+      # subclasses of PersistedMudObject override #copy_persisted_attributes
+      # to copy the subclasses' persisted properties
+      #  e.g. PersistedMob overrides #copy_persisted_attributes
+      #       to copy the persisted properties of Mob
+      def copy_persisted_attributes from, to
         # override in subclass
       end
 
       # subclasses of PersistedMudObject override ::transient_class
       # to return the transient class associated with the subclass
-      def self.transient_class
+      def transient_class
         raise "#transient_class must be overridden"
       end
     end
