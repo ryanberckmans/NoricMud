@@ -15,6 +15,13 @@ module NoricMud
         nil
       end
 
+      protected
+
+      # subclasses of PersistedMudObject override #copy_from_transient
+      # to copy the subclasses' persisted properties from the
+      # transient mud_object associated with the subclass
+      #  e.g. PersistedMob overrides #copy_from_transient
+      #       to copy persisted properties from Mob
       def copy_from_transient mud_object
         # override in subclass
       end

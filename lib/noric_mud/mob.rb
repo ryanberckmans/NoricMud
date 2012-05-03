@@ -31,5 +31,9 @@ module NoricMud
         "{FU"
       end
     end
+
+    def self.persistence_class
+      Persistence::PersistedMob
+    end
   end
 end
