@@ -11,7 +11,7 @@ module NoricMud
       # todo concise documentation for this
       def async_save mud_object
         @mutex.synchronize { copy_from_transient mud_object }
-        Persistence::async { @mutex.synchronize { self.save } }
+        NoricMud::async { @mutex.synchronize { self.save } }
         nil
       end
 
