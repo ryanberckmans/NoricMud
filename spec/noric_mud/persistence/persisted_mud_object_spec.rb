@@ -24,6 +24,19 @@ module NoricMud
 
         @persisted_mud_object.async_save @mud_object
       end
+
+      it "raises on #transient raises due to no transient_class" do
+        expect { @persisted_mud_object.transient }.to raise_error
+      end
+
+      it "does #transient" do
+        require 'ostruct'
+        @persisted_mud_object.should_receive(:transient_class).once.and_return(Object)
+        @mutex.should_receive(:synchronize).once { |&block| block.call }
+        @persisted_mud_object.should_receive(:copy_persisted_attributes).with(@persisted_mud_object,an_instance_of(Object)).once
+
+        @persisted_mud_object.transient.should_not be_nil
+      end
     end
   end
 end

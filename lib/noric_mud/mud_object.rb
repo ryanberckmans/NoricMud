@@ -23,7 +23,7 @@ module NoricMud
 
     protected
 
-    # subclasses of MudObject override #persistence_class
+    # subclasses of MudObject override ::persistence_class
     # to return the persistence class associated with the subclass
     def self.persistence_class
       raise "#persistence_class must be overridden"

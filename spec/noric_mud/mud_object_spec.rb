@@ -37,7 +37,7 @@ module NoricMud
       end
 
       it "returns true for persist? after calling #persist given a persistence_class" do
-        @mud_object.should_receive(:persistence_class).and_return(Object)
+        @mud_object.should_receive(:persistence_class).once.and_return(Object)
         @mud_object.persist
         @mud_object.persist?.should be_true
       end
