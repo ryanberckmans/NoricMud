@@ -10,10 +10,6 @@ module NoricMud
       def to_transient mob=Mob.new
         mob.short_name = short_name
         mob.long_name = long_name
-        mob.hp_max = 250
-        mob.energy_max = 100
-        mob.hp = 250
-        mob.energy = 100
         mob
       end
 
