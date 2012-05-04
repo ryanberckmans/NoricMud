@@ -63,7 +63,7 @@ module NoricMud
       end
 
       # invoked by #async_save when transient? == false
-      def async_save_witheout_transient
+      def async_save_without_transient
         NoricMud::async { @mutex.synchronize { self.save } }
       end
     end
