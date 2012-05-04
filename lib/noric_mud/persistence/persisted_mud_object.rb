@@ -1,3 +1,5 @@
+require 'ostruct'
+
 module NoricMud
   module Persistence
     class PersistedMudObject < ActiveRecord::Base
@@ -9,10 +11,11 @@ module NoricMud
         @transient = nil
       end
 
-      # todo concise documentation for this
-      def async_save mud_object
-        @mutex.synchronize { copy_from_transient mud_object }
-        NoricMud::async { @mutex.synchronize { self.save } }
+      # asynchronously save persisted attributes.
+      # if transient exists, persisted attributes
+      # are copied from transient during the save
+      def async_save
+        transient? ? async_save_with_transient : async_save_without_transient
         nil
       end
 
@@ -27,6 +30,10 @@ module NoricMud
 
       protected
 
+      def transient?
+        !@transient.nil?
+      end
+
       # subclasses of PersistedMudObject override #copy_persisted_attributes
       # to copy the subclasses' persisted properties
       #  e.g. PersistedMob overrides #copy_persisted_attributes
@@ -39,6 +46,25 @@ module NoricMud
       # to return the transient class associated with the subclass
       def transient_class
         raise "#transient_class must be overridden"
+      end
+
+      private
+
+      # invoked by #async_save when transient? == true
+      def async_save_with_transient
+        transient_copy = OpenStruct.new # use OpenStruct to cache persisted attributes
+        copy_persisted_attributes transient, transient_copy # copy @transient into transient_copy to cache persisted attributes, because they may change in @transient before the asyncronous save completes
+        NoricMud::async do
+          @mutex.synchronize do
+            copy_persisted_attributes transient_copy, self
+            save
+          end
+        end
+      end
+
+      # invoked by #async_save when transient? == false
+      def async_save_witheout_transient
+        NoricMud::async { @mutex.synchronize { self.save } }
       end
     end
   end

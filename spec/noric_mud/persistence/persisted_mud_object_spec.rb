@@ -14,18 +14,7 @@ module NoricMud
         @persisted_mud_object = PersistedFoo.new @mutex
       end
 
-      it "does #async_save" do
-        @mud_object = double
-        @mutex_synchronized = 0
-        @mutex.should_receive(:synchronize).twice { |&block| block.call }
-        @persisted_mud_object.should_receive(:copy_from_transient).with(@mud_object).once
-        NoricMud.should_receive(:async).once.and_yield
-        @persisted_mud_object.should_receive(:save).once.and_return(nil)
-
-        @persisted_mud_object.async_save @mud_object
-      end
-
-      it "raises on #transient raises due to no transient_class" do
+      it "raises on #transient due to no transient_class" do
         expect { @persisted_mud_object.transient }.to raise_error
       end
 
@@ -45,6 +34,29 @@ module NoricMud
         transient = @persisted_mud_object.transient
         transient2 = @persisted_mud_object.transient
         transient.object_id.should eq(transient2.object_id)
+      end
+
+      it "does #async_save with transient" do
+        @transient = Object.new
+        @persisted_mud_object.stub(:transient?).and_return true
+        @persisted_mud_object.stub(:transient).and_return @transient
+        
+        @persisted_mud_object.should_receive(:copy_persisted_attributes).once.with(@transient,an_instance_of(OpenStruct))
+        @persisted_mud_object.should_receive(:copy_persisted_attributes).once.with(an_instance_of(OpenStruct),@persisted_mud_object)
+        NoricMud.should_receive(:async).once.and_yield
+        @mutex.should_receive(:synchronize).once.and_yield
+        @persisted_mud_object.should_receive(:save).once.and_return(nil)
+        
+        @persisted_mud_object.async_save
+      end
+
+      it "does #async_save without transient" do
+        @persisted_mud_object.stub(:transient?).and_return false
+        NoricMud.should_receive(:async).once.and_yield
+        @mutex.should_receive(:synchronize).once.and_yield
+        @persisted_mud_object.should_receive(:save).once.and_return(nil)
+
+        @persisted_mud_object.async_save
       end
     end
   end
