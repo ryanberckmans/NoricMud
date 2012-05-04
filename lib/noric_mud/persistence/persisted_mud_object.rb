@@ -5,10 +5,10 @@ module NoricMud
     class PersistedMudObject < ActiveRecord::Base
       self.abstract_class = true
 
-      def initialize mutex=Mutex.new
+      def initialize _transient=nil
         super()
-        @mutex = mutex # mutex must be synchronized for any CRUD to persisted properties
-        @transient = nil
+        @transient = _transient
+        @mutex = Mutex.new
       end
 
       # asynchronously save persisted attributes.
@@ -23,7 +23,7 @@ module NoricMud
       def transient
         unless @transient
           @transient = transient_class.new
-          @mutex.synchronize { copy_persisted_attributes self, @transient }
+          mutex.synchronize { copy_persisted_attributes self, @transient }
         end
         @transient
       end
@@ -50,12 +50,17 @@ module NoricMud
 
       private
 
+      # mutex must be synchronized for any CRUD to persisted properties
+      def mutex
+        @mutex
+      end
+
       # invoked by #async_save when transient? == true
       def async_save_with_transient
         transient_copy = OpenStruct.new # use OpenStruct to cache persisted attributes
         copy_persisted_attributes transient, transient_copy # copy @transient into transient_copy to cache persisted attributes, because they may change in @transient before the asyncronous save completes
         NoricMud::async do
-          @mutex.synchronize do
+          mutex.synchronize do
             copy_persisted_attributes transient_copy, self
             save
           end
@@ -64,7 +69,7 @@ module NoricMud
 
       # invoked by #async_save when transient? == false
       def async_save_without_transient
-        NoricMud::async { @mutex.synchronize { self.save } }
+        NoricMud::async { mutex.synchronize { self.save } }
       end
     end
   end

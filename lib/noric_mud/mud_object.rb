@@ -17,15 +17,15 @@ module NoricMud
     # if no persistence exists, create new persistence and save
     # postcondition: persist? == true
     def persist
-      @persistence = persistence_class.new unless persist?
+      @persistence = persistence_class.new self unless persist?
       nil
     end
 
     protected
 
-    # subclasses of MudObject override ::persistence_class
+    # subclasses of MudObject override persistence_class
     # to return the persistence class associated with the subclass
-    def self.persistence_class
+    def persistence_class
       raise "#persistence_class must be overridden"
     end
   end

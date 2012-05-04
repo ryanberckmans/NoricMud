@@ -10,8 +10,9 @@ module NoricMud
       end
       
       before :each do
-        @mutex = double Mutex
-        @persisted_mud_object = PersistedFoo.new @mutex
+        @persisted_mud_object = PersistedFoo.new
+        @mutex = double "mutex"
+        @mutex.stub(:synchronize).and_yield
       end
 
       it "raises on #transient due to no transient_class" do
@@ -20,7 +21,7 @@ module NoricMud
 
       it "does #transient" do
         @persisted_mud_object.should_receive(:transient_class).once.and_return(Object)
-        @mutex.should_receive(:synchronize).once { |&block| block.call }
+        @persisted_mud_object.should_receive(:mutex).once.and_return @mutex
         @persisted_mud_object.should_receive(:copy_persisted_attributes).with(@persisted_mud_object,an_instance_of(Object)).once
 
         @persisted_mud_object.transient.should_not be_nil
@@ -28,7 +29,7 @@ module NoricMud
 
       it "returns the same transient instance for subsequent invocations of #transient" do
         @persisted_mud_object.should_receive(:transient_class).once.and_return(Object)
-        @mutex.should_receive(:synchronize).once { |&block| block.call }
+        @persisted_mud_object.should_receive(:mutex).once.and_return @mutex
         @persisted_mud_object.should_receive(:copy_persisted_attributes).with(@persisted_mud_object,an_instance_of(Object)).once
 
         transient = @persisted_mud_object.transient
@@ -44,7 +45,7 @@ module NoricMud
         @persisted_mud_object.should_receive(:copy_persisted_attributes).once.with(@transient,an_instance_of(OpenStruct))
         @persisted_mud_object.should_receive(:copy_persisted_attributes).once.with(an_instance_of(OpenStruct),@persisted_mud_object)
         NoricMud.should_receive(:async).once.and_yield
-        @mutex.should_receive(:synchronize).once.and_yield
+        @persisted_mud_object.should_receive(:mutex).once.and_return @mutex
         @persisted_mud_object.should_receive(:save).once.and_return(nil)
         
         @persisted_mud_object.async_save
@@ -53,7 +54,7 @@ module NoricMud
       it "does #async_save without transient" do
         @persisted_mud_object.stub(:transient?).and_return false
         NoricMud.should_receive(:async).once.and_yield
-        @mutex.should_receive(:synchronize).once.and_yield
+        @persisted_mud_object.should_receive(:mutex).once.and_return @mutex
         @persisted_mud_object.should_receive(:save).once.and_return(nil)
 
         @persisted_mud_object.async_save

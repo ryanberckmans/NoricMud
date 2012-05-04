@@ -36,8 +36,10 @@ module NoricMud
         expect { @mud_object.persist}.to raise_error
       end
 
-      it "returns true for persist? after calling #persist given a persistence_class" do
-        @mud_object.should_receive(:persistence_class).once.and_return(Object)
+      it "with a persistence_class, #persist passes self to the persistence class constructor, and returns true for persist?" do
+        class Foo; end # dummy persistence_class
+        @mud_object.should_receive(:persistence_class).once.and_return(Foo)
+        Foo.should_receive(:new).once.with(@mud_object).and_return(Object.new)
         @mud_object.persist
         @mud_object.persist?.should be_true
       end

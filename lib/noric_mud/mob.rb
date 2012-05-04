@@ -24,7 +24,9 @@ module NoricMud
       end
     end
 
-    def self.persistence_class
+    private
+    
+    def persistence_class
       Persistence::PersistedMob
     end
   end
