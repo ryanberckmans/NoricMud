@@ -25,3 +25,10 @@ save_timer = PeriodicTimer Config::SAVE_INTERVAL do |sovereign_mud_object|
   sovereign_mud_object.async_save # all slave objects saved, e.g. inventory
 end
 sovereign_mud_object.bind(:logout) { save_timer.cancel }
+
+# saving unstructured data
+#  e.g. add a mod which allows ingame chess playing, saves in-progress games and elo
+
+# transactions:
+## i) do we need transactions
+## ii) do transactions require relational?
