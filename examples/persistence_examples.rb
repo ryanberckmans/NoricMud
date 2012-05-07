@@ -28,7 +28,36 @@ sovereign_mud_object.bind(:logout) { save_timer.cancel }
 
 # saving unstructured data
 #  e.g. add a mod which allows ingame chess playing, saves in-progress games and elo
+#  which layers do we touch to modify persisted data model?
 
 # transactions:
 ## i) do we need transactions
 ## ii) do transactions require relational?
+
+# persistence api
+# load MudObject from persistence (i.e. the use-case where we don't start with the MudObject)
+# save MudObject
+# mark MudObject as persistent
+# mark MudObject as transient
+
+# persistence abstraction stack
+# i) game:
+  "save this MudObject... and do nothing if transient"
+  "save these objects... and skip the ones that are transient"
+  mud_object.save; MudObject.save_all player1, player2
+# ii) persistence:
+  "asynchronously update this data model and save it"
+  "asynchronously start a transaction, update/save these models, end transaction"
+  Note: "transaction at this layer doesn't know about data storage solution"
+# iii) data model:
+  "copy these persisted attributes and save"
+  Note: transient MudObjects penetrate data model layer (to be copied) but go no further
+# iv) data store:
+  api: CRUD
+  "CRUD these entities using a specific (3rd-party) storage solution e.g. activerecord"
+  ? does data store layer support multiple storage layers at same time? No. But, in future might want to storage rooms in activerecord/postgres and player data in right_aws/dynamoDB, etc.
+# v) third-party storage
+  api: e.g. ActiveRecord::Base
+  "CRUD with an underlying (physical) storage technology e.g. sqlite or dynamoDB"
+# vi) physical storage
+
