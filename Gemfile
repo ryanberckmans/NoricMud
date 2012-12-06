@@ -4,18 +4,18 @@ gem "rails", "~> 3.2.3"
 gem 'seh'
 gem 'depq'
 
-group :non_jruby do
-  gem 'sqlite3-ruby', :require => 'sqlite3'
+group :no_jruby do
+  gem "sqlite3-ruby", "~> 1.3.3", :require => 'sqlite3'
 end
 
 group :jruby do
-  gem 'jdbc-sqlite3'
+  gem "activerecord-jdbcsqlite3-adapter", "~> 1.2.2.1"
 end
 
-group :development, :test do
-  gem 'rspec'
+group :development do
+  gem "rspec", "~> 2.12.0"
 end
 
 group :profile do
-  gem 'ruby-prof'
+  gem "ruby-prof", "~> 0.11.2"
 end
