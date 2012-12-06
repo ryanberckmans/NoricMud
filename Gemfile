@@ -6,8 +6,10 @@ gem 'seh'
 
 gem 'depq'
 
-gem 'ruby-prof'
-
 group :development, :test do
   gem 'rspec'
+end
+
+group :profile do
+  gem 'ruby-prof'
 end
