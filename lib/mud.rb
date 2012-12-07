@@ -40,6 +40,10 @@ require "timer.rb"
 require "game/base.rb"
 
 def start_mud
+  Signal.trap :INT do # default JRuby behavior is for the JVM to halt on a SIG_INT; do this instead
+    Thread.main.raise Interrupt
+  end 
+
   Log::log_thread_start
   Log::info "instantiating core components", "mud"
   
@@ -70,5 +74,6 @@ def start_mud
     end
   rescue Exception => e
     Util::log_exception Logger::FATAL, e, "mud"
+    Log::shutdown
   end
 end
