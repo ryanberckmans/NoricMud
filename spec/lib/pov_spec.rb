@@ -8,6 +8,8 @@ describe "issuing points of view with pov and pov_scope" do
 
   pending "should require an explicit ostream, instead of using global pov_send, perhaps using pov_scope( send_func )"
 
+  pending "pov_scope() shouldn't communicate with pov() and pov_none() using the Thread.current[:current_pov_scope] global"
+
   it "raises error when pov_scope doesn't have a block" do
     expect { pov_scope }.to raise_error
   end

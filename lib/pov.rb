@@ -34,18 +34,34 @@ require 'ostruct'
 #   pov(sally.room.mobs) { "Sally hits Bob and Fred with dual-slash!" }
 # end
 
+# HUGE TERRIBLE HACK - use a global variable for the CURRENT_POV_SCOPE
+#
+# The old pov.rb used continuations which aren't supported in JRuby.
+# It's impossible to maintain the original pov syntax without continuations:
+#  (i) you can have the original syntax, but must use instance_eval around the block,
+#      which makes stuff like pov(bob) { @game.send } break, because @game isn't an instance variable of PointOfViewScope
+#  (ii) TODO: update the syntax to pov_scope do |pov| pov.pov; pov.none; end
+#  (iii) find some cleverer way :(
 
 # Start a new pov_scope. The mandatory passed block accumulates points of view using pov() and pov_none()
 def pov_scope &block
   raise "pov_scope requires a block" unless block_given?
   scope = PointOfViewScope.new
-  scope.instance_eval &block
+  Thread.current[:current_pov_scope] = scope  # HACK!
+  block.call
   scope.send $POV_send_func
   nil
 end
 
+def pov *observers, &block
+  Thread.current[:current_pov_scope].pov *observers, &block # HACK!
+end
+
+def pov_none *observers, &block
+  Thread.current[:current_pov_scope].pov_none *observers, &block # HACK!
+end
+
 # Dangerous. The lambda send_func( observer, msg) is set as the global function used in pov_scope()
-# If send_func is thread-safe, then this library is thread-safe.
 def pov_send send_func
   $POV_send_func = send_func
 end
@@ -68,8 +84,6 @@ class PointOfViewScope
     end
     nil
   end
-
-  private # private, because these methods should only be called via instance_eval from pov_scope()
 
   # Declare the passed observers as having the point of view returned by calling the passed block, in the current scope
   # Observers already having a point of view in the current scope are skipped.
