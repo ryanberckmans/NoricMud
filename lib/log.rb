@@ -31,7 +31,7 @@ class Log
     LOG_THREAD_COUNT.times do
       log_thread = Thread.new do
         @@log_statement_queue.pop.call while @@running
-        @@log_statement_queue.pop.call while not @@log_statement_queue.empty?
+        @@log_statement_queue.pop(true).call while true rescue nil # pop(true) will raise an error when the queue is empty
       end
       log_thread.priority = 1 # JRuby threads have priority 1-10, with 10 highest
       @@log_threads << log_thread
