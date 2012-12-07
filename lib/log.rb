@@ -28,7 +28,7 @@ class Log
     @@log_threads = []
     10.times do
       log_thread = Thread.new { @@log_statement_queue.pop.call while true }
-      log_thread.priority = -2
+      log_thread.priority = 1 # JRuby threads have priority 1-10, with 10 highest
       @@log_threads << log_thread
     end
     nil
