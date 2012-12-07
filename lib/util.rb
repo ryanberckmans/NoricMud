@@ -29,17 +29,6 @@ module Util
     def strip_newlines( string )
       string.gsub /\r?\n/, ", "
     end
-
-    def resumption_exception(*args)
-      # from internet
-      raise *args
-    rescue Exception => e
-      callcc do |cc|
-        scls = class << e; self; end
-        scls.send(:define_method, :resume, lambda { cc.call })
-        raise
-      end
-    end
   end # class << self
 
   module InFiber

@@ -1,89 +1,93 @@
 require 'continuation'
 require 'ostruct'
 
-class HadPov < Exception
-  def pov=(msg)
-    @msg = msg
-  end
-  def pov
-    @msg
-  end
-  def subject=(subject)
-    @subject=subject
-  end
-  def subject
-    @subject
-  end
+# This API is suitable for sending different points of view to a set of observers,
+# if the points of view follow this pattern: "specific, less specific, .., everybody else"
+# E.g. in a MUD, most points of view are patterned as "me, you, everybody else"
+
+# Example 1
+#
+# Bob says 'Hi'
+#
+# pov_scope do  # pov_scope wraps each invocation of the pov system
+#   pov(bob) { "You say, 'Hi'." }  # Declare Bob's point of view
+#   pov(bob.room.mobs) { "Bob says, 'Hi'." } # Declare the room's point of view.  Note that, although Bob himself is included in bob.room.mobs, pov_scope prevents Bob from seeing two points of view.
+# end
+
+# Example 2
+#
+# Fred disconnects from the game.
+#
+# pov_scope do
+#   pov_none fred # Fred gets no point of view, because he disconnected
+#   pov(fred.room.mobs) { "Fred disconnects." }
+# end
+
+# Example 3
+#
+# Sally is in a furious melee, and hits Bob and Fred with the dual-slash ability. Jim is blinded and sees nothing.
+#
+# pov_scope do
+#   pov_none jim # Jim is blinded and sees nothing
+#   pov(sally) { "You hit Bob and Fred with dual-slash!" }
+#   pov(bob, fred) { "Sally hits you with dual-slash!" } # pov accepts a list of arguments, or a list of lists, or anything that ruby can Array.flatten
+#   pov(sally.room.mobs) { "Sally hits Bob and Fred with dual-slash!" }
+# end
+
+
+# Start a new pov_scope. The mandatory passed block accumulates points of view using pov() and pov_none()
+def pov_scope &block
+  raise "pov_scope requires a block" unless block_given?
+  scope = PointOfViewScope.new
+  scope.instance_eval &block
+  scope.send $POV_send_func
+  nil
 end
 
-def had_pov( subject, msg )
-  h = HadPov.new
-  h.subject = subject
-  h.pov = msg
-  Util.resumption_exception h
+# Dangerous. The lambda send_func( observer, msg) is set as the global function used in pov_scope()
+# If send_func is thread-safe, then this library is thread-safe.
+def pov_send send_func
+  $POV_send_func = send_func
 end
 
 $POV_send_func = ->(key,value){ puts key + " pov << " + value  }
 
-# public
-
-def pov_send(send_func)
-  $POV_send_func = send_func
-end
-
-def pov_scope(&block)
-  povs = {}
-  begin
-    block.call
-  rescue HadPov => e
-    povs[e.subject] = e.pov unless povs.key? e.subject
-    e.resume
+# Do not instantiate directly. Accumulates observers' points of view for the current pov_scope.
+# A PointOfViewScope is instantiated for each pov_scope()
+class PointOfViewScope
+  def initialize
+    @points_of_view = {}
   end
-  povs.each_pair do |key,value|
-    $POV_send_func[key,value]
-  end
-end
 
-def pov_static(*params)
-  all_params = {}
-  params.flatten.each do |param|
-    raise "pov_static expects each param as hash pov_label:pov_string" unless param.kind_of? Hash
-    all_params.merge! param
-  end
-  OpenStruct.new all_params
-end
-
-def pov(*receivers, &block)
-  receivers.flatten.each do |rc|
-    had_pov rc, block.call
-  end
-end
-
-def pov_none(*receivers)
-  pov(receivers) do "" end
-end
-
-# example
-
-first = "Lashmaw, the infinium crystal blade's slash"
-third = "manificent crystal blade's slash"
-
-weapon = OpenStruct.new
-weapon.pov = pov_static first:first, third:third
-
-def m( weapon )
-  pov_scope do
-    everyone = ["Fred","Alice","Jim","Bob"]
-    pov("Fred","Alice") do
-      "Your " + weapon.pov.first + " decimates Jim."
+  # Send the accumulated points of view using the passed lambda send_func( observer, msg )
+  #
+  # Do not call directly. Used by pov_scope().
+  def send send_func
+    @points_of_view.each_pair do |key,value|
+      send_func[key,value]
     end
-    pov("Jim") do
-      "Fred's " + weapon.pov.third + " decimates you."
+    nil
+  end
+
+  private # private, because these methods should only be called via instance_eval from pov_scope()
+
+  # Declare the passed observers as having the point of view returned by calling the passed block, in the current scope
+  # Observers already having a point of view in the current scope are skipped.
+  #
+  # Call the passed block at most once, if the list of observers is non-empty.
+  def pov *observers
+    raise "pov requires a block" unless block_given?
+    flattened_observers = observers.flatten
+    return if flattened_observers.empty?
+    pov_msg = yield
+    flattened_observers.each do |observer|
+      @points_of_view[observer] = pov_msg unless @points_of_view.key? observer
     end
-    pov(everyone) do
-      "everyone else"
-    end
+    nil
+  end
+
+  # Declare the passed observers as having no point of view (i.e. the empty string), in the current scope
+  def pov_none *observers
+    pov(*observers) { "" }
   end
 end
-
-#m weapon
