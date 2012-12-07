@@ -41,8 +41,10 @@ describe AccountSystem do
         conn
       end
       @account.tick
-      @client_socket.recv(4096).should_not == ""
-      @client_socket.recv(1024).should == ""
+      @client_socket.recv(8192).should_not == ""
+      expected_empty_string = @client_socket.recv_nonblock(1024) rescue nil
+      expected_empty_string.should_not be_nil
+      expected_empty_string.should be_empty
     end
 
     it "triggers an account_connection when an account is authenticated" do
