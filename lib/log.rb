@@ -18,19 +18,32 @@ Logger::Formatter.send :remove_const, :Format
 Logger::Formatter.send :const_set, :Format, "%s\t%s\t%d\t%5s\t%s\t%s\n"
 
 class Log
+  LOG_THREAD_COUNT = 3 # number of threads writing to the log file
   PATH = "log/"
   EXTENSION = ".log"
   ROTATION = "daily"
   @@log_statement_queue = Queue.new
+  @@running = true # False if shutdown() has been called, True otherwise
 
   def self.log_thread_start
     raise "call log_thread_start only once" if defined? @@log_threads
     @@log_threads = []
-    10.times do
-      log_thread = Thread.new { @@log_statement_queue.pop.call while true }
+    LOG_THREAD_COUNT.times do
+      log_thread = Thread.new do
+        @@log_statement_queue.pop.call while @@running
+        @@log_statement_queue.pop.call while not @@log_statement_queue.empty?
+      end
       log_thread.priority = 1 # JRuby threads have priority 1-10, with 10 highest
       @@log_threads << log_thread
     end
+    nil
+  end
+
+  def self.shutdown
+    info "shutdown", "log"
+    @@running = false
+    @@log_threads.each { |log_thread| log_thread.join }
+    close_all
     nil
   end
 
@@ -82,4 +95,3 @@ class Log
   end
 end
 
-at_exit { Log::close_all }
