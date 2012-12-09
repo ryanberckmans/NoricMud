@@ -1,11 +1,16 @@
+require 'yaml'
+require 'sequel'
+
 module NoricMud
   module Persistence
     def self.connect_db yml_path
       config = YAML.load_file(yml_path)[ ENV['RAILS_ENV'] ]
+      puts config
       Sequel.connect( 
-                     :url: config['url'],
-                     :max_connections: config['pool'],
-                     :pool_timeout: config['timeout']
+                     config['database'],
+                     :max_connections => config['pool'],
+                     :pool_timeout => config['timeout'],
+                     :test => true
                      )
     end
     
