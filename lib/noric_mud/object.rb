@@ -1,7 +1,5 @@
 module NoricMud
-  class MudObject
-
-
+  class Object
     # db columns on all mud objects:
     parent_mud_object_id # i.e. location.persistence_id
     
