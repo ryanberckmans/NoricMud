@@ -15,6 +15,11 @@ module NoricMud
     
     @@world_db    = connect_db 'config/world_database.yml'
     @@instance_db = connect_db 'config/instance_database.yml'
+
+    Sequel.extension :migration
+
+    Sequel::Migrator.run @@world_db, 'db/migrations', :use_transactions => true
+    Sequel::Migrator.run @@instance_db, 'db/migrations', :use_transactions => true
     
     # R in CRUD
     # Recursively loads from db the object subtree rooted at the passed object_id
