@@ -1,2 +1,1 @@
-require_relative "persistence/persisted_mud_object"
-require_relative "persistence/persisted_mob"
+require_relative "persistence/object_persistence_sequel"
