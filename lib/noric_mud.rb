@@ -1,6 +1,6 @@
 require "thread"
 
-# require_relative "noric_mud/object"
+require_relative "noric_mud/object"
 require_relative "noric_mud/persistence"
 
 module NoricMud
