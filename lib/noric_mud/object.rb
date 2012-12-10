@@ -40,9 +40,15 @@ module NoricMud
     # overridden operations
     #bool persisted_attribute? attribute_name
     #klass perssitence_class
-    
-    def initialize persistence=nil
-      @persistence = persistence
+
+    # params
+    #   :attributes - set of attributes for this object
+    #   :location to attach to
+    #   :persistence_id - nil or FixNum if this object is persisted
+    def initialize params
+      @attributes = params[:attributes]
+      @location = params[:location]
+      @persistence_id = params[:persistence_id]
     end
 
     def persist?
