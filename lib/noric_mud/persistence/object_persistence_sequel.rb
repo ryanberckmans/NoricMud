@@ -1,8 +1,15 @@
 require 'yaml'
 require 'sequel'
 
+Sequel.extension :migration
+
 module NoricMud
   module Persistence
+    def self.migrate sequel_db
+      Sequel::Migrator.run sequel_db, 'db/migrations', :use_transactions => true
+      sequel_db
+    end
+
     def self.connect_db yml_path
       config = YAML.load_file(yml_path)[ ENV['RAILS_ENV'] ]
       Sequel.connect( 
@@ -13,14 +20,9 @@ module NoricMud
                      )
     end
     
-    @@world_db    = connect_db 'config/world_database.yml'
-    @@instance_db = connect_db 'config/instance_database.yml'
+    @@world_db    = migrate connect_db 'config/world_database.yml'
+    @@instance_db = migrate connect_db 'config/instance_database.yml'
 
-    Sequel.extension :migration
-
-    Sequel::Migrator.run @@world_db, 'db/migrations', :use_transactions => true
-    Sequel::Migrator.run @@instance_db, 'db/migrations', :use_transactions => true
-    
     # R in CRUD
     # Recursively loads from db the object subtree rooted at the passed object_id
     def self.load object_id
