@@ -1,34 +1,43 @@
 require 'json'
 require 'bijection'
-require_relative "persistence/object_persistence_sequel"
+require_relative "object"
+require_relative "persistence/sequel_adapter"
 
 module NoricMud
   module Persistence
-    public
 
+    public
+    
     def self.world_load object_id
     end
 
     def self.instance_load object_id
     end
 
-
     # R in CRUD
     # Recursively loads from db the object subtree rooted at the passed object_id
-    def self.public_load object_id
+    def self.public_load object_id, location # i.e. location to attach to
+      serialized_attributes = SequelAdapter::world_load_attributes object_id
+
+      attributes = {}
       
+      serialized_attributes.each_pair do |name,serialized_value|
+        attributes[name] = deserialize_attribute_value serialized_value 
+      end
+
+      # TODO attribute translation.  bob[:location] -> bob.location.persistence_id and backwards on load
+
+      raise "expected an :object_class attribute while loading object" unless attributes.key? :object_class
+
+      object = (value_to_class attributes.delete :object_class).new :location => location, :attributes => attributes
       
-      #object_attributes = AttributeModel.find :object_id => object_id
+      contained_object_ids = [] # TODO SequelAdapter:: get child object ids
 
-      #object = nil# construct proper object using object_attributes
+      contained_object_ids.each do |contained_object_id|
+        # object.contents << public_load contained_object_id, object
+      end
 
-      #contained_object_models = ObjectModel.find :location_object_id => object_id # Object table has index on location_object_id
-
-      #contained_object_models.each do |contained_object_model|
-      #  object.contents << load contained_object_model.id
-      #end
-
-      #object
+      object
     end
 
     private

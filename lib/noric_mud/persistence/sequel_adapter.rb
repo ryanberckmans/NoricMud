@@ -5,7 +5,10 @@ Sequel.extension :migration
 
 module NoricMud
   module Persistence
-    class Sequel
+    class SequelAdapter
+      @@world_db    = migrate connect_db 'config/world_database.yml'
+      @@instance_db = migrate connect_db 'config/instance_database.yml'
+      
       class << self
         public
         def world_load_attributes object_id
@@ -17,13 +20,13 @@ module NoricMud
         end
 
         private
-        def self.migrate sequel_db
+        def migrate sequel_db
           Sequel::Migrator.run sequel_db, 'db/migrations', :use_transactions => true
           sequel_db
         end
 
         private
-        def self.connect_db yml_path
+        def connect_db yml_path
           config = YAML.load_file(yml_path)[ ENV['RAILS_ENV'] ]
           Sequel.connect( 
                          config['database'],
@@ -32,12 +35,14 @@ module NoricMud
                          :test => true
                          )
         end
-        
-        @@world_db    = migrate connect_db 'config/world_database.yml'
-        @@instance_db = migrate connect_db 'config/instance_database.yml'
+
+        DATABASES = {
+#          :world    => migrate connect_db 'config/world_database.yml',
+#          :instance => migrate connect_db 'config/instance_database.yml'
+        }
 
         # Return all attributes in a hash { :attribute_name => "<serialized json>" } for the passed object id.  Note that the attribute values are serialized JSON at this point.
-        def self.load_attributes object_id, sequel_database
+        def load_attributes object_id, sequel_database
           object_attributes_dataset = sequel_database[:attributes].where(:object_id => object_id).select(:name, :value).all
 
           object_attributes = {}
