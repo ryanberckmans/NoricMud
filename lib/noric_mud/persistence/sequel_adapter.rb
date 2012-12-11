@@ -5,36 +5,36 @@ Sequel.extension :migration
 
 module NoricMud
   module Persistence
-    class SequelAdapter; end; # Declare SequelAdapter so we can assign it to Storage (and not have to do it below the class definition)
-
-    Storage = SequelAdapter # Wire Persistence to use SequelAdapter as Storage
-    
     class SequelAdapter
       class << self
-        public
 
-        # Return all attributes in a hash { :attribute_name => "<serialized json>" } for the passed object id.  Note that the attribute values are serialized JSON at this point.
+        # Return all attributes for the passed persistence id.
+        # Attribute names are converted to symbols, e.g. "age" -> :age
+        # Attribute values are unmodified (and, if applicable, not yet deserialized)
+        #
         # required params
-        #   :object_id - the primary key of the objects table whose attributes will be loaded
-        #   :database  - the database to load from, must be :world or :instance
-        def load_attributes params
-          object_attributes = {}
+        #   :persistence_id - id for the object whose attributes will be returned
+        #   :database  - the database to get from, must be :world or :instance
+        # @return a hash of attributes { :attribute_name => value } for the passed object id.  Note that the attribute values are serialized JSON at this poin.t
+        def get_attributes params
+          attributes = {}
 
-          (get_db params[:database])[:attributes].where(:object_id => params[:object_id]).select(:name, :value).all do |row|
-            object_attributes[row[:name].to_sym] = row[:value]
+          (get_db params[:database])[:attributes].where(:object_id => params[:persistence_id]).select(:name, :value).all do |row|
+            attributes[row[:name].to_sym] = row[:value]
           end
 
-          object_attributes
+          attributes
         end
 
-        # Return the ids of all objects with the passed object_id as their location_object_id
+        # Return the persistence_ids for all objects contained by the object with the passed persistence_id
         # required params
-        #   :object_id - the primary key of the objects table whose attributes will be loaded
-        #   :database  - the database to load from, must be :world or :instance
-        def load_object_contents_ids params
+        #   :persistence_id - id for the object whose contained ids will be returned
+        #   :database  - the database to get from, must be :world or :instance
+        # @return an array of persistence_ids for all contained by object with the passed persistence_id
+        def get_object_contents_ids params
           object_contents_ids = []
           
-          (get_db params[:database])[:objects].where(:location_object_id => params[:object_id]).select(:id).all do |row|
+          (get_db params[:database])[:objects].where(:location_object_id => params[:persistence_id]).select(:id).all do |row|
             object_contents_ids << row[:id]
           end
 
@@ -42,29 +42,48 @@ module NoricMud
         end
 
         # Create a new object in the database
+        # required params
+        #   :database  - the database create in, must be :world or :instance
         # optional params
-        #   :location_object_id - location_object_id for the new object
-        #   :attributes - Hash of String name -> String value - attributes for the new object
+        #   :location_persistence_id - set as location_object_id for the new object
+        #   :attributes - { String name -> String value } - attributes for the new object
         # @return object_id of the newly created object
         def create_object params
+          created_object_id = (get_db params[:database])[:objects].insert :location_object_id => params[:location_persistence_id]
+
+          if params.key? :attributes
+            # attributes input format:  { :gender => :male, :pet_name => "Fred", .., name_N => value_N }
+            # format required by Sequel::Dataset::import:  [[created_object_id, :gender,:male], [created_object_id, pet_name,"Fred"], .., [created_object_id, name_N,value_N]]
+            attributes_import_format = []
+            params[:attributes].each_pair do |name,value|
+              attributes_import_format << [created_object_id, name, value]
+            end
+            (get_db params[:database])[:attributes].import [:object_id,:name,:value], attributes_db_format
+          end
+
+          created_object_id
         end
 
         # Save a single attribute for a persistent object
         # required params
-        #   :persistence_id - existing object id
-        #   :name - String - name of the attribute to save
-        #   :value - String - value of the attribute to save
+        #   :database  - the database to use, must be :world or :instance
+        #   :persistence_id - existing object id whose attribute is being set
+        #   :name - String - name of the attribute to set
+        #   :value - String - value of the attribute to set
         # @returns nil
-        def save_attribute params
+        def set_attribute params
+          (get_db params[:database])[:attributes].where( :object_id => params[:persistence_id], :name => params[:name] ).update :value => params[:value]
           nil
         end
 
         # Set the location_object_id for an existing object
         # required params
+        #   :database  - the database to use, must be :world or :instance
         #   :persistence_id - existing object id to set location for
         #   :location_persistence_id - existing object id which is the location to set
         # @returns nil
         def set_location params
+          (get_db params[:database])[:objects].where( :id => params[:persistence_id] ).update :location_object_id => params[:location_persistence_id]
           nil
         end
         
@@ -94,25 +113,6 @@ module NoricMud
         :world    => (migrate connect_db 'config/world_database.yml'),
         :instance => (migrate connect_db 'config/instance_database.yml')
       }
-
-      # Each persisted Object has exactly one ObjectPersistence
-      class TODO_CHANGE_ME_ObjectPersistence
-
-        # C in CRUD
-        # Construct an ObjectPersistence used to persist a single Object
-        # Any children of the Object are persisted separately
-        def initialize object_to_persist
-        end
-
-        public
-        def location_object_id=
-        end
-        
-        def save_attribute attribute_name, attribute_value
-        end
-
-      end
-      
     end
   end
 end
