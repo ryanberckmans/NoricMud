@@ -6,34 +6,33 @@ require_relative "persistence/storage"
 module NoricMud
   module Persistence
 
+    OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME = :__reserved__object_class # serialized objects set this attribute containing their class name (i.e. a type of NoricMud::Object) for construction during deserialization. The attribute name mustn't conflict with any existing attributes.
+
     public
     
     # R in CRUD
-    # Recursively loads from db the object subtree rooted at the passed object_id
+    # Get an object with the passed persistence_id from the db.  Constructs the object and all contained objects.
     # required params
-    #   :object_id - persistent object id to load
-    #   :database  - database to load from, must be :world or :instance
-    #   :location  - object to attach to
-    # @return loaded and constructed NoricMud::Object
-    def self.load_object params
-      serialized_attributes = Storage::load_attributes params
+    #   :database  - the database to get from, must be :world or :instance
+    #   :persistence_id - id of the existing persistent object to get
+    #   :location  - an instance of NoricMud::Object to set as the constructed object's location
+    # @return NoricMud::Object constructed from the database with the passed persistence_id
+    def self.get_object params
+      attributes = Storage::get_attributes params
 
-      attributes = {}
-      
-      serialized_attributes.each_pair do |name,serialized_value|
-        attributes[name] = deserialize_attribute_value serialized_value 
+      # Attribute values are serialized when stored and must be deserialized
+      attributes.each_key do |name|
+        attributes[name] = deserialize attributes[name]
       end
 
-      # TODO attribute translation.  bob[:location] -> bob.location.persistence_id and backwards on load
+      raise "serialized objects must have an #{OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME} attribute for construction during deserialization" unless attributes.key? OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
 
-      raise "expected an :object_class attribute while loading object" unless attributes.key? :object_class
+      object_class = object_class_string_to_type attributes.delete OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
 
-      object = (value_to_class attributes.delete :object_class).new :location => location, :attributes => attributes
+      object = object_class.new :location => params[:location], :attributes => attributes, :persistence_id => params[:persistence_id]
       
-      contained_object_ids = [] # TODO Storage:: get child object ids
-
-      contained_object_ids.each do |contained_object_id|
-        # object.contents << public_load contained_object_id, object
+      Storage::get_object_contents_ids.each do |contained_id|
+        object.contents << get_object(:database => params[:database], :persistence_id => contained_id, :location => object)
       end
 
       object
@@ -41,34 +40,38 @@ module NoricMud
 
     # C in CRUD
     # Create a new object in the database
+    # required params
+    #   :database  - the database create in, must be :world or :instance
     # optional params
-    #   :location_object_id - the object_id of the persistent object containing the object being saved
-    #   :attributes - attributes to save, belonging to the object being saved
-    # @return persistence_id of the new 
+    #   :location_persistence_id - the persistence_id of the location of the object to create
+    #   :attributes - { Symbol name -> value } - attributes for the new object
+    #                                  value must implement .to_json
+    # @return persistence_id of the newly created object
     def self.create_object params
+      Storage::create_object params
     end
 
     # U in CRUD
-    # Save a single attribute for a persistent object
+    # Set a single attribute for a persistent object
     # required params
-    #   :persistence_id - the id of the existing persistent object
-    #   :name - String - name of the attribute to save
-    #   :value - value of the attribute to save. Will be serialized to json. Must implement value.to_json
-    # @returns nil
-    def self.save_attribute params
-      params[:value] = serialize_attribute_value params[:value]
-      # TODO
-      nil
+    #   :database  - the database to use, must be :world or :instance
+    #   :persistence_id - id of the existing persistent object whose attribute is being set
+    #   :name - Symbol - name of the attribute to set
+    #   :value - value - value of the attribute to set - value must implement .to_json
+    # @return nil
+    def self.set_attribute params
+      Storage::set_attribute params
     end
 
     # U in CRUD
     # Set the location for a persistent object
     # required params
+    #   :database  - the database to use, must be :world or :instance
     #   :persistence_id - id of the existing persistent object to set the location for
     #   :location_persistence_id - existing persistent object id which is the location to set
-    # @returns nil
+    # @return nil
     def self.set_location params
-      nil
+      Storage::set_location params
     end
 
     # D in CRUD
@@ -78,27 +81,24 @@ module NoricMud
     private
       
     @@class_map = Bijection.new
-    @@class_map.add NoricMud::Object, :object
+    @@class_map.add NoricMud::Object, "object"
 
-    def self.class_to_value klass
+    def self.object_class_type_to_string klass
       @class_map.get_y klass
     end
 
-    def self.value_to_class value
-      @class_map.get_x value
+    def self.object_class_string_to_type string
+      @class_map.get_x string
     end
 
-    # Serialize the passed attribute value. Values are wrapped in { :data => value } so literal values don't generate json parse errors.
-    #  E.g. "foo" isn't valid json, but "{ :data => "foo" }" is valid json.
-    def self.serialize_attribute_value value
-      { :data => value }.to_json
-      # todo catch serialization errors
+    # Serialize the passed data into a String containing JSON.
+    def self.serialize data
+      { :data => data }.to_json
     end
 
-    # Deserialize the passed attribute value. Note the { :data => value } wrapper explained above.
-    def self.deserialize_attribute_value serialized_value
-      (JSON.parse serialized_value)[:data]
-      # todo catch parse errors
+    # Deserialize the passed String containing JSON, which must have been previously serialized with Persistence::serialize(). 
+    def self.deserialize json_string
+      JSON.parse(json_string)[:data]
     end 
   end
 end
