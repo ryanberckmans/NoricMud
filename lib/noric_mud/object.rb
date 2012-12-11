@@ -12,11 +12,8 @@ module NoricMud
     # transient attributes on all mud objects:
     #contents
 
-    # instance variables
-    #attributes
-    
     # public operations
-    #bool persist?
+    #bool persistent?
     #void persist
     #id persistence_id
     #location=
@@ -41,33 +38,53 @@ module NoricMud
     #bool persisted_attribute? attribute_name
     #klass perssitence_class
 
-    # params
+    # Constructor for NoricMud::Object
+    # Any parameters will be set without any updates to persistence. This is intended for use, e.g. within persistence itself, to deserialize an object subtree from persistence without circularly writing back to persistence.
+    # optional params
     #   :attributes - set of attributes for this object
-    #   :location to attach to
+    #   :location - an instance of NoricMud::Object to attach to
     #   :persistence_id - nil or FixNum if this object is persisted
-    def initialize params
-      @attributes = params[:attributes]
-      @location = params[:location]
-      @persistence_id = params[:persistence_id]
+    def initialize params={}
+      @attributes = params[:attributes] || {} # never modify directly, use set_attribute
+      @location = params[:location] # never modify directly, use location=
+      @persistence_id = params[:persistence_id] # constant
+
+      @contents = [] # transient. It's expected, but unenforced, that any NoricMud::Object with location set to this should be included in contents.
     end
 
-    def persist?
-      !@persistence.nil?
+    attr_reader :persistence_id, :location
+
+    attr_accessor :contents
+
+    def persistent?
+      !persistence_id.nil? || (!location.nil? && location.persistent?)
     end
 
-    # if no persistence exists, create new persistence and save
-    # postcondition: persist? == true
     def persist
-      @persistence = persistence_class.new self unless persist?
-      nil
     end
 
-    protected
+    def location= new_location
+      #TODO
+    end
 
-    # subclasses of MudObject override persistence_class
-    # to return the persistence class associated with the subclass
-    def persistence_class
-      raise "#persistence_class must be overridden"
+    def to_s
+      s = ""
+      s += "object, ruby object_id:#{self.object_id}\n"
+      s += "  persistence_id: #{persistence_id.nil? ? nil : persistence_id}\n"
+      s += "  persistent?: #{persistent?.to_s}\n"
+      s += "  location persistence_id: #{location.nil? ? nil : location.persistence_id}\n"
+      s += "  attributes: #{@attributes.to_s}\n"
+      s += "  contents: #{contents.empty? ? "<empty>" : ""}\n\n"
+      unless contents.empty?
+        t = ""
+        contents.each do |object|
+          t += object.to_s
+        end
+        t.lines.each do |line|
+          s += "    #{line}"
+        end
+      end
+      s
     end
   end
 end
