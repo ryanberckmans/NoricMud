@@ -1,8 +1,6 @@
 module NoricMud
+  # Instances of NoricMud::Object are not threadsafe and are intended to be used by a single thread.
   class Object
-    # db columns on all mud objects:
-    #parent_mud_object_id # i.e. location.persistence_id
-    
     # db attributes on all mud objects:
     #short_name
     #long_name
@@ -13,11 +11,6 @@ module NoricMud
     #contents
 
     # public operations
-    #bool persistent?
-    #void persist
-    #id persistence_id
-    #location=
-    #location
     #short_name=
     #short_name
     #long_name=
@@ -28,16 +21,6 @@ module NoricMud
     #add_keyword
     #remove_keyword
 
-    # private operations
-    #void set_attribute attribute_name, attribute_value
-    #void persist_attribute attribute_name, attribute_value
-    #void create_new_persistence
-    #bool persistence_exists?
-
-    # overridden operations
-    #bool persisted_attribute? attribute_name
-    #klass perssitence_class
-
     # Constructor for NoricMud::Object
     # Any parameters will be set without any updates to persistence. This is intended for use, e.g. within persistence itself, to deserialize an object subtree from persistence without circularly writing back to persistence.
     # optional params
@@ -47,7 +30,7 @@ module NoricMud
     def initialize params={}
       @attributes = params[:attributes] || {} # never modify directly, use set_attribute
       @location = params[:location] # never modify directly, use location=
-      @persistence_id = params[:persistence_id] # constant
+      @persistence_id = params[:persistence_id]
 
       @contents = [] # transient. It's expected, but unenforced, that any NoricMud::Object with location set to this should be included in contents.
     end
@@ -57,22 +40,65 @@ module NoricMud
     attr_accessor :contents
 
     def persistent?
-      !persistence_id.nil? || (!location.nil? && location.persistent?)
+      persistence_exists? || (!location.nil? && location.persistent?)
     end
 
+    def location_persistence_id
+      location.nil? ? nil : location.persistence_id
+    end
+
+    # Creates persistence for this object, unless it already exists
+    # @return nil
     def persist
+      database = :world # TODO inject database, probably based on self.class
+      unless persistence_exists?
+        @persistence_id = Persistence::create_object :database => database, :class => self.class, :location_persistence_id => location_persistence_id, :attributes => @attributes
+      end
+      nil
     end
 
+    # Set this object's location. Note that location.contents should include this (and any former location.contents should exclude this), and this must be done externally.
+    # If the new location is persistent, this object will be persisted.
+    # @param new_location - NoricMud::Object to set as this object's location
+    # @return nil
     def location= new_location
-      #TODO
+      @location = new_location
+      if persistence_exists?
+        database = :world # TODO inject database, probably based on self.class
+        Persistence::set_location :database => database, :persistence_id => persistence_id, :location_persistence_id => location_persistence_id
+      else
+        persist if !new_location.nil? && new_location.persistent?
+      end
+      nil
     end
 
+    def persistence_exists?
+      !@persistence_id.nil?
+    end
+
+    public # TODO protected
+    # Set an attribute on this object.
+    # @param name - Symbol - name of the attribute to set
+    # @param value - value of the attribute to set - value must implement .to_json for persistence
+    # @return nil
+    def set_attribute name, value
+      raise "attribute name must be a Symbol" unless name.is_a? Symbol # things can get pretty broken during persistence deserialization / object reconstruction if attribute name isn't a Symbol
+      @attributes[name] = value
+      if persistent?
+        raise "an object that's persistent should have existing persistence in the database already, because we're in set_attribute(); this class isn't threadsafe and persistence should be created when persist() is called or location is set to a persistent location" unless persistence_exists?
+        database = :world # TODO inject database, probably based on self.class
+        Persistence::set_attribute :database => database, :persistence_id => persistence_id, :name => name, :value => value
+      end
+      nil
+    end
+
+    public
     def to_s
       s = ""
       s += "object, ruby object_id:#{self.object_id}\n"
-      s += "  persistence_id: #{persistence_id.nil? ? nil : persistence_id}\n"
+      s += "  persistence_id: #{persistence_exists? ? persistence_id : nil}\n"
       s += "  persistent?: #{persistent?.to_s}\n"
-      s += "  location persistence_id: #{location.nil? ? nil : location.persistence_id}\n"
+      s += "  location persistence_id: #{location_persistence_id}\n"
       s += "  attributes: #{@attributes.to_s}\n"
       s += "  contents: #{contents.empty? ? "<empty>" : ""}\n\n"
       unless contents.empty?
