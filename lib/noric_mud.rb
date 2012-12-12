@@ -5,6 +5,17 @@ require_relative "noric_mud/persistence"
 
 module NoricMud
   class << self
+
+    # Move the passed object of type NoricMud::Object from object.location to the passed destination
+    # Updates the contents of the old and new locations
+    # @return nil
+    def move object, destination
+      object.location.contents.delete object unless object.location.nil?
+      object.location = destination
+      destination.contents << object
+      nil
+    end
+
     @@queue = Queue.new
 
     # push block onto queue for asynchronous execution

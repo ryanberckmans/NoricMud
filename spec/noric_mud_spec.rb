@@ -1,6 +1,56 @@
 require "spec_helper"
+require "noric_mud"
 
 describe NoricMud do
+  describe "move" do
+    before :each do
+      @object = double NoricMud::Object
+      @destination = double NoricMud::Object
+      @contents = []
+      
+      @object.stub(:location) { @location }
+      @object.stub(:location=) { nil }
+      @destination.stub(:contents) { @contents }
+    end
+
+    def move
+      NoricMud::move @object, @destination
+    end
+    
+    shared_examples "a move" do
+      it "adds object to destination's contents" do
+        move
+        @contents.should include @object
+      end
+
+      it "sets object.location to the destination" do
+        @object.should_receive(:location=).with(@destination).once
+        move
+      end
+    end
+
+    context "with a non-nil location" do
+      before :each do
+        @location = double NoricMud::Object
+        @location_contents = [@object]
+        @location.stub(:contents) { @location_contents }
+      end
+      it_behaves_like "a move"
+
+      it "removes object from location's contents" do
+        move
+        @location_contents.should_not include @object
+      end
+    end
+
+    context "with a nil location" do
+      before :each do
+        @location = nil
+      end
+      it_behaves_like "a move"
+    end
+  end # move
+  
   before :all do
     NoricMud::start_async_thread
   end
