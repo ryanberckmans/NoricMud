@@ -99,6 +99,14 @@ module NoricMud
       nil
     end
 
+    # Set an attribute on this object, unless the attribute already exists
+    # Same params as set_attribute
+    # @return nil
+    def set_attribute_unless_exists name, value
+      set_attribute name, value unless @attributes.key? name
+      nil
+    end
+
     public
     def to_s
       s = ""
