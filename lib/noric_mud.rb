@@ -6,6 +6,12 @@ require_relative "noric_mud/persistence"
 module NoricMud
   class << self
 
+    # Determine the current room of an object.
+    # Could be nil if object is detached.
+    # Could be nil if the object is a zone or something without a Room as an ancestor
+    def room
+    end
+    
     # Move the passed object of type NoricMud::Object from object.location to the passed destination
     # Updates the contents of the old and new locations
     # @return nil
