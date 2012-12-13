@@ -21,9 +21,16 @@ module NoricMud
     # @return room_instance_id of new room
     def add_room room_template
       raise "only a room_template may be added to a zone" unless room_template.is_a? RoomTemplate
+      NoricMud::move room_template, self
       room_instance_id = next_room_instance_id
       get_attribute(:rooms)[room_instance_id] = room_template
       room_instance_id
+    end
+
+    # Delete the existing room with the passed room_instance_id from this zone
+    # @param room_instance_id - the id of the room to delete
+    def delete_room room_instance_id
+      raise "pending"
     end
 
     # Return an Enumerator containing each room in this zone.
