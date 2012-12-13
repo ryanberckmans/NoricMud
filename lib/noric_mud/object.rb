@@ -77,6 +77,13 @@ module NoricMud
     end
 
     protected
+    # Get an attribute on this object.
+    # @param name - Symbol - name of the attribute to get
+    # @return attribute value for the passed name
+    def get_attribute name
+      @attributes[name]
+    end
+    
     # Set an attribute on this object.
     # @param name - Symbol - name of the attribute to set
     # @param value - value of the attribute to set - value must implement .to_json for persistence

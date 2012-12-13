@@ -14,7 +14,7 @@ describe NoricMud::ObjectParts::Description do
   end
 
   it "alises description() with desc()" do
-    subject.desc.object_id.should eq(subject.description.object_id)
+    subject.method(:desc).should eq(subject.method(:description))
   end
 
   it "calls set_attribute with new description on description=" do
