@@ -1,15 +1,6 @@
 module NoricMud
   # Instances of NoricMud::Object are not threadsafe and are intended to be used by a single thread.
   class Object
-    # db attributes on all mud objects:
-    #short_name
-    #long_name
-    #description
-    #keywords
-
-    # transient attributes on all mud objects:
-    #contents
-
     # public operations
     #short_name=
     #short_name
@@ -54,6 +45,15 @@ module NoricMud
       unless persistence_exists?
         @persistence_id = Persistence::create_object :database => database, :class => self.class, :location_persistence_id => location_persistence_id, :attributes => @attributes
       end
+      # note that contents depends on this persistence_id and this object must be saved first
+      # once Persistence is asynchronous this will become trickier
+      contents.each do |contained_object|
+        # If the contained_object doesn't have persistence, we want to create it.
+        # If the contained_object does have persistence, we want to make sure that any new persistence_id is set as the contained_object's location_persistence_id
+        # This behavior is exactly what location= does, and so call it instead of persist() which wouldn't update location_persistence_id when persistence already exists.
+        # The inefficiency with location= is that every child object creating a new persistence will have to call up to this object in persistent?.  That's ok for now.
+        contained_object.location = self
+      end
       nil
     end
 
@@ -76,7 +76,7 @@ module NoricMud
       !@persistence_id.nil?
     end
 
-    public # TODO protected
+    protected
     # Set an attribute on this object.
     # @param name - Symbol - name of the attribute to set
     # @param value - value of the attribute to set - value must implement .to_json for persistence
