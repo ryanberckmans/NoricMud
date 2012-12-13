@@ -1,13 +1,11 @@
 require 'spec_helper'
 require 'noric_mud/object_parts/short_name'
 
-describe NoricMud::ObjectParts::ShortName do
-  class IncludeShortName
-    include NoricMud::ObjectParts::ShortName
-  end
+class IncludeShortName
+  include NoricMud::ObjectParts::ShortName
+end
 
-  subject { IncludeShortName.new }
-  
+describe IncludeShortName do
   it "calls get_attribute :short_name on short_name()" do
     subject.should_receive(:get_attribute).once.with(:short_name)
     subject.short_name

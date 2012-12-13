@@ -1,13 +1,11 @@
 require 'spec_helper'
 require 'noric_mud/object_parts/long_name'
 
-describe NoricMud::ObjectParts::LongName do
-  class IncludeLongName
-    include NoricMud::ObjectParts::LongName
-  end
+class IncludeLongName
+  include NoricMud::ObjectParts::LongName
+end
 
-  subject { IncludeLongName.new }
-  
+describe IncludeLongName do
   it "calls get_attribute :long_name on long_name()" do
     subject.should_receive(:get_attribute).once.with(:long_name)
     subject.long_name

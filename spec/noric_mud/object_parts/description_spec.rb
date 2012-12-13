@@ -1,13 +1,11 @@
 require 'spec_helper'
 require 'noric_mud/object_parts/description'
 
-describe NoricMud::ObjectParts::Description do
-  class IncludeDescription
-    include NoricMud::ObjectParts::Description
-  end
-
-  subject { IncludeDescription.new }
+class IncludeDescription
+  include NoricMud::ObjectParts::Description
+end
   
+describe IncludeDescription do
   it "calls get_attribute :description on description()" do
     subject.should_receive(:get_attribute).once.with(:description)
     subject.description

@@ -1,13 +1,11 @@
 require 'spec_helper'
 require 'noric_mud/object_parts/gender'
 
-describe NoricMud::ObjectParts::Gender do
-  class IncludeGender
-    include NoricMud::ObjectParts::Gender
-  end
-
-  subject { IncludeGender.new }
-
+class IncludeGender
+  include NoricMud::ObjectParts::Gender
+end
+  
+describe IncludeGender do
   it "calls get_attribute :gender on gender()" do
     subject.should_receive(:get_attribute).once.with(:gender)
     subject.gender
