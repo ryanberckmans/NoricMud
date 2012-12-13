@@ -3,6 +3,10 @@ require 'noric_mud/object'
 
 module NoricMud
   describe Object do
+    pending "inject database"
+    pending "#delete_attribute"
+    pending "modifying an attribute without calling set_attribute, such as modifying an array, won't save it"
+    
     it "set_attribute_unless_exists sets the attribute" do
       bar = [1,2,3]
       subject.__send__ :set_attribute_unless_exists, :foo, bar
