@@ -6,6 +6,8 @@ module NoricMud
     its("class.ancestors") { should include(ObjectParts::ShortName) }
     its("class.ancestors") { should include(ObjectParts::Description) }
 
+    pending "well this room_instance_id stuff was fun to spec, but an Object should only know about itself and its subtree"
+
     it { expect {subject.add_room_instance_id 0}.to change {subject.each_room_instance_id.to_a.size}.from(0).to(1) }
     it { subject.add_room_instance_id(777).should be_nil }
     
