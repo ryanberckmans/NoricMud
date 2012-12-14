@@ -20,4 +20,8 @@ describe IncludeDescription do
     subject.should_receive(:set_attribute).once.with(:description, new_description)
     subject.description = new_description
   end
+
+  it "alises description=() with desc()" do
+    subject.method(:desc=).should eq(subject.method(:description=))
+  end
 end

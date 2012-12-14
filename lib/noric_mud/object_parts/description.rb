@@ -10,6 +10,8 @@ module NoricMud
       def description= new_description
         set_attribute :description, new_description
       end
+
+      alias_method :desc=, :description=
     end
   end
 end

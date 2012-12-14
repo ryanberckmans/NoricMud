@@ -1,16 +1,6 @@
 module NoricMud
   # Instances of NoricMud::Object are not threadsafe and are intended to be used by a single thread.
   class Object
-    # public operations
-    #short_name=
-    #short_name
-    #long_name=
-    #long_name
-    #description=
-    #description
-    #[string] keywords
-    #add_keyword
-    #remove_keyword
 
     # Constructor for NoricMud::Object
     # Any parameters will be set without any updates to persistence. This is intended for use, e.g. within persistence itself, to deserialize an object subtree from persistence without circularly writing back to persistence.
@@ -62,6 +52,7 @@ module NoricMud
     # @param new_location - NoricMud::Object to set as this object's location
     # @return nil
     def location= new_location
+      raise "location must be an instance of NoricMud::Object or nil" if !(new_location.nil? || new_location.is_a?(Object))
       @location = new_location
       if persistence_exists?
         database = :world # TODO inject database, probably based on self.class

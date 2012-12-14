@@ -89,7 +89,7 @@ module NoricMud
 
             if attribute_record.empty?
               # If the attribute doesn't exist, we must INSERT and not UPDATE
-              attribute_record.insert :object_id => params[:persistence_id], :name => params[:name].to_s, :value => params[:value]
+              attribute_record.insert :object_id => params[:persistence_id], :name => params[:name].to_s, :value => params[:value] # convert name to String as Symbol breaks sqlite
             else
               attribute_record.update :value => params[:value]
             end
