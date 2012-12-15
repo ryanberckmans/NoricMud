@@ -14,7 +14,7 @@ module NoricMud
       # @param key - key to associate with the passed value
       # @param value - value referenced by the passed key, will be garbage-collected if this is its only reference
       # @return nil
-      def set_object key, value
+      def []= key, value
         @soft_value_map[key] = value
         nil
       end
@@ -22,7 +22,7 @@ module NoricMud
       # Returns the value associated with the passed key
       # May return nil if the key isn't in the IdentityMap, or if the value was garbage-collected
       # @return value
-      def get_object key
+      def [] key
         @soft_value_map[key]
       end
     end
