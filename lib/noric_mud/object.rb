@@ -11,6 +11,9 @@ module NoricMud
     #   :location - an instance of NoricMud::Object to attach to
     #   :persistence_id - nil or FixNum if this object is persisted
     def initialize params={}
+      raise "attributes must be a Hash" if params.key? :attributes && !params[:attributes].is_a?(Hash)
+      validate_location params[:location]
+      
       @attributes = params[:attributes] || {} # never modify directly, use set_attribute
       @location = params[:location] # never modify directly, use location=
       @persistence_id = params[:persistence_id]
@@ -53,7 +56,8 @@ module NoricMud
     # @param new_location - NoricMud::Object to set as this object's location
     # @return nil
     def location= new_location
-      raise "location must be an instance of NoricMud::Object or nil" if !(new_location.nil? || new_location.is_a?(Object))
+      validate_location new_location
+
       @location = new_location
       if persistence_exists?
         Persistence::set_location :database => database, :persistence_id => persistence_id, :location_persistence_id => location_persistence_id
@@ -117,6 +121,14 @@ module NoricMud
     # Do not override. Convenience method to call Class.database
     def database
       self.class.database
+    end
+
+    private
+    def validate_location location
+      raise "location must be an instance of NoricMud::Object or nil" if !(location.nil? || location.is_a?(NoricMud::Object))
+    end
+
+    def valid_attributes
     end
 
     public
