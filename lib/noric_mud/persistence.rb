@@ -44,23 +44,24 @@ module NoricMud
     end
 
     # C in CRUD
-    # Create a new object in the database
+    # Create a new object in the database, returning its new persistence_id. The passed object will not be modified and must assign the returned persistence_id to itself
     # required params
-    #   :database  - the database create in, must be :world or :instance
-    #   :class - the class of the created object, used in get_object to reconstruct the object
-    # optional params
-    #   :location_persistence_id - the persistence_id of the location of the object to create
-    #   :attributes - { Symbol name -> value } - attributes for the new object, values must support Marshal.dump
+    #   object - NoricMud::Object which will be created in the database, must not already be persistent
     # @return persistence_id of the newly created object
-    def self.create_object params
-      raise "param :class is required for create_object" unless params.key? :class
+    def self.create_object object
+      raise "object must be transient when calling create_object, i.e. object.persistence_id == nil" unless object.persistence_id.nil?
       
-      # Use the :class param to create an attribute with (OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME, string value of class)
-      # This attribute will be used to reconstruct the object
-      object_class_string = params.delete(:class).to_s
+      params = {
+        :database => object.database,
+        :location_persistence_id => object.location_persistence_id,
+        :attributes => object.send(:attributes)
+      }
+      
+      # Use the object class to create an attribute with (OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME, string value of class), used to reconstruct the object
+      object_class_string = object.class.to_s
 
       params[:attributes] ||= {}
-      params[:attributes] = params[:attributes].merge({ OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME => object_class_string }) # merge creates a new hash; the copy produced by merge is a shallow clone and could still result in unwanted mutations to the passed attributes, although unlikely.
+      params[:attributes] = params[:attributes].merge({ OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME => object_class_string }) # merge creates a new hash; use a new hash to prevent modifications to passed attributes; the copy produced by merge is a shallow clone and could still result in unwanted mutations to the passed attributes
 
       params[:attributes].each_pair do |name,value|
         params[:attributes][name] = serialize value
@@ -100,7 +101,7 @@ module NoricMud
     # No support to delete an attribute
     
     private
-      
+    
     # Serialize the passed data
     def self.serialize data
       Marshal.dump data

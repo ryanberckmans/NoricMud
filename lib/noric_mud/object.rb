@@ -82,6 +82,17 @@ module NoricMud
       Persistence::get_object :database => database, :persistence_id => persistence_id_string.to_i
     end
 
+    # Override. Returns the persistence database for all instances of this class
+    # @returns database - must be :world or :instance
+    def self.database
+      :instance
+    end
+
+    # Do not override. Convenience method to call Class.database
+    def database
+      self.class.database
+    end
+
     protected
     # Get an attribute on this object.
     # @param name - Symbol - name of the attribute to get
@@ -112,23 +123,13 @@ module NoricMud
       nil
     end
 
-    # Override. Returns the persistence database for all instances of this class
-    # @returns database - must be :world or :instance
-    def self.database
-      :instance
-    end
-
-    # Do not override. Convenience method to call Class.database
-    def database
-      self.class.database
-    end
-
     private
     def validate_location location
       raise "location must be an instance of NoricMud::Object or nil" if !(location.nil? || location.is_a?(NoricMud::Object))
     end
 
-    def valid_attributes
+    def attributes
+      @attributes
     end
 
     public
