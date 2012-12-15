@@ -1,3 +1,5 @@
+require_relative 'transient_object_error'
+
 module NoricMud
   # Instances of NoricMud::Object are not threadsafe and are intended to be used by a single thread.
   class Object
@@ -31,7 +33,6 @@ module NoricMud
     # Creates persistence for this object, unless it already exists
     # @return nil
     def persist
-      database = :world # TODO inject database, probably based on self.class
       unless persistence_exists?
         @persistence_id = Persistence::create_object :database => database, :class => self.class, :location_persistence_id => location_persistence_id, :attributes => @attributes
       end
@@ -55,7 +56,6 @@ module NoricMud
       raise "location must be an instance of NoricMud::Object or nil" if !(new_location.nil? || new_location.is_a?(Object))
       @location = new_location
       if persistence_exists?
-        database = :world # TODO inject database, probably based on self.class
         Persistence::set_location :database => database, :persistence_id => persistence_id, :location_persistence_id => location_persistence_id
       else
         persist if !new_location.nil? && new_location.persistent?
@@ -64,7 +64,18 @@ module NoricMud
     end
 
     def persistence_exists?
-      !@persistence_id.nil?
+      !persistence_id.nil?
+    end
+
+    # Implements Marshal interface, http://www.ruby-doc.org/core-1.9.3/Marshal.html
+    def _dump level
+      raise TransientObjectError.new self unless persistence_exists?
+      persistence_id.to_s
+    end
+
+    # Implements Marshal interface, http://www.ruby-doc.org/core-1.9.3/Marshal.html
+    def self._load persistence_id_string
+      Persistence::get_object :database => database, :persistence_id => persistence_id_string.to_i
     end
 
     protected
@@ -84,7 +95,6 @@ module NoricMud
       @attributes[name] = value
       if persistent?
         raise "an object that's persistent should have existing persistence in the database already, because we're in set_attribute(); this class isn't threadsafe and persistence should be created when persist() is called or location is set to a persistent location" unless persistence_exists?
-        database = :world # TODO inject database, probably based on self.class
         Persistence::set_attribute :database => database, :persistence_id => persistence_id, :name => name, :value => value
       end
       nil
@@ -96,6 +106,17 @@ module NoricMud
     def set_attribute_unless_exists name, value
       set_attribute name, value unless @attributes.key? name
       nil
+    end
+
+    # Override. Returns the persistence database for all instances of this class
+    # @returns database - must be :world or :instance
+    def self.database
+      :instance
+    end
+
+    # Do not override. Convenience method to call Class.database
+    def database
+      self.class.database
     end
 
     public
