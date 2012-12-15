@@ -106,7 +106,9 @@ module NoricMud
         def set_location params
           sequel_db = get_db params[:database]
           sequel_db.transaction do
-            sequel_db[:objects].where( :id => params[:persistence_id] ).update :location_object_id => params[:location_persistence_id]
+            object_record = sequel_db[:objects].where( :id => params[:persistence_id] )
+            raise "persistence_id correspond to an existing object" if object_record.empty?
+            object_record.update :location_object_id => params[:location_persistence_id]
           end
           nil
         end
@@ -128,7 +130,6 @@ module NoricMud
                          )
         end
 
-        public # TODO not public
         def get_db name
           @@databases[name]
         end
