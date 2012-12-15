@@ -50,19 +50,20 @@ module NoricMud
     #   :class - the class of the created object, used in get_object to reconstruct the object
     # optional params
     #   :location_persistence_id - the persistence_id of the location of the object to create
-    #   :attributes - { Symbol name -> value } - attributes for the new object
-    #                                  value must implement .to_json
+    #   :attributes - { Symbol name -> value } - attributes for the new object, values must support Marshal.dump
     # @return persistence_id of the newly created object
     def self.create_object params
+      raise "param :class is required for create_object" unless params.key? :class
+      
       # Use the :class param to create an attribute with (OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME, string value of class)
-      # This attribute will be used to reconstruct the object during serialization
+      # This attribute will be used to reconstruct the object
       object_class_string = params.delete(:class).to_s
 
       params[:attributes] ||= {}
       params[:attributes] = params[:attributes].merge({ OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME => object_class_string }) # merge creates a new hash; the copy produced by merge is a shallow clone and could still result in unwanted mutations to the passed attributes, although unlikely.
 
-      params[:attributes].each_key do |name|
-        params[:attributes][name] = serialize params[:attributes][name]
+      params[:attributes].each_pair do |name,value|
+        params[:attributes][name] = serialize value
       end
       
       Storage::create_object params
@@ -74,11 +75,12 @@ module NoricMud
     #   :database  - the database to use, must be :world or :instance
     #   :persistence_id - id of the existing persistent object whose attribute is being set
     #   :name - Symbol - name of the attribute to set
-    #   :value - value - value of the attribute to set - value must implement .to_json
+    #   :value - value - value of the attribute to set - must support Marshal.dump
     # @return nil
     def self.set_attribute params
       params[:value] = serialize params[:value]
       Storage::set_attribute params
+      nil
     end
 
     # U in CRUD
@@ -90,6 +92,7 @@ module NoricMud
     # @return nil
     def self.set_location params
       Storage::set_location params
+      nil
     end
 
     # D in CRUD
@@ -98,14 +101,14 @@ module NoricMud
     
     private
       
-    # Serialize the passed data into a String containing JSON.
+    # Serialize the passed data
     def self.serialize data
-      { :data => data }.to_json
+      Marshal.dump data
     end
 
-    # Deserialize the passed String containing JSON, which must have been previously serialized with Persistence::serialize(). 
-    def self.deserialize json_string
-      JSON.parse(json_string, :symbolize_names => true)[:data]
+    # Deserialize the passed serialized data
+    def self.deserialize data
+      Marshal.load data
     end 
   end
 end
