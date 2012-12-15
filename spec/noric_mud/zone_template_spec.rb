@@ -7,10 +7,12 @@ module NoricMud
     its("class.ancestors") { should include(ObjectParts::Description) }
 
     it { expect { add_room nil }.to raise_error }
-    it { expect { add_room NoricMud::Object.new }.to raise_error }
+    it { expect { add_room [] }.to raise_error }
 
     its(:each_room) { should be_a(Enumerator) }
+    its("each_room.to_a.size") { should eq(0) }
 
+    its(:next_room_instance_id) { should eq(0) }
     its(:next_room_instance_id) { should be_a(Fixnum) }
     it { expect { subject.__send__ :next_room_instance_id }.to change{subject.__send__ :next_room_instance_id}.by(2) } # by(2) and not by(1) since next_room_instance_id increments itself during the check
 
@@ -23,15 +25,9 @@ module NoricMud
       end
       its("each_room.to_a") { should include([@room_instance_id,@template]) }
     end
-    
-    context "initialized with params" do
-      subject { ZoneTemplate.new({ :persistence_id => 5, :location => 7}) }
-      its(:persistence_id) { should eq(5) }
-      its(:location) { should eq(7) }
-      its(:next_room_instance_id) { should eq(0) }
-      its("each_room.to_a.size") { should eq(0) }
-    end
-    
+
+    pending "test that ZoneTemplate#initialize passes parameters to super"
+
     context "with some basic properties" do
       before :each do
         subject.short_name = "some short name zone style"
