@@ -50,6 +50,14 @@ module NoricMud
           expect { Storage::set_attribute({ :persistence_id => @persistence_id, :name => :foo, :value => "valid"}.merge params).to change(Storage::get_attributes({ :persistence_id => @persistence_id }.merge params).size).from(0).to(1) }
         end
 
+        it "raises on setting an attribute with empty value" do
+          expect { Storage::set_attribute({ :persistence_id => @persistence_id, :name => "valid234", :value => ""}.merge params) }.to raise_error(Sequel::DatabaseError)
+        end
+
+        it "raises on setting an attribute with empty name" do
+          expect { Storage::set_attribute({ :persistence_id => @persistence_id, :name => "", :value => "not empty"}.merge params) }.to raise_error(Sequel::DatabaseError)
+        end
+        
         context "setting an attribute" do
           before :each do
             @name = :attr_name
