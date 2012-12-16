@@ -107,7 +107,7 @@ module NoricMud
           sequel_db = get_db params[:database]
           sequel_db.transaction do
             object_record = sequel_db[:objects].where( :id => params[:persistence_id] )
-            raise "persistence_id correspond to an existing object" if object_record.empty?
+            raise "persistence_id must correspond to an existing object" if object_record.empty?
             object_record.update :location_object_id => params[:location_persistence_id]
           end
           nil
