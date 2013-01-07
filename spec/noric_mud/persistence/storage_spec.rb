@@ -95,6 +95,11 @@ module NoricMud
             @persistence_id2 = Storage::create_object params
           end
 
+          it "get_all_object_ids includes both created objects" do
+            all_ids = Storage::get_all_object_ids params
+            all_ids.should include(@persistence_id,@persistence_id2)
+          end
+
           it "allows set_location on the existing objects" do
             def object1_in_object2
               Storage::set_location({ :persistence_id => @persistence_id, :location_persistence_id => @persistence_id2, :database => :world})

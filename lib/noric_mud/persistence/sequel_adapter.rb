@@ -8,6 +8,20 @@ module NoricMud
     class SequelAdapter
       class << self
 
+        # Return persistence_ids for all objects in the database
+        # required params
+        #   :database - the database to get from, must be :world or :instance
+        # @return an array of persistence_ids for all stored objects
+        def get_all_object_ids params
+          object_ids = nil
+
+          sequel_db = get_db params[:database]
+          sequel_db.transaction do
+            object_ids = sequel_db[:objects].select_map(:id)
+          end
+          object_ids
+        end
+
         # Return all attributes for the passed persistence id.
         # Attribute names are converted to symbols, e.g. "age" -> :age
         # Attribute values are unmodified (and, if applicable, not yet deserialized)
@@ -35,13 +49,11 @@ module NoricMud
         #   :persistence_id - id for the object whose contained ids will be returned
         # @return an array of persistence_ids for all contained by object with the passed persistence_id
         def get_object_contents_ids params
-          object_contents_ids = []
+          object_contents_ids = nil
 
           sequel_db = get_db params[:database]
           sequel_db.transaction do
-            sequel_db[:objects].where(:location_object_id => params[:persistence_id]).select(:id).all do |row|
-              object_contents_ids << row[:id]
-            end
+            object_contents_ids = sequel_db[:objects].where(:location_object_id => params[:persistence_id]).select_map(:id)
           end
 
           object_contents_ids
