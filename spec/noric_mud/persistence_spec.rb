@@ -24,10 +24,10 @@ module NoricMud
       adjusted_params = {
         :database => :world,
         :location_persistence_id => params[:location_persistence_id],
-        :attributes => params[:attributes].merge({ Persistence::OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME => object.class.to_s })
+        :attributes => params[:attributes].merge({ subject::Util::OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME => object.class.to_s })
       }
       adjusted_params[:attributes].each_key do |name|
-        adjusted_params[:attributes][name] = subject.send :serialize, adjusted_params[:attributes][name]
+        adjusted_params[:attributes][name] = subject::Util::serialize(adjusted_params[:attributes][name] )
       end
       subject::Storage.should_receive(:create_object).once.with(adjusted_params)
 
@@ -90,33 +90,9 @@ module NoricMud
 
     it "set_attribute serializes the value it passes to Storage::set_attribute" do
       params = { :value => "serialize me!" }
-      params_serialized = { :value => subject.send(:serialize, params[:value]) }
+      params_serialized = { :value => subject::Util::serialize(params[:value]) }
       subject::Storage.should_receive(:set_attribute).once.with(params_serialized)
       subject::set_attribute params
-    end
-
-    it "serialize passes the data to Marshal.dump" do
-      data = [1,2,3]
-      Marshal.should_receive(:dump).once.with(data)
-      subject.send :serialize, data
-    end
-
-    it "serialize returns the data provided by Marshal.dump" do
-      result = [1,2,3,4]
-      Marshal.should_receive(:dump).once.and_return(result)
-      subject.send(:serialize, "data").should eq(result)
-    end
-
-    it "deserialize passes the data to Marshal.load" do
-      data = [1,2,3]
-      Marshal.should_receive(:load).once.with(data)
-      subject.send :deserialize, data
-    end
-
-    it "deserialize returns the data provided by Marshal.load" do
-      result = [1,2,3,4]
-      Marshal.should_receive(:load).once.and_return(result)
-      subject.send(:deserialize, "data").should eq(result)
     end
   end
 end
