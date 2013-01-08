@@ -3,6 +3,14 @@ require_relative 'transient_object_error'
 module NoricMud
   # Instances of NoricMud::Object are not threadsafe and are intended to be used by a single thread.
   class Object
+    # Inject the persistence dependency, used by all Objects
+    def self.persistence= persistence
+      @persistence = persistence
+    end
+
+    def self.persistence
+      @persistence
+    end
 
     # Constructor for NoricMud::Object
     # Any parameters will be set without any updates to persistence. This is intended for use, e.g. within persistence itself, to deserialize an object subtree from persistence without circularly writing back to persistence.
@@ -36,9 +44,9 @@ module NoricMud
     # @return nil
     def persist
       unless persistence_exists?
-        @persistence_id = Persistence::create_object self
+        @persistence_id = Object.persistence::create_object self
       end
-      # note that contents depends on this persistence_id and this object must be saved first
+      # note that contained objects depend on this persistence_id and this object must be saved first
       # once Persistence is asynchronous this will become trickier
       contents.each do |contained_object|
         # If the contained_object doesn't have persistence, we want to create it.
@@ -51,16 +59,19 @@ module NoricMud
     end
 
     # Set this object's location, updating the contents of any old and new locations.
+    # It is the caller's responsibility that the new location not introduce any cycles in the location graph. I.e. calling self.location repeatedly should never lead back to self.
     # If the new location is persistent, this object will be persisted.
     # @param new_location - NoricMud::Object to set as this object's location
     # @return nil
     def location= new_location
       validate_location new_location
-      self.location.contents.delete self unless @location.nil?
-      @location = new_location
-      @location.contents << self unless @location.nil?
+      unless new_location == @location
+        self.location.contents.delete self unless @location.nil?
+        @location = new_location
+        @location.contents << self unless @location.nil?
+      end
       if persistence_exists?
-        Persistence::set_location :database => database, :persistence_id => persistence_id, :location_persistence_id => location_persistence_id
+        Object.persistence::set_location :database => database, :persistence_id => persistence_id, :location_persistence_id => location_persistence_id
       else
         persist if !new_location.nil? && new_location.persistent?
       end
@@ -75,7 +86,7 @@ module NoricMud
 
     # Implements Marshal interface, http://www.ruby-doc.org/core-1.9.3/Marshal.html
     def self._load persistence_id_string
-      Persistence::get_object database, persistence_id_string.to_i
+      Object.persistence::get_object database, persistence_id_string.to_i
     end
 
     # Override. Returns the persistence database for all instances of this class
@@ -106,7 +117,7 @@ module NoricMud
       @attributes[name] = value
       if persistent?
         raise "an object that's persistent should have existing persistence in the database already, because we're in set_attribute(); this class isn't threadsafe and persistence should be created when persist() is called or location is set to a persistent location" unless persistence_exists?
-        Persistence::set_attribute :database => database, :persistence_id => persistence_id, :name => name, :value => value
+        Object.persistence::set_attribute :database => database, :persistence_id => persistence_id, :name => name, :value => value
       end
       nil
     end
