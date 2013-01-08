@@ -93,7 +93,7 @@ module NoricMud
       def self.create_object_from_serialized_attributes persistence_id, attributes
         raise ObjectCorruptedError, persistence_id unless attributes.key? OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
         object_class = Util::constantize deserialize attributes.delete OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
-        object_class.new persistence_id
+        object_class.new :persistence_id => persistence_id
       end
 
       def self.setup_object_contents persistence_id, database, objects
