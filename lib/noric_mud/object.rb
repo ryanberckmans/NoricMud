@@ -8,10 +8,10 @@ module NoricMud
     # Any parameters will be set without any updates to persistence. This is intended for use, e.g. within persistence itself, to deserialize an object subtree from persistence without circularly writing back to persistence.
     # optional params
     #   :persistence_id - nil or persistence id of this object in database
-    def initialize persistence_id=nil
+    def initialize params={}
       @attributes = {}
       @location = nil
-      @persistence_id = persistence_id
+      @persistence_id = params[:persistence_id]
 
       @contents = [] # transient. It's expected, but unenforced, that any NoricMud::Object with location set to this should be included in contents.
     end
