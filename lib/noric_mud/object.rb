@@ -75,7 +75,7 @@ module NoricMud
 
     # Implements Marshal interface, http://www.ruby-doc.org/core-1.9.3/Marshal.html
     def self._load persistence_id_string
-      Persistence::get_object :database => database, :persistence_id => persistence_id_string.to_i
+      Persistence::get_object database, persistence_id_string.to_i
     end
 
     # Override. Returns the persistence database for all instances of this class

@@ -3,7 +3,24 @@ require 'noric_mud/persistence'
 
 module NoricMud
   describe Persistence do
-    pending "get_object shouldn't have a location param, and delegate to a private get_object which does allow a location parameter for recursive construction. Top-level get_objects should have set_location nil called and returned as detached, to prevent a de-sync between the object's db location and in-game location"
+    before :each do
+      @identity_map = double 'IdentityMap'
+      @identity_map.stub :add_object
+      subject.identity_map = @identity_map
+    end
+
+    it "get_object delegates to identity_map" do
+      database = :foo
+      persistence_id = 42
+      @identity_map.should_receive(:get_object).once.with(database,persistence_id)
+      subject.get_object database, persistence_id
+    end
+
+    it "get_object returns the result of identity_map.get_object" do
+      result = :result
+      @identity_map.stub :get_object => result
+      subject.get_object(nil,nil).should eq(result)
+    end
 
     it "create_object passes params to Storage::create_object, deleting the :class parameter, adding the OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME parameter, and serializing attribute values" do
       params = {
@@ -62,6 +79,13 @@ module NoricMud
       result = 23423
       subject::Storage.should_receive(:create_object).once.and_return(result)
       subject::create_object(Object.new).should eq(result)
+    end
+
+    it "create_object adds the object to identity_map" do
+      subject::Storage.stub :create_object
+      object = Object.new
+      @identity_map.should_receive(:add_object).once.with(object)
+      subject::create_object(object).should
     end
 
     it "set_location passes params to Storage::set_location" do
