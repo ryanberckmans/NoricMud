@@ -19,11 +19,13 @@ describe NoricMud do
     
     shared_examples "a move" do
       it "adds object to destination's contents" do
+        pending "mv move specs into Object"
         move
         @contents.should include @object
       end
 
       it "sets object.location to the destination" do
+        pending "mv move specs into Object"
         @object.should_receive(:location=).with(@destination).once
         move
       end
@@ -38,6 +40,7 @@ describe NoricMud do
       it_behaves_like "a move"
 
       it "removes object from location's contents" do
+        pending "mv move specs into Object"
         move
         @location_contents.should_not include @object
       end
