@@ -4,6 +4,8 @@ require_relative 'object_not_found_error'
 require_relative 'object_corrupted_error'
 require_relative 'storage'
 
+# Warning: IdentityMap has implicit dependencies on any type it may try to construct when loading objects from the database. E.g., if IdentityMap may construct a ZoneTemplate, ZoneTemplate must be require'd before IdentityMap.instance is constructed
+
 module NoricMud
   module Persistence
     # IdentityMap is a singleton which maintains references to all objects persisted in the database.
@@ -96,8 +98,6 @@ module NoricMud
         DATABASES.each { |db| all_objects[db] = load_all_objects_from_database db }
         all_objects
       end # load_all_objects
-
-      instance # create IdentityMap instance by calling Singleton.instance
     end
   end
 end

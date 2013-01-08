@@ -28,18 +28,10 @@ module NoricMud
 
     attr_accessor :contents
 
-    def persistent?
-      !@persistence_id.nil?
-    end
-
-    def should_persist?
-      persistent? || (!location.nil? && location.should_persist?)
-    end
-
     def location_persistence_id
       location.nil? ? nil : location.persistence_id
     end
-
+    
     # Creates persistence for this object, unless it already exists
     # @return nil
     def persist
@@ -80,7 +72,7 @@ module NoricMud
 
     # Implements Marshal interface, http://www.ruby-doc.org/core-1.9.3/Marshal.html
     def _dump level
-      raise TransientObjectError.new self unless persistent?
+      raise TransientObjectError, self unless persistent?
       persistence_id.to_s
     end
 
@@ -102,7 +94,15 @@ module NoricMud
 
     protected
     attr_reader :persistence_id
-    
+
+    def persistent?
+      !@persistence_id.nil?
+    end
+
+    def should_persist?
+      persistent? || (!location.nil? && location.should_persist?)
+    end
+
     # Get an attribute on this object.
     # @param name - Symbol - name of the attribute to get
     # @return attribute value for the passed name

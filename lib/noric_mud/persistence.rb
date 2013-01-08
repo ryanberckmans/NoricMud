@@ -24,7 +24,7 @@ module NoricMud
       #   object - NoricMud::Object which will be created in the database, must not already be persistent
       # @return persistence_id of the newly created object
       def create_object object
-        raise "object must be transient when calling create_object" if object.persistent?
+        raise "object must be transient when calling create_object" if object.send :persistent?
         
         params = {
           :database => object.database,

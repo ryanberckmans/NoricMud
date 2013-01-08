@@ -10,7 +10,17 @@ module NoricMud
     
     pending "modifying an attribute without calling set_attribute, such as modifying an array, won't save it. Maybe this is a don't-play-with-fire thing. #modify_attribute can yield the value and persist it afterwards, and the burden is on the programmer not to modify attributes separately. That's a bit ghetto, isn't Evennia's system entirely transparent?  You set an attribute and it's magically updated, regardles of the complexity/depth of the attribute."
 
-    pending "the entire persistence api should be protected - i.e. accessible by other Object instances - except persist() which is really the only client-facing operation"
+    pending "#location_persistence_id should be protected (or not exist at all)"
+
+    context "a subclass overriding database" do
+      class Subclass < Object
+        def self.database
+          :another_database
+        end
+      end
+      subject { Subclass.new }
+      its(:database) { should eq(:another_database) }
+    end
     
     context "with a persistent Object" do
       before :each do
@@ -35,6 +45,16 @@ module NoricMud
         end
         @object.location = location
       end
+    end
+
+    it "raises TransientObjectError on Marshal.dump because Object is transient" do
+      expect { Marshal.dump subject }.to raise_error(TransientObjectError)
+    end
+
+    it "delegates Object._load to persistence_get_object" do
+      persistence_id_string = "2343"
+      @persistence.should_receive(:get_object).once.with(Object.database,persistence_id_string.to_i)
+      Object._load persistence_id_string
     end
 
     context "with a contained persistent object" do
