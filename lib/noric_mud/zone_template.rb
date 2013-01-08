@@ -21,7 +21,7 @@ module NoricMud
     # @return room_instance_id of new room
     def add_room room_template
       raise "only a room_template may be added to a zone" unless room_template.is_a? RoomTemplate
-      NoricMud::move room_template, self
+      room_template.location = self
       room_instance_id = next_room_instance_id
       get_attribute(:rooms)[room_instance_id] = room_template
       room_instance_id
