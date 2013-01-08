@@ -1,3 +1,4 @@
+require 'singleton'
 require_relative 'util'
 require_relative 'object_not_found_error'
 require_relative 'object_corrupted_error'
@@ -9,18 +10,10 @@ module NoricMud
     # IdentityMap will load all database object upon construction.
     # The consumer is responsible for adding newly persisted objects to IdentityMap
     class IdentityMap
+      include Singleton
+
       DATABASES = [:world, :instance]
 
-      def self.add_object object
-        @@instance.add_object object
-      end
-
-      def self.get_object database, persistence_id
-        @@instance.get_object database, persistence_id
-      end
-
-      private
-      # TODO of course making initialize private won't work - need to make new private I think
       def initialize
         @all_objects = load_all_objects
       end
@@ -37,7 +30,8 @@ module NoricMud
         raise ObjectNotFoundError, persistence_id unless object
         object
       end
-      
+
+      private
       def load_all_objects
         def create_object_from_serialized_attributes persistence_id, attributes
           raise ObjectCorruptedError, persistence_id unless attributes.key? Util::OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
@@ -104,8 +98,7 @@ module NoricMud
         all_objects
       end # load_all_objects
 
-      raise "expected IdentityMap singleton instance to not exist yet" if defined? @@instance
-      @@instance = IdentityMap.new
+      instance # create IdentityMap instance by calling Singleton.instance
     end
   end
 end
