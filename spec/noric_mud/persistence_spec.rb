@@ -7,6 +7,9 @@ module NoricMud
       @identity_map = double 'IdentityMap'
       @identity_map.stub :add_object
       subject.identity_map = @identity_map
+
+      @storage = double 'Storage'
+      subject.storage = @storage
     end
 
     it "get_object delegates to identity_map" do
@@ -46,7 +49,7 @@ module NoricMud
       adjusted_params[:attributes].each_key do |name|
         adjusted_params[:attributes][name] = subject::Util::serialize(adjusted_params[:attributes][name] )
       end
-      subject::Storage.should_receive(:create_object).once.with(adjusted_params)
+      @storage.should_receive(:create_object).once.with(adjusted_params)
 
       subject::create_object object
     end
@@ -70,20 +73,20 @@ module NoricMud
       object.stub(:database).and_return :world
       attributes_clone = attributes.clone
       attributes.freeze
-      subject::Storage.should_receive :create_object
+      @storage.should_receive :create_object
       subject::create_object object
       attributes.should eq(attributes_clone)
     end
     
     it "create_object returns the result of Storage::create_object" do
       result = 23423
-      subject::Storage.should_receive(:create_object).once.and_return(result)
+      @storage.should_receive(:create_object).once.and_return(result)
       subject::create_object(Object.new).should eq(result)
     end
 
     it "create_object adds the object to identity_map" do
       persistence_id = 23943
-      subject::Storage.stub :create_object => persistence_id
+      @storage.stub :create_object => persistence_id
       object = Object.new
       @identity_map.should_receive(:add_object).once.with(persistence_id,object)
       subject::create_object(object).should
@@ -91,32 +94,32 @@ module NoricMud
 
     it "set_location passes params to Storage::set_location" do
       params = {}
-      subject::Storage.should_receive(:set_location).once.with params
+      @storage.should_receive(:set_location).once.with params
       subject::set_location params
     end
 
     it "set_location returns nil" do
       result = Object.new
-      subject::Storage.should_receive(:set_location).once.and_return(result)
+      @storage.should_receive(:set_location).once.and_return(result)
       subject::set_location(nil).should be_nil
     end
 
     it "set_attribute passes params to Storage::set_attribute" do
       params = {}
-      subject::Storage.should_receive(:set_attribute).once.with params
+      @storage.should_receive(:set_attribute).once.with params
       subject::set_attribute params
     end
 
     it "set_attribute returns nil" do
       result = Object.new
-      subject::Storage.should_receive(:set_attribute).once.and_return(result)
+      @storage.should_receive(:set_attribute).once.and_return(result)
       subject::set_attribute({}).should be_nil
     end
 
     it "set_attribute serializes the value it passes to Storage::set_attribute" do
       params = { :value => "serialize me!" }
       params_serialized = { :value => subject::Util::serialize(params[:value]) }
-      subject::Storage.should_receive(:set_attribute).once.with(params_serialized)
+      @storage.should_receive(:set_attribute).once.with(params_serialized)
       subject::set_attribute params
     end
   end

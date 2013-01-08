@@ -1,4 +1,3 @@
-require_relative "object"
 require_relative "persistence/storage"
 require_relative "persistence/util"
 
@@ -7,6 +6,10 @@ module NoricMud
     class << self
       def identity_map= identity_map
         @identity_map = identity_map
+      end
+
+      def storage= storage
+        @storage = storage
       end
 
       # R in CRUD
@@ -42,7 +45,7 @@ module NoricMud
           params[:attributes][name] = Util::serialize value
         end
         
-        persistence_id = Storage::create_object params
+        persistence_id = @storage::create_object params
 
         @identity_map.add_object persistence_id, object
         persistence_id
@@ -58,7 +61,7 @@ module NoricMud
       # @return nil
       def set_attribute params
         params[:value] = Util::serialize params[:value]
-        Storage::set_attribute params
+        @storage::set_attribute params
         nil
       end
 
@@ -70,7 +73,7 @@ module NoricMud
       #   :location_persistence_id - existing persistent object id which is the location to set
       # @return nil
       def set_location params
-        Storage::set_location params
+        @storage::set_location params
         nil
       end
 
