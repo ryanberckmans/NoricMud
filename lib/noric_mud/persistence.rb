@@ -2,6 +2,8 @@ require 'json'
 require_relative "../util"
 require_relative "object"
 require_relative "persistence/storage"
+require_relative "persistence/object_not_found_error"
+require_relative "persistence/object_corrupted_error"
 
 module NoricMud
   module Persistence
@@ -11,35 +13,14 @@ module NoricMud
     public
     
     # R in CRUD
-    # Get an object with the passed persistence_id from the db.  Constructs the object and all contained objects.
+    # Get an object with the passed persistence_id from the db
     # required params
     #   :database  - the database to get from, must be :world or :instance
     #   :persistence_id - id of the existing persistent object to get
-    # optional params
-    #   :location  - an instance of NoricMud::Object to set as the constructed object's location
-    # @return NoricMud::Object constructed from the database object with the passed persistence_id
+    # @return NoricMud::Object with the passed persistence_id
     def self.get_object params
-      attributes = Storage::get_attributes params
-
-      puts attributes
-      
-      # Attribute values are serialized when stored and must be deserialized
-      attributes.each_key do |name|
-        attributes[name] = deserialize attributes[name]
-      end
-
-      puts attributes
-      
-      raise "serialized objects must have an #{OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME} attribute for construction during deserialization" unless attributes.key? OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
-
-      object_class = Util::constantize attributes.delete OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
-
-      object = object_class.new :location => params[:location], :attributes => attributes, :persistence_id => params[:persistence_id]
-      
-      Storage::get_object_contents_ids(params).each do |contained_id|
-        object.contents << get_object(:database => params[:database], :persistence_id => contained_id, :location => object)
-      end
-
+      object = IDENTITY_MAP[params[:database]][params[:persistence_id]]
+      raise ObjectNotFoundError, params[:persistence_id] unless object
       object
     end
 
@@ -67,7 +48,10 @@ module NoricMud
         params[:attributes][name] = serialize value
       end
       
-      Storage::create_object params
+      persistence_id = Storage::create_object params
+
+      IDENTITY_MAP[persistence_id] = object
+      persistence_id
     end
 
     # U in CRUD
@@ -101,7 +85,62 @@ module NoricMud
     # No support to delete an attribute
     
     private
-    
+
+    IDENTITY_MAP = {}
+    def self.load_all_objects
+      raise "load_all_objects may only be called once" unless IDENTITY_MAP.empty?
+      
+      def self.create_object_from_serialized_attributes persistence_id, attributes
+        raise ObjectCorruptedError, persistence_id unless attributes.key? OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
+        object_class = Util::constantize deserialize attributes.delete OBJECT_CLASS_MAGIC_ATTRIBUTE_NAME
+        object_class.new persistence_id
+      end
+
+      def self.setup_object_contents persistence_id, database, objects
+        object_contents_ids = Storage::get_object_contents_ids :database => database, :persistence_id => persistence_id
+        object_contents_ids.each do |contained_id|
+          objects[persistence_id].contents << objects[contained_id]
+          objects[contained_id].send :unsafe_set_location, objects[persistence_id]
+        end
+      end
+
+      def self.load_all_objects_from_database database
+        all_persistence_ids = Storage::get_all_object_ids :database => database
+
+        serialized_attributes = {}
+        objects = {}
+
+        corrupted_objects = []
+        all_persistence_ids.each do |persistence_id|
+          serialized_attributes[persistence_id] = Storage::get_attributes :database => database, :persistence_id => persistence_id
+          begin
+            objects[persistence_id] = create_object_from_serialized_attributes persistence_id, serialized_attributes[persistence_id]
+          rescue ObjectCorruptedError
+            # TODO log object ids which cannot be loaded
+            corrupted_objects << persistence_id
+            serialized_attributes.delete persistence_id
+          end
+        end
+
+        all_persistence_ids -= corrupted_objects
+
+        all_persistence_ids.each { |persistence_id| setup_object_contents persistence_id, database, objects }
+
+        all_persistence_ids.each do |persistence_id|
+          object_attributes = {}
+          serialized_attributes[persistence_id].each_pair do |name,serialized_value|
+            object_attributes[name] = deserialize serialized_value
+          end
+          objects[persistence_id].send :unsafe_set_attributes, object_attributes
+        end
+        objects
+      end
+
+      [:world,:instance].each do |db|
+        IDENTITY_MAP[db] = load_all_objects_from_database db
+      end
+    end
+
     # Serialize the passed data
     def self.serialize data
       Marshal.dump data
@@ -110,6 +149,8 @@ module NoricMud
     # Deserialize the passed serialized data
     def self.deserialize data
       Marshal.load data
-    end 
+    end
+
+    load_all_objects
   end
 end
