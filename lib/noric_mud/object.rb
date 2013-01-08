@@ -7,16 +7,11 @@ module NoricMud
     # Constructor for NoricMud::Object
     # Any parameters will be set without any updates to persistence. This is intended for use, e.g. within persistence itself, to deserialize an object subtree from persistence without circularly writing back to persistence.
     # optional params
-    #   :attributes - set of attributes for this object
-    #   :location - an instance of NoricMud::Object to attach to
-    #   :persistence_id - nil or FixNum if this object is persisted
-    def initialize params={}
-      raise "attributes must be a Hash" if params.key? :attributes && !params[:attributes].is_a?(Hash)
-      validate_location params[:location]
-      
-      @attributes = params[:attributes] || {} # never modify directly, use set_attribute
-      @location = params[:location] # never modify directly, use location=
-      @persistence_id = params[:persistence_id]
+    #   :persistence_id - nil or persistence id of this object in database
+    def initialize persistence_id=nil
+      @attributes = {}
+      @location = nil
+      @persistence_id = persistence_id
 
       @contents = [] # transient. It's expected, but unenforced, that any NoricMud::Object with location set to this should be included in contents.
     end
@@ -24,6 +19,10 @@ module NoricMud
     attr_reader :persistence_id, :location
 
     attr_accessor :contents
+
+    def persistence_exists?
+      !persistence_id.nil?
+    end
 
     def persistent?
       persistence_exists? || (!location.nil? && location.persistent?)
@@ -37,7 +36,7 @@ module NoricMud
     # @return nil
     def persist
       unless persistence_exists?
-        @persistence_id = Persistence::create_object :database => database, :class => self.class, :location_persistence_id => location_persistence_id, :attributes => @attributes
+        @persistence_id = Persistence::create_object self
       end
       # note that contents depends on this persistence_id and this object must be saved first
       # once Persistence is asynchronous this will become trickier
@@ -51,24 +50,21 @@ module NoricMud
       nil
     end
 
-    # Set this object's location. Note that location.contents should include this (and any former location.contents should exclude this), and this must be done externally.
+    # Set this object's location, updating the contents of any old and new locations.
     # If the new location is persistent, this object will be persisted.
     # @param new_location - NoricMud::Object to set as this object's location
     # @return nil
     def location= new_location
       validate_location new_location
-
+      self.location.contents.delete self unless @location.nil?
       @location = new_location
+      @location.contents << self unless @location.nil?
       if persistence_exists?
         Persistence::set_location :database => database, :persistence_id => persistence_id, :location_persistence_id => location_persistence_id
       else
         persist if !new_location.nil? && new_location.persistent?
       end
       nil
-    end
-
-    def persistence_exists?
-      !persistence_id.nil?
     end
 
     # Implements Marshal interface, http://www.ruby-doc.org/core-1.9.3/Marshal.html
@@ -130,6 +126,14 @@ module NoricMud
 
     def attributes
       @attributes
+    end
+
+    def unsafe_set_attributes attributes
+      @attributes = attributes
+    end
+
+    def unsafe_set_location location
+      @location = location
     end
 
     public
