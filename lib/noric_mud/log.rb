@@ -26,6 +26,37 @@ module NoricMud
     EXTENSION = ".log"
     ROTATION = "daily"
 
+    class << self
+      def default= default_log
+        @default_log = default_log
+      end
+
+      def fatal progname = nil, &block
+        return unless @default_log
+        @default_log.log Logger::FATAL, progname, &block
+      end
+
+      def error progname = nil, &block
+        return unless @default_log
+        @default_log.log Logger::ERROR, progname, &block
+      end
+
+      def warn progname = nil, &block
+        return unless @default_log
+        @default_log.log Logger::WARN, progname, &block
+      end
+
+      def info progname = nil, &block
+        return unless @default_log
+        @default_log.log Logger::INFO, progname, &block
+      end
+
+      def debug progname = nil, &block
+        return unless @default_log
+        @default_log.log Logger::DEBUG, progname, &block
+      end
+    end
+
     def initialize log_device = nil, params = {}
       create_logger log_device, params
       @log_statement_queue = Queue.new
@@ -46,7 +77,7 @@ module NoricMud
       log Logger::ERROR, progname, &block
     end
 
-    def fatal progname = nil, &block
+    def warn progname = nil, &block
       log Logger::WARN, progname, &block
     end
 
@@ -58,7 +89,6 @@ module NoricMud
       log Logger::DEBUG, progname, &block
     end
 
-    private    
     def log severity, progname
       raise "cannot log after #shutdown" if @shutdown_requested
       return if severity < @logger.level
@@ -67,6 +97,7 @@ module NoricMud
       nil
     end
 
+    private
     def create_logger log_device = nil, params = {}
       log_device = PATH + log_device + EXTENSION if log_device.is_a? String
       @logger = Logger.new log_device, ROTATION
