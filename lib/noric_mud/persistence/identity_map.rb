@@ -18,10 +18,9 @@ module NoricMud
         @all_objects = load_all_objects
       end
 
-      def add_object object
-        raise "expected object to have a persistence_id" if object.persistence_id.nil?
-        raise "expected object to not be in the identity map" if @all_objects[object.database].key? object.persistence_id
-        @all_objects[object.database][object.persistence_id] ||= object
+      def add_object persistence_id, object
+        raise "expected object to not be in the identity map" if @all_objects[object.database].key? persistence_id
+        @all_objects[object.database][persistence_id] ||= object
         nil
       end
 

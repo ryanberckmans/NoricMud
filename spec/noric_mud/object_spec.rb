@@ -12,8 +12,6 @@ module NoricMud
 
     pending "the entire persistence api should be protected - i.e. accessible by other Object instances - except persist() which is really the only client-facing operation"
     
-    pending "persistent? should mean 'OK to pull the plug': i.e. persistence_exists? should be renamed persistent?.  What persistent? currently is should instead be should_persist?, which uses a separate flag.  This decouples the existence of persistence from the intent to persist"
-
     context "with a persistent Object" do
       before :each do
         @persistence_id = 392348
@@ -83,7 +81,7 @@ module NoricMud
       persistence_id = 203948230948
       @persistence.stub :create_object => persistence_id
       subject.persist
-      subject.persistence_id.should eq(persistence_id)
+      subject.send(:persistence_id).should eq(persistence_id)
     end
 
     it "persist calls create_object, when creating new persistence" do
@@ -140,7 +138,7 @@ module NoricMud
       subject.location = location
       expect { subject.location = location2 }.to change { location.contents.include? subject }.from(true).to(false)
     end
-    
+
     it "set_attribute_unless_exists sets the attribute" do
       bar = [1,2,3]
       subject.__send__ :set_attribute_unless_exists, :foo, bar

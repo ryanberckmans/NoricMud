@@ -19,7 +19,7 @@ module NoricMud
         object = double "Object"
         object.stub :database => :world
         object.stub :persistence_id => 37
-        subject.add_object object
+        subject.add_object object.persistence_id, object
         subject.get_object(object.database, object.persistence_id).should eq(object)
       end
 

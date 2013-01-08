@@ -33,7 +33,7 @@ module NoricMud
       }
 
       object = double(Object)
-      object.stub(:persistence_id).and_return nil
+      object.stub(:persistent?).and_return false
       object.stub(:location_persistence_id).and_return params[:location_persistence_id]
       object.stub(:attributes).and_return params[:attributes]
       object.stub(:database).and_return :world
@@ -51,10 +51,10 @@ module NoricMud
       subject::create_object object
     end
 
-    it "create_object raises if object already has a persistence_id" do
+    it "create_object raises if object is already persistent" do
       object = double Object
-      object.stub(:persistence_id).and_return 50
-      expect { subject::create_object object }.to raise_error(/persistence_id/)
+      object.stub(:persistent?).and_return true
+      expect { subject::create_object object }.to raise_error(/must be transient/)
     end
 
     it "create_object does not mutate the passed attributes" do
@@ -64,7 +64,7 @@ module NoricMud
         :desc => "Tall, oak, chestnut"
       }
       object = double(Object)
-      object.stub(:persistence_id).and_return nil
+      object.stub(:persistent?).and_return false
       object.stub(:location_persistence_id).and_return 2342
       object.stub(:attributes).and_return attributes
       object.stub(:database).and_return :world
@@ -82,9 +82,10 @@ module NoricMud
     end
 
     it "create_object adds the object to identity_map" do
-      subject::Storage.stub :create_object
+      persistence_id = 23943
+      subject::Storage.stub :create_object => persistence_id
       object = Object.new
-      @identity_map.should_receive(:add_object).once.with(object)
+      @identity_map.should_receive(:add_object).once.with(persistence_id,object)
       subject::create_object(object).should
     end
 
