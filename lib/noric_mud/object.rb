@@ -124,6 +124,17 @@ module NoricMud
       nil
     end
 
+    # Yields the value of the attribute with the passed name. The yielded value is then passed to set_attribute.
+    # Any new value returned by the block is discarded.
+    # This convenience method helps to mitigate the following problem: Object has no way of knowing when an attribute value, such as an Array, is modified elsewhere. If a value is modified and set_attribute isn't called, the modification will not be persisted to the database. Matters only when #should_persist? is true.
+    # @yield value - yields the attribute value for the passed attribute name
+    # @return nil
+    def modify_attribute name
+      value = get_attribute name
+      yield value if block_given?
+      set_attribute name, value
+    end
+
     # Set an attribute on this object, unless the attribute already exists
     # Same params as set_attribute
     # @return nil

@@ -8,8 +8,6 @@ module NoricMud
       Object.persistence = @persistence
     end
     
-    pending "modifying an attribute without calling set_attribute, such as modifying an array, won't save it. Maybe this is a don't-play-with-fire thing. #modify_attribute can yield the value and persist it afterwards, and the burden is on the programmer not to modify attributes separately. That's a bit ghetto, isn't Evennia's system entirely transparent?  You set an attribute and it's magically updated, regardles of the complexity/depth of the attribute."
-
     pending "#location_persistence_id should be protected (or not exist at all)"
 
     context "a subclass overriding database" do
@@ -44,6 +42,18 @@ module NoricMud
           params[:location_persistence_id].should be_nil
         end
         @object.location = location
+      end
+
+      it "set_attribute calls persistence::set_attribute" do
+        name = :foo
+        value = "some value"
+        @persistence.should_receive(:set_attribute).once.with({
+                                                                :database => @object.database,
+                                                                :persistence_id => @persistence_id,
+                                                                :name => name,
+                                                                :value => value
+                                                              })
+        @object.send :set_attribute, name, value
       end
     end
 
@@ -159,6 +169,21 @@ module NoricMud
       expect { subject.location = location2 }.to change { location.contents.include? subject }.from(true).to(false)
     end
 
+    it "raises on set_attribute if name isn't a symbol" do
+      expect { subject.send :set_attribute, "foo", "bar" }.to raise_error(/must be a Symbol/)
+    end
+
+    it "doesn't call persistence on set_attribute, since object is transient" do
+      @persistence.should_not_receive :set_attribute
+      subject.send :set_attribute, :foo, "bar"
+    end
+
+    it "sets the attribute" do
+      name = :foord
+      value = "slkfajld"
+      expect { subject.send :set_attribute, name, value }.to change{ subject.send :get_attribute, name }.from(nil).to(value)
+    end
+
     it "set_attribute_unless_exists sets the attribute" do
       bar = [1,2,3]
       subject.__send__ :set_attribute_unless_exists, :foo, bar
@@ -167,14 +192,24 @@ module NoricMud
 
     context "with a non-nil attribute :foo" do
       before :each do
-        @bar = 5
-        subject.__send__ :set_attribute, :foo, @bar
+        @name = :foo
+        @value = [1,2,3,4,5]
+        subject.__send__ :set_attribute, @name, @value
       end
 
       it "set_attribute_unless_exists should not set :foo" do
         dar = "don't set me!"
-        subject.__send__ :set_attribute_unless_exists, :foo, dar
-        subject.__send__(:get_attribute,:foo).should eq(@bar)
+        subject.__send__ :set_attribute_unless_exists, @name, dar
+        subject.__send__(:get_attribute,@name).should eq(@value)
+      end
+
+      it "modify_attribute yields value" do
+        expect { |rspec_makes_this_block| subject.send :modify_attribute, @name, &rspec_makes_this_block }.to yield_with_args(@value)
+      end
+
+      it "modify_attribute calls set_attribute" do
+        subject.should_receive(:set_attribute).with(@name,@value).once
+        subject.send :modify_attribute, @name
       end
     end
   end
