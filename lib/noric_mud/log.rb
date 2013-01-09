@@ -27,6 +27,18 @@ module NoricMud
     ROTATION = "daily"
 
     class << self
+      # Instantiate a Ruby Logger using our defaults and conventions.
+      # @param log_device [Object] - a String or IO instance to pass to Logger.new
+      # @param level [Fixnum] - a log level to assign to the logger; Logger::DEBUG <= level <= Logger::FATAL
+      # @return [Logger]
+      def create_logger log_device, level
+        log_device = PATH + log_device + EXTENSION if log_device.is_a? String
+        logger = Logger.new log_device, ROTATION
+        raise "failed to initialize logger #{log_device.to_s}" unless logger
+        logger.level = level
+        logger
+      end
+
       def default= default_log
         @default_log = default_log
       end
@@ -57,8 +69,9 @@ module NoricMud
       end
     end
 
-    def initialize log_device = nil, params = {}
-      create_logger log_device, params
+    # param [Logger] - an instance of Ruby Logger
+    def initialize logger
+      @logger = logger
       @log_statement_queue = Queue.new
       @shutdown_requested = false
       start_log_thread
@@ -98,13 +111,6 @@ module NoricMud
     end
 
     private
-    def create_logger log_device = nil, params = {}
-      log_device = PATH + log_device + EXTENSION if log_device.is_a? String
-      @logger = Logger.new log_device, ROTATION
-      raise "failed to initialize logger #{log_device.to_s}" unless @logger
-      @logger.level = params[:level] if params[:level]
-    end
-    
     def start_log_thread
       @log_thread = Thread.new do
         def log_job job
