@@ -7,8 +7,8 @@ module NoricMud
         Digest::MD5.hexdigest(o)
       end
 
-      def dump_exception exception
-        "uncaught exception #{e.class}, exception ancestors: " + e.class.ancestors.join("\t") + ", backtrace: " + e.backtrace.join("\t") + ", message: " + e.message
+      def dump_exception e
+        "uncaught exception #{e.class}, exception ancestors: " + e.class.ancestors.join(" ") + ", backtrace: " + e.backtrace.join("\t") + ", message: " + e.message
       end
 
       LINE_WRAP = 79
