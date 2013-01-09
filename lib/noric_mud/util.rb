@@ -7,11 +7,8 @@ module NoricMud
         Digest::MD5.hexdigest(o)
       end
 
-      def log_exception( severity, e, progname = nil )
-        Log::log severity, "uncaught exception #{e.class}", progname
-        Log::log severity, "exception ancestors: " + e.class.ancestors.join("\t"), progname
-        Log::log severity, e.backtrace.join("\t"), progname
-        Log::log severity, e.message, progname if e.message.length > 0
+      def dump_exception exception
+        "uncaught exception #{e.class}, exception ancestors: " + e.class.ancestors.join("\t") + ", backtrace: " + e.backtrace.join("\t") + ", message: " + e.message
       end
 
       LINE_WRAP = 79
