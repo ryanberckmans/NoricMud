@@ -5,7 +5,9 @@ require 'noric_mud/network/connection'
 module NoricMud
   module Network
     describe Connection do
-      # I wrote Connection before I knew about dependency injection. These examples are made to work with a real TCPSocket
+      # I wrote Connection without thinking to inject dependencies. These examples are made to work with a real TCPSocket
+
+      pending "color msgs elsewhere and remove color dependency from Connection"
       
       def next_port
         $test_port ||= Random.rand(10000) + 30000
@@ -237,29 +239,26 @@ module NoricMud
         end
 
         it "colorifies sent messages" do
-          pending "Connection shouldn't know about color"
           msg = "hey {@{!{FW{BUjim how you doing{@"
           @connection.send msg
-          @client_socket.recv(1024).should == color(msg)
+          @client_socket.recv(1024).should == Color::color(msg)
         end
 
         it "leaves no color codes in a sent string" do
-          pending "Connection shouldn't know about color"
           msg = "hey!"
-          COLORS.keys.each do |color_code| msg += color_code end
+          Color::COLORS.keys.each do |color_code| msg += color_code end
           msg += msg
           @connection.send msg
           recv_msg = @client_socket.recv(2048)
-          COLORS.keys.each do |color_code|
+          Color::COLORS.keys.each do |color_code|
             recv_msg.index(color_code).should be_nil
           end
         end
 
         it "correctly sends a message which is epsilon besides color codes" do
-          pending "Connection shouldn't know about color"
           msg = "{@{!{FW{BU"
           expect { @connection.send msg }.to_not raise_error
-          @client_socket.recv(1024).should == color(msg)
+          @client_socket.recv(1024).should == Color::color(msg)
         end
       end
     end

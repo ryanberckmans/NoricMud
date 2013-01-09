@@ -5,7 +5,7 @@ require 'noric_mud/network/server'
 module NoricMud
   module Network
     describe Server do
-      # I wrote Server before I knew about dependency injection. These examples are made to work with a real TCPSocket/Server
+      # I wrote Server without thinking to inject Dependencies. These examples are made to work with a real TCPSocket/Server
       
       def next_port
         $test_port ||= Random.rand(10000) + 30000

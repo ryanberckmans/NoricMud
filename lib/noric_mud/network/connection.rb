@@ -1,5 +1,6 @@
 require 'noric_mud/easy_class_log'
 require 'noric_mud/util'
+require 'noric_mud/color'
 
 module NoricMud
   module Network
@@ -27,7 +28,7 @@ module NoricMud
       def send msg
         return unless @connected
         begin
-          @socket.send msg, 0
+          @socket.send Color::color(msg), 0
         rescue Exception => e
           error { "connection #{id} exception raised in socket.send():" }
           error { "#{e.backtrace.join ", "}" }
