@@ -55,7 +55,7 @@ module NoricMud
       end
 
       def shutdown
-        @connections.each do |conn| conn.disconnect end
+        @connections.each_value do |conn| conn.disconnect end
         @server.close
       end
 
