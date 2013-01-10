@@ -15,10 +15,12 @@ module NoricMud
       def flush_msgs
         @mob_msgs.each_pair do |mob,msg|
           @connections_for_mob[mob].each do |connection|
-            prompt = "\n{!{FUprompt> "
+            prompt = "\n{!{FUprompt> {@"
             @server.send connection, msg + prompt
           end
         end
+        @mob_msgs.clear
+        nil
       end
 
       def next_login
@@ -26,19 +28,26 @@ module NoricMud
       end
 
       def next_disconnection
-        @new_disconnections.shift
+        raise "disconnect handled internally"
       end
 
       def next_reconnection
         raise "no support to reconnect"
       end
 
+      def process_commands
+        @mob_for_connection.each_pair do |connection,mob|
+          cmd = @server.next_command connection
+          mob.run_cmd cmd if cmd
+        end
+      end
+
       def process_connections
         while connection = @server.next_connection do
           mob = Mob.new
           mob.gender = :male
-          mob.short_name "EveryoneIsNamedBob"
-          mob.long_name = "#{mob.short_name} the Assassin Hero"
+          mob.short_name = "EveryoneIsNamedBob"
+          mob.long_name = "{FY#{mob.short_name}{FG the Assassin Hero"
           mob.description = "Lookin good."
           create_session mob, connection
           @new_logins << mob
@@ -46,16 +55,8 @@ module NoricMud
       end
 
       def process_disconnections
-        while connection = @network.next_disconnection do
+        while connection = @server.next_disconnection do
           delete_session connection
-          @new_disconnections
-        end
-      end
-
-      def process_commands
-        @mob_for_connection.each_pair do |connection,mob|
-          cmd = @server.next_command connection
-          mob.run_cmd cmd if cmd
         end
       end
 
