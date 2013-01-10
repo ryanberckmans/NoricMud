@@ -3,6 +3,7 @@ require 'thread'
 require_relative 'noric_mud/util'
 require_relative 'noric_mud/log'
 require_relative 'noric_mud/easy_class_log'
+require_relative 'noric_mud/player/sessions'
 require_relative 'noric_mud/network/server'
 
 module NoricMud
@@ -20,11 +21,26 @@ module NoricMud
       info { "============================== booting ==============================" }
       info { "instantiating core components" }
 
+      require_relative 'noric_mud/room'
+      room = Room.new
+      room.short_name = "The Summit of Mount Eirenor"
+      room.description = Util::justify "Wind whips around furiously as it completes its journey from the far-off base of the mountain to the ceiling of the world. The view extends to infinity in all directions, showcasing a hundred thousand square miles of terrain like a child's playset."
+      @root = room
+      
       server = Network::Server.new
+      sessions = Player::Sessions.new server
 
       begin
         tick_loop do
           server.tick
+          sessions.process_disconnections
+          sessions.process_connections
+          while mob = sessions.next_login do
+            mob.location = @root
+            mob.msg { @root.long_appearance }
+          end
+          sessions.process_commands
+          sessions.flush_msgs
         end
       ensure
         server.shutdown
