@@ -34,7 +34,7 @@ module NoricMud
 
     # Run a cmd from the point of view of this Mob
     def run_cmd cmd
-      msg { "Darn, you can't run commands yet" }
+      msg { "{@Darn, you can't run commands yet.\n\n#{location.long_appearance}" }
     end
 
     attr_accessor :msg_mailbox # a proc taking |msg| responsible for delivering the msg, set externally

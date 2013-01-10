@@ -8,6 +8,7 @@ module NoricMud
     include ObjectParts::Description
 
     # Look appearance is used when looking in this room
+    # TODO - see how Evennia skips the looker when listing room contents
     def long_appearance
       look = "{!{FY#{short_name}\n"
       look += "{FM#{description}\n" unless not description or description.empty?
