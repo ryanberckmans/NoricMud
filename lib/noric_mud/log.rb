@@ -79,6 +79,7 @@ module NoricMud
 
     def shutdown
       @shutdown_requested = true
+      @log_statement_queue << nil # use nil as a termination message
       @log_thread.join
     end
 
@@ -113,16 +114,15 @@ module NoricMud
     private
     def start_log_thread
       @log_thread = Thread.new do
-        def log_job job
-          @logger.log job[:severity], job[:msg], job[:progname]
-        end
         begin
           @logger.log Logger::FATAL, "opening log file"
-          log_job @log_statement_queue.pop while not @shutdown_requested
-          # @shutdown_requested is true, drain the queue and then end the thread
-          log_job @log_statement_queue.pop(true) while true rescue nil # pop(true) will raise an error when the queue is empty
+          while true do
+            job = @log_statement_queue.pop
+            break if job.nil?
+            @logger.log job[:severity], job[:msg], job[:progname]
+          end
         ensure
-          @logger.log Logger::FATAL, "closing log file" rescue nil
+          @logger.log Logger::FATAL, "closing log file"
           @logger.close
         end
       end
