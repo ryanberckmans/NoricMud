@@ -63,12 +63,13 @@ module NoricMud
       private
       def delete_session connection
         raise "expected connection to have a session" unless @mob_for_connection.key? connection
-        @mob_for_connection.delete connection
+        mob = @mob_for_connection.delete connection
         raise "expected mob to output to connection" unless @connections_for_mob[mob].include? connection
         @connections_for_mob[mob].delete connection
         mob.has_session = false if @connections_for_mob[mob].empty?
-        raise "expected not mob.has_session since we don't support mindlinking yet" if mob.has_session
+        raise "expected not mob.has_session since we don't support mindlinking yet" if mob.has_session?
         mob.lost_link = true
+        nil
       end
       
       def create_session mob, connection

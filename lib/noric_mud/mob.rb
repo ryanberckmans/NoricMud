@@ -19,7 +19,7 @@ module NoricMud
     
     # Short appearance is used when Mob is seen a room
     def short_appearance
-      "{!{FY#{long_name} {FGis here.#{@lost_link ? " [Lost Link]" : ""}\n"
+      "{!{FY#{long_name} {FGis here.#{@lost_link ? " {@[Lost Link]" : ""}\n"
     end
 
     # Long appearance is used when Mob is looked at
