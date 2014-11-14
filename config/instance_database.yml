@@ -1,9 +1,9 @@
 development:
-  database: jdbc:sqlite:db/instance_development.sqlite3
+  database: sqlite://db/instance_development.sqlite3
   pool: 5
   timeout: 1500
 
 test:
-  database: jdbc:sqlite:db/instance_test.sqlite3
+  database: sqlite://db/instance_test.sqlite3
   pool: 5
   timeout: 1500
